@@ -1,93 +1,93 @@
-# 핀포인트 체크리스트
+# Pinpoint checklist
 
-목차: 채택 기준 · 여섯 가지 근원 · 영역별 질문 · 후보 형식 · 버리는 것
+Contents: Adoption criteria · Six sources · Questions by area · Candidate format · Discard
 
-분석 서브에이전트와 메인이 함께 쓴다. 후보는 근거와 함께만 올린다.
+Used by both analysis subagents and the main agent. Raise candidates only with evidence.
 
-## 채택 기준
+## Adoption criteria
 
-세 가지를 모두 만족해야 규칙 행이 된다.
+A candidate becomes a rule row only if all three hold.
 
-1. **이 프로젝트에만 있다** — 일반 지식으로 맞힐 수 없다(이 저장소의 모듈 이름·경로 모양·명명·예외).
-2. **어기면 비용이 난다** — 결함·재작업·리뷰 반려·장애·데이터 오류로 이어진다.
-3. **근거가 있다** — `파일:줄`, 커밋 해시, 설정 파일, 또는 인터뷰 답. 근거가 없으면 `확인 필요`로만 올린다.
+1. **Specific to this project** — general knowledge could not guess it (this repo's module names, path shapes, naming, exceptions).
+2. **Breaking it costs something** — leads to defects, rework, review rejection, outages or bad data.
+3. **Has evidence** — `file:line`, a commit hash, a config file or an interview answer. Without evidence raise it only as `needs confirmation`.
 
-## 여섯 가지 근원
+## Six sources
 
-| 근원 | 무엇 | 찾는 법(지문 절 → 직접 확인) | 규칙 모양 |
+| Source | What | How to find (fingerprint section → check directly) | Rule shape |
 |---|---|---|---|
-| S1 필수 경유 모듈 | 모두가 거쳐야 하는 공통 통신·저장·코드 조회·UI 키트 | 「많이 쓰는 내부 모듈」·「호출 수신자」 상위 → 그 모듈을 **안 쓰는** 파일을 검색해 예외인지 위반인지 본다 | `X 경유·직접 Y 신규 사용 금지` + `기존 예외: …` |
-| S2 계약·명명 | API 경로 모양, 페이징 입력·출력 키, 응답 키, 필드 대소문자, DB 객체 접두어·컬럼 접미어, 파일 배치 | 「경로 모양」·「Java 매핑」·DDL/매퍼 파일명·컬럼명 빈도 | `<패턴> 유지`, 명명 표 |
-| S3 사고에서 나온 주의 | 같은 곳이 반복해 고장 난 이유, 직관과 다른 동작, 성능 함정 | 「fix 커밋」·「fix 핫스팟」 → 해당 커밋 diff를 읽어 원인이 반복 가능한지 판단. 「주의 주석」 | `<상황>이면 <방법>·<잘못된 방법> 금지(이유 한 구)` |
-| S4 기준 파일 | 새 화면·API·쿼리를 만들 때 따라 할 파일 | 같은 종류 파일 중 공통 모듈을 빠짐없이 쓰고 최근 고쳐진 것. 핫스팟 상위는 불안정할 수 있으니 diff로 확인 | `기준 화면은 [파일](링크)다` |
-| S5 과정·정책 | 누가 서버를 켜는지, DB 쓰기 승인, 검증 의무, 브랜치·PR 흐름, 공유 범위 | 코드로 알 수 없다 → 인터뷰. CI 설정·브랜치 목록·커밋 이력은 기본값 제안의 근거로만 쓴다 | `common.md`·`git.md` 문장 |
-| S6 환경 사실 | 버전·포트·프로필·실행 방법·DB 연결 경로·배포 흐름 | 매니페스트·설정 파일·Dockerfile·CI → 사용자 확인 | `environments.md` 표 + 기준일·확인 범위 |
+| S1 mandatory shared modules | Shared communication, storage, code lookup or UI kit everyone must go through | Top of "Most-used internal modules" and "Call receivers" → search files that **don't** use the module and decide exception or violation | `Use X; no new direct Y` + `Existing exceptions: …` |
+| S2 contracts and naming | API path shape, paging input/output keys, response keys, field case, DB object prefixes and column suffixes, file placement | "Path shapes", "Java mappings", DDL/mapper file names, column name frequency | `Keep <pattern>`, naming table |
+| S3 incident-born gotchas | Why the same place broke repeatedly, counter-intuitive behavior, performance traps | "Fix commits" and "Fix hotspots" → read the commit diff and judge whether the cause can recur. "Warning comments" | `When <situation>, <method>; no <wrong method> (one-phrase reason)` |
+| S4 exemplar files | File to copy when building a new screen, API or query | Among files of the same kind, one that uses every shared module and has a fresh last change in `git log`. Hotspot leaders may be unstable, so check the diff | `The exemplar screen is [file](link)` |
+| S5 process and policy | Who starts servers, DB write approval, verification duty, branch and PR flow, sharing scope | Not knowable from code → interview. CI config, branch list and commit history only support the proposed default | Sentences in `common.md` and `git.md` |
+| S6 environment facts | Versions, ports, profiles, how to run, DB connection path, deploy flow | Manifests, config files, Dockerfile, CI → user confirmation | `environments.md` table + as-of date and checked scope |
 
-## 영역별 질문
+## Questions by area
 
-스택에 맞는 질문만 고른다. 괄호 안은 예시이고, 이 저장소에 없는 개념은 묻지 않는다.
+Pick only questions that fit the stack. Parentheses are examples; do not ask about concepts this repo does not have.
 
-**화면(SPA·서버 렌더링 템플릿·모바일)**
+**Screens (SPA, server-rendered templates, mobile)**
 
-- 서버 통신·화면 렌더링은 어느 공통 모듈을 거치는가(API 클라이언트·공통 훅·템플릿 레이아웃·공통 조각)? 거치지 않는 파일은 예외인가 위반인가?
-- 공통 UI 구성 요소(컴포넌트 키트·폼 조각·그리드·모달)가 있는가? 벗어나도 되는 경우와 안 되는 경우는?
-- 선택 목록·코드값은 어디서 오는가(서버 조회·상수·열거형)? 하드코딩이 위반으로 고쳐진 적이 있는가?
-- 폼 입력 검증과 오류 표시는 어디서 하는가(클라이언트·서버·둘 다)? 서버 검증 길이·형식과 화면이 어긋나 고친 적이 있는가?
-- 파일 위치·확장자·import 별칭·라우팅(메뉴) 등록 방식은?
-- 스타일 변수·테마, 다국어 문구 키 사용 방식은? 문구 파일 동기화를 검사하는 테스트가 있는가?
+- Which shared module does server communication or rendering go through (API client, shared hook, template layout, shared fragment)? Are files that bypass it exceptions or violations?
+- Are there shared UI building blocks (component kit, form fragments, grid, modal)? When may you deviate and when not?
+- Where do option lists and code values come from (server lookup, constants, enums)? Was hard-coding ever fixed as a violation?
+- Where are form input validation and error display done (client, server, both)? Was a mismatch between server length/format validation and the screen ever fixed?
+- File location, extensions, import aliases, routing (menu) registration?
+- Style variables and themes, i18n message key usage? Is there a test that checks message files stay in sync?
 
-**서버(API·배치·메시지 소비자)**
+**Server (API, batch, message consumers)**
 
-- 진입점 모양이 고정되어 있는가(REST 경로 규칙·동적 디스패치·명령 패턴)? 문자열 검색만으로 미사용을 단정하면 안 되는가?
-- 트랜잭션 경계는 어디서 정해지는가(애너테이션·AOP·이름 규칙·미들웨어)?
-- 저장은 무엇으로 하는가(ORM 리포지토리·SQL 매퍼·쿼리 빌더·프로시저·공통 유틸)? 대량 처리·N+1 함정이 있는가?
-- 오류를 응답으로 돌려주는 규약(예외 처리기·오류 코드·메시지 키)은? 예외를 성공으로 숨겨 고친 적이 있는가?
-- 입력 경계 검증(길이·범위·바인딩 허용 필드)은 어디서 하는가? 경계값 때문에 500을 고친 적이 있는가?
-- 페이징·다국어·데이터 범위(조직·사용자·판매자 등) 파라미터 계약은?
-- 주석·문서화 형식을 반복해 고친 흔적이 있는가?
-- **부속 기능은 따로 훑는다** — 리포트·파일 업로드/다운로드·파일 저장·인증 제외 경로·외부 연동·스케줄러는 핵심 흐름과 다른 규칙을 갖는다. 지문 「확장자 상위」에 일반 소스가 아닌 확장자(리포트 양식·`.proto`·`.graphql`·템플릿 등)가 있으면 그 종류마다 "어디에 두나·어떻게 호출하나·필드 이름을 무엇과 맞추나·성공을 무엇으로 판단하나·실패하면 어디를 보나"를 묻는다.
+- Is the entry-point shape fixed (REST path rule, dynamic dispatch, command pattern)? Is it unsafe to conclude "unused" from string search alone?
+- Where are transaction boundaries defined (annotation, AOP, naming rule, middleware)?
+- What does persistence use (ORM repository, SQL mapper, query builder, procedures, shared util)? Any bulk-processing or N+1 traps?
+- What is the convention for returning errors (exception handler, error codes, message keys)? Was an exception hidden as success ever fixed?
+- Where is input boundary validation done (length, range, allowed binding fields)? Was a 500 from a boundary value ever fixed?
+- Parameter contracts for paging, i18n and data scope (organization, user, seller, etc.)?
+- Any trace of repeatedly fixing comment or documentation format?
+- **Scan side features separately** — reports, file upload/download, file storage, auth-excluded paths, external integrations and schedulers have rules different from the core flow. If the fingerprint's "Top extensions" lists non-source extensions (report layouts, `.proto`, `.graphql`, templates, etc.), ask for each kind: "where it lives, how it is called, what field names must match, what counts as success, where to look on failure".
 
 **DB**
 
-- 스키마는 어디서 관리하는가(마이그레이션 도구·초기화 스크립트·DDL 기준본·ORM 자동 생성)? 기동할 때 적용되는가? 스키마를 바꾸면 무엇을 함께 고쳐야 하는가(DB 종류별 스크립트·엔티티·시드 데이터)?
-- 이름 규칙(접두어·접미어·인덱스·제약 이름)이 이름 빈도에서 보이는가?
-- 공통 컬럼(생성·수정 시각·작성자·삭제 표시), 제약 방침(FK 사용 여부), 사용 여부 플래그 표기는?
-- 코드값·메뉴·메시지·권한 같은 메타 데이터는 어디에 두고 어떤 순서로 등록하는가?
-- 스크립트를 다시 실행해도 안전해야 하는가(`IF NOT EXISTS`·`ON CONFLICT`)? 프로시저·뷰가 있으면 변경 전 원본 보관이 필요한가?
+- Where is the schema managed (migration tool, init scripts, DDL baseline, ORM auto-generation)? Is it applied at startup? What else must change with a schema change (per-DB-vendor scripts, entities, seed data)?
+- Are naming rules (prefixes, suffixes, index and constraint names) visible from name frequency?
+- Common columns (created/updated time, author, deleted flag), constraint policy (FKs or not), how in-use flags are written?
+- Where are metadata such as code values, menus, messages and permissions kept, and in what order are they registered?
+- Must scripts be safe to rerun (`IF NOT EXISTS`, `ON CONFLICT`)? With procedures or views, must the original definition be kept before changing?
 
-**인프라·환경**
+**Infra and environment**
 
-- 로컬 실행 방법·포트·프로필·런타임 버전(엔진 필드·`.nvmrc`·툴체인·래퍼·devcontainer)은?
-- DB·외부 서비스 연결 경로(로컬 컨테이너·VPN·터널 등)는? 설정이 어디서 덮어써지는가(환경변수 > 설정 파일 등)?
-- CI가 도는 브랜치와 실제로 실행하는 검사 명령, 병합하면 배포까지 이어지는 브랜치는?
-- 저장소 전체 파일을 검사하는 도구(nohttp·라이선스 헤더·markdownlint·맞춤법)가 문서에도 적용되는가?
+- How to run locally, ports, profiles, runtime versions (engines field, `.nvmrc`, toolchain, wrappers, devcontainer)?
+- Connection path to DB and external services (local container, VPN, tunnel)? Where do settings get overridden (env vars > config files, etc.)?
+- Which branches CI runs on, which check commands it actually runs, which branches deploy on merge?
+- Do repo-wide file checkers (nohttp, license header, markdownlint, spell check) apply to docs too?
 
-**Git·과정**
+**Git and process**
 
-- 커밋 제목 형식(conventional 비율·type·scope·언어·어미)과 트레일러(필수 `Signed-off-by` 등) 사용은?
-- 브랜치 흐름(작업 → dev → main 등), 병합 방식(merge·squash·rebase), 보호 설정은?
-- PR/MR 호스트와 CLI(`gh`/`glab`) 사용 가능 여부, PR 템플릿·기여 안내(`CONTRIBUTING`·README 절·`.github/`)는?
+- Commit subject format (conventional ratio, type, scope, language, mood) and trailers (required `Signed-off-by`, etc.)? Fix commits may be marked in any language (e.g. `fix`, `prevent`, or Korean `수정`, `방지`), and warning comments too (e.g. `WARNING`, `NOTE`, or Korean `주의`).
+- Branch flow (work → dev → main, etc.), merge method (merge, squash, rebase), protection settings?
+- PR/MR host and whether a CLI (`gh`/`glab`) is available, PR template and contribution guide (`CONTRIBUTING`, README section, `.github/`)?
 
-## 후보 형식
+## Candidate format
 
-서브에이전트는 이 표만 돌려준다(`확인` 행 우선, 15행까지).
+Subagents return only this table (`confirmed` rows first, up to 15 rows).
 
 ```markdown
-| 영역 | 규칙 후보(한 줄, 규칙 문체) | 근원 | 근거 | 확신 |
+| Area | Rule candidate (one line, rule style) | Source | Evidence | Confidence |
 |---|---|---|---|---|
-| front | `api/client.ts` 경유·직접 fetch 신규 사용 금지 | S1 | src/api/client.ts:12 · import 214파일 · 직접 fetch 3파일(login·upload) | 확인 |
-| back | 목록 조회는 `PageRequest` 입력·`total` 출력 유지 | S2 | src/common/Page.java:8 · 쿼리 41곳 | 확인 |
-| db | 대량 저장은 배치 INSERT | S3 | a1b2c3d fix: 업로드 타임아웃 · diff에서 행 단위 insert 루프 | 추정 |
+| front | Use `api/client.ts`; no new direct fetch | S1 | src/api/client.ts:12 · imported by 214 files · direct fetch in 3 files (login, upload) | confirmed |
+| back | List queries keep `PageRequest` input and `total` output | S2 | src/common/Page.java:8 · 41 queries | confirmed |
+| db | Bulk saves use batch INSERT | S3 | a1b2c3d fix: upload timeout · row-by-row insert loop in the diff | guessed |
 ```
 
-- `확신`은 `확인`(근거 코드·설정을 직접 열어 동작을 봄) 또는 `추정`(빈도·이름·주석·커밋 메시지만 봄) 둘 중 하나다. 섞이면 `추정`으로 쓰고 근거 칸에 무엇을 봤는지 적는다.
-- 기준 파일 후보는 `S4` 행으로 올리고 근거에 왜 기준인지 한 구를 쓴다.
-- 인터뷰가 필요한 것은 `S5` 행으로 올리고 근거 칸에 기본값으로 제안할 값과 그 근거를 쓴다.
+- `Confidence` is either `confirmed` (opened the evidence code or config and saw the behavior) or `guessed` (saw only frequency, names, comments or commit messages). If mixed, write `guessed` and say in the evidence cell what you looked at.
+- Raise exemplar file candidates as `S4` rows with one phrase in the evidence cell on why it is the exemplar.
+- Raise items needing an interview as `S5` rows, with the proposed default and its evidence in the evidence cell.
 
-## 버리는 것
+## Discard
 
-- 일반 모범 사례, 언어·프레임워크 문서에 있는 내용.
-- 린터·타입 검사·컴파일러·**기존 테스트**가 이미 막는 것.
-- 한 파일에서만 보이는 취향(들여쓰기 등). 들여쓰기·줄바꿈은 "주변 파일을 따른다" 한 줄로 끝낸다.
-- 근거 없이 다른 프로젝트에서 가져온 행.
-- 지금은 안 쓰는 코드의 관례(최근 커밋에서 바뀐 방식이 있으면 새 방식을 따른다).
+- General best practices, anything in language or framework docs.
+- Anything linters, type checks, compilers or **existing tests** already prevent.
+- Taste visible in one file only (indentation, etc.). Indentation and line endings end with one line: "follow surrounding files".
+- Rows brought from other projects without evidence.
+- Conventions of code no longer used (if recent commits changed the approach, follow the new one).

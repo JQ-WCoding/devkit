@@ -1,17 +1,17 @@
 ---
 name: pr-publish
-description: 브랜치 변경을 리뷰해 PR/MR 제목·본문 초안을 만들고 확인 후 gh·glab으로 생성·갱신한다. "PR 올려줘", "MR 만들어줘", "MR 본문 갱신해줘"에 쓴다.
-argument-hint: "[source 브랜치] [target 브랜치]"
+description: Review the branch, draft a PR/MR title and body, then create or update it with gh or glab after confirmation. Use for "open a PR", "create an MR", "update the MR body".
+argument-hint: "[source branch] [target branch]"
 ---
 
-# PR/MR 리뷰·게시
+# PR/MR review and publish
 
-코드 수정·commit·push·merge는 이 스킬 호출만으로 승인되지 않는다. 저장소 `docs/rules/git.md`의 브랜치·PR 규칙이 있으면 그것을 따른다.
+Invoking this skill does not by itself approve code changes, commits, pushes or merges. Follow the branch and PR rules in the repo's `docs/rules/git.md` if present.
 
-## 1. 대상 고정
+## 1. Pin the targets
 
-- source는 인자 또는 현재 브랜치, target은 인자 → `git.md`의 흐름 → 원격 기본 브랜치(`git symbolic-ref refs/remotes/origin/HEAD`) 순으로 정한다.
-- 원격을 조회하고 SHA를 고정한다. 임의 stash·checkout·reset으로 작업 트리를 바꾸지 않는다.
+- Source is the argument or the current branch. Target is the argument → the flow in `git.md` → the remote default branch (`git symbolic-ref refs/remotes/origin/HEAD`).
+- Query the remote and pin the SHAs. Do not change the working tree with ad-hoc stash, checkout or reset.
 
 ```bash
 git fetch --no-tags origin <source> <target>
@@ -19,40 +19,40 @@ git rev-parse origin/<source> origin/<target>
 git merge-base origin/<target> origin/<source>
 ```
 
-- PR에 들어가는 것은 **원격** source다. 로컬에 push되지 않은 커밋이 있으면 포함되지 않는다고 알리고, 요청받으면 `devkit:push`로 올린다.
-- 원격 호스트로 도구를 고른다: `git remote get-url origin`의 호스트가 `github.com` 또는 `gh auth status`의 호스트면 `gh`, `gitlab` 도메인 또는 `glab auth status`의 호스트(사내 GitLab 포함)면 `glab`. 어느 쪽도 아니면(파일 경로 원격, 인증 안 됨) **초안 모드**다.
+- What goes into the PR is the **remote** source. If there are local commits not yet pushed, say they are not included; push them with `devkit:push` when asked.
+- Choose the tool by remote host: `gh` if the host of `git remote get-url origin` is `github.com` or a host in `gh auth status`; `glab` if it is a `gitlab` domain or a host in `glab auth status` (including self-hosted GitLab). If neither (file-path remote, not authenticated), use **draft mode**.
 
-## 2. 리뷰
+## 2. Review
 
-- 고정한 SHA의 전체 변경 목록과 diff를 읽고, 필요한 호출부는 그 SHA 기준으로 읽는다(`git show <sha>:<경로>`). 로컬 작업 파일이 다르면 PR 코드로 보지 않는다.
-- 실제 장애·데이터 오류·회귀, API·스키마 계약, 권한, 트랜잭션, 비밀값 포함 여부를 중심으로 본다. 취향이나 수치만으로 리팩터링을 요구하지 않는다.
-- 변경이 크면 파일 묶음별로 `devkit:code-reader`에 호출부 추적을 맡긴다.
-- 검사가 필요하면 `devkit:check`를 제안한다(직접 호출 스킬이다).
+- Read the full change list and diff at the pinned SHA, and read callers as of that SHA (`git show <sha>:<path>`). If local working files differ, do not treat them as PR code.
+- Focus on real failures, data errors and regressions, API and schema contracts, permissions, transactions, and whether secrets are included. Do not demand refactoring on taste or metrics alone.
+- For a large change, hand caller tracing to `devkit:code-reader` per group of files.
+- If checks are needed, suggest `devkit:check` (a user-invoked skill).
 
-## 3. 초안과 🛑 확인
+## 3. Draft and 🛑 confirmation
 
-- 리뷰 결과(결함은 파일·발생 조건·영향)와 제목·본문 초안을 보여 준다. 제목·본문의 언어와 형식은 `git.md`·PR 템플릿(`.github/pull_request_template.md`·`.gitlab/merge_request_templates/`)을 따르고, 없으면 `devkit:commit`의 형식·언어 판정을 그대로 쓴다.
-- 이슈 키가 있으면 `git.md`의 연결 방식(제목 접두어·본문 `Closes #45`·`Refs ABC-123` 등)을 따르고, 규칙이 없으면 본문에 출처 링크만 둔다. 트래커의 상태를 바꾸지 않는다.
-- 분석 문서(`.devkit/work/*/analysis.md` 중 브랜치 이름·이슈 키가 맞는 것, 없으면 가장 최근 것을 확인받아)가 있으면 요구 항목·영향 범위·검증 결과·DB 적용 절차를 본문에 요약한다. 분석 문서와 작업 SQL은 저장소에 커밋되지 않으므로, 리뷰어가 알아야 할 SQL 절차는 본문에 쓰고 "이 PR에 포함되지 않음"을 밝힌다.
-- 본문에 실행하지 않은 검사를 통과로 쓰지 않는다. AI 작성 표기는 `git.md`의 트레일러 규칙을 따르고, 규칙이 없으면 넣지 않는다.
-- 열린 PR/MR이 있는지 확인해 새로 만들지 갱신할지 함께 알린다.
-- 초안 모드면 열린 PR 확인과 게시 확인을 건너뛰고, 제목·본문을 scratchpad 파일과 응답으로 전달한 뒤 호스트에서 직접 만들도록 안내하고 끝낸다.
-- "이대로 올릴지" 한 번 묻는다. 사용자가 처음부터 "리뷰 후 바로 올려"라고 했고 확인된 결함이 없으면 생략한다. 결함이 있으면 반드시 다시 묻는다.
+- Show the review result (defects with file, trigger condition and impact) and the title and body draft. Title and body language and format follow `git.md` and the PR template (`.github/pull_request_template.md`, `.gitlab/merge_request_templates/`); without them, use `devkit:commit`'s format and language decision as is.
+- If there is an issue key, follow the linking style in `git.md` (title prefix, `Closes #45` or `Refs ABC-123` in the body, etc.); without a rule, put only the source link in the body. Do not change tracker status.
+- If there is an analysis doc (an `.devkit/work/*/analysis.md` matching the branch name or issue key; otherwise the most recent one, after confirming), summarize the requirement items, impact, verification results and DB apply steps in the body. Analysis docs and work SQL are not committed to the repo, so write the SQL steps reviewers need in the body and state "not included in this PR".
+- Do not write checks that were not run as passed. AI attribution follows the trailer rule in `git.md`; without a rule, leave it out.
+- Check whether an open PR/MR exists and say whether you will create or update.
+- In draft mode, skip the open-PR check and the publish confirmation; deliver the title and body as a scratchpad file and in the reply, tell the user to create it on the host, and stop.
+- Ask once whether to publish as is. If the user said from the start "review and publish right away" and no defects were confirmed, skip it. If there are defects, always ask again.
 
-## 4. 게시
+## 4. Publish
 
-- 게시 직전 원격 SHA를 다시 조회한다. 리뷰한 SHA와 다르면 게시하지 않고 추가된 커밋을 알린다.
-- 인증을 확인한다(`gh auth status` / `glab auth status`). 실패하면 게시하지 않고 초안을 전달해 사용자가 직접 만들게 한다. 브라우저 자동화 등 다른 경로로 대신 게시하지 않는다.
-- 본문은 scratchpad 파일로 넘긴다.
+- Query the remote SHA again right before publishing. If it differs from the reviewed SHA, do not publish; report the added commits.
+- Check authentication (`gh auth status` / `glab auth status`). If it fails, do not publish; deliver the draft so the user can create it. Do not publish by another route such as browser automation.
+- Pass the body through a scratchpad file.
 
-| 동작 | GitHub (`gh`) | GitLab (`glab`) |
+| Action | GitHub (`gh`) | GitLab (`glab`) |
 |---|---|---|
-| 열린 것 확인 | `gh pr list --head <source> --base <target> --json number,url` | `glab mr list --source-branch <source> --target-branch <target> -F json` |
-| 생성 | `gh pr create --head <source> --base <target> --title "<제목>" --body-file <파일>` | `glab mr create --source-branch <source> --target-branch <target> --title "<제목>" --description-file <파일> --remove-source-branch=false --push=false --yes` |
-| 갱신 | `gh pr edit <번호> --title "<제목>" --body-file <파일>` | `glab mr update <iid> --title "<제목>" --description-file <파일>` |
-| 게시 후 확인 | `gh pr view <번호> --json headRefOid,baseRefName,headRefName,url` | `glab mr view <iid> -F json` |
+| Find open | `gh pr list --head <source> --base <target> --json number,url` | `glab mr list --source-branch <source> --target-branch <target> -F json` |
+| Create | `gh pr create --head <source> --base <target> --title "<title>" --body-file <file>` | `glab mr create --source-branch <source> --target-branch <target> --title "<title>" --description-file <file> --remove-source-branch=false --push=false --yes` |
+| Update | `gh pr edit <number> --title "<title>" --body-file <file>` | `glab mr update <iid> --title "<title>" --description-file <file>` |
+| Verify after publish | `gh pr view <number> --json headRefOid,baseRefName,headRefName,url` | `glab mr view <iid> -F json` |
 
-- `glab mr update`의 `--remove-source-branch`·`--squash-before-merge`는 토글이라 갱신에서 쓰지 않는다.
-- 게시 후 source·target·head SHA가 리뷰한 값과 같은지 확인하고 링크를 보고한다.
-- merge·auto-merge·승인·리뷰어/담당자 지정은 요청받았을 때만 한다. 병합이 배포로 이어지는 브랜치면 그 점을 알린다.
-- 인증 계정이 개인 계정이 아니면(봇 토큰 등) 작성자가 그 계정으로 표시된다고 알린다.
+- `--remove-source-branch` and `--squash-before-merge` on `glab mr update` are toggles, so do not use them when updating.
+- After publishing, confirm source, target and head SHA match the reviewed values, and report the link.
+- Merge, auto-merge, approval and reviewer/assignee changes only on request. If merging the branch leads to a deploy, say so.
+- If the authenticated account is not a personal one (bot token etc.), say the author will show as that account.

@@ -1,53 +1,54 @@
-# 스킬·에이전트 작성 원칙
+# Skill and agent authoring principles
 
-원칙 출처: [Skill 작성 모범 사례](https://platform.claude.com/docs/ko/agents-and-tools/agent-skills/best-practices).
+Source: [Skill authoring best practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices).
 
-## 위치와 이름
+## Location and name
 
-- 이 저장소 전용이면 `<저장소>/.claude/skills/<이름>/`, 에이전트는 `<저장소>/.claude/agents/<이름>.md`.
-- `name`은 64자 이하 소문자·숫자·하이픈, `claude`·`anthropic` 금지, 폴더 이름과 같게 한다. 만든 뒤에는 바꾸지 않는다(다른 문서가 링크한다).
-- 사용 가능한 스킬 목록에서 겹치는 것을 먼저 찾는다. 겹치면 새로 만들지 않거나, 두 description에 서로 쓰지 않는 경우를 적는다.
+- Repo-only: `<repo>/.claude/skills/<name>/`; agents: `<repo>/.claude/agents/<name>.md`.
+- `name`: at most 64 chars of lowercase letters, digits and hyphens, no `claude` or `anthropic`, same as the folder name. Do not rename after creation (other docs link to it).
+- Look for overlaps in the available skill list first. If one overlaps, don't create a new one, or state in both descriptions when not to use each.
+- Write project skills and agents in the project's document language (the one `docs/rules/` uses).
 
-## 평가 시나리오부터
+## Eval scenarios first
 
-- 이 대화에서 사용자가 반복해 알려 준 것, Claude가 틀리거나 놓친 지점을 먼저 적는다. 스킬에는 그 격차를 메우는 내용만 넣는다.
-- `evals/evals.json`에 시나리오를 3개 이상 둔다. 자동 선택되는 스킬은 "이 스킬을 쓰면 안 되는 요청"도 1개 넣는다.
+- First write down what the user repeatedly told you in this conversation and where Claude was wrong or missed something. Put only what fills that gap into the skill.
+- Keep 3+ scenarios in `evals/evals.json`. For auto-selected skills include 1 "request this skill must not handle".
 
 ```json
 [
-  {"skills": ["<이름>"], "query": "<실제 요청 문장>", "files": [],
-   "expected_behavior": ["<관찰할 수 있는 기대 동작>"]}
+  {"skills": ["<name>"], "query": "<real request sentence>", "files": [],
+   "expected_behavior": ["<observable expected behavior>"]}
 ]
 ```
 
 ## SKILL.md
 
-- `description`: 무엇을 하는지 + 언제 쓰는지(사용자가 실제로 쓰는 요청 표현) + 쓰지 않는 경우. 3인칭 서술형, 1,024자 이하, XML 태그 없이. 스킬 선택은 이 문장만 보고 정해진다.
-- 삭제·배포·백업·DB 쓰기·검사처럼 사용자가 부를 때만 실행할 스킬은 `disable-model-invocation: true`. 인자를 받으면 `argument-hint`.
-- 본문은 이 프로젝트에만 있는 경로·규칙·판단 기준·금지 사항만. `docs/rules/`에 있는 규칙은 복제하지 말고 링크한다.
-- 500줄 미만. 길어지면 세부를 참조 파일로 옮긴다. 참조 파일은 SKILL.md에서 한 단계로만 링크하고, 100줄이 넘으면 제목 아래 `목차:` 줄을 둔다.
-- 순서·정확성이 중요한 작업은 명령을 그대로 적는다. 판단이 필요한 작업은 기준만 준다.
-- 단계가 많으면 번호 단계로 쓰고, 사용자 승인 지점(🛑)과 검증 → 수정 → 재검증 루프를 둔다.
-- 선택지는 기본값 하나와 예외 하나. 용어는 하나로 통일한다.
-- 사람용 설치 안내는 `SETUP.md`에 둔다.
-- 시간이 지나면 틀려질 문장 대신 `확인 범위(YYYY-MM-DD)`나 실패했을 때 할 일로 쓴다.
+- `description`: what it does + when to use it (the request phrases users actually type) + when not to. Third person, at most 1,024 chars, no XML tags. Skill selection is decided by this sentence alone.
+- Skills to run only when the user invokes them (delete, deploy, backup, DB writes, checks): `disable-model-invocation: true`. If it takes arguments: `argument-hint`.
+- Body: only this project's paths, rules, judgment criteria and prohibitions. Do not duplicate rules in `docs/rules/`; link them.
+- Under 500 lines. When it grows, move details to reference files. Link reference files one level deep from SKILL.md, and put a `Contents:` line under the title when one exceeds 100 lines.
+- For tasks where order and precision matter, write the commands verbatim. For judgment tasks, give only the criteria.
+- With many steps, use numbered steps with user approval points (🛑) and a verify → fix → re-verify loop.
+- Options: one default and one exception. Use one term per concept.
+- Put human installation instructions in `SETUP.md`.
+- Instead of sentences that go stale, write `checked scope (YYYY-MM-DD)` or what to do when it fails.
 
-## 스크립트
+## Scripts
 
-- 결정적인 작업은 `scripts/`에 두고 SKILL.md에 실행할지 읽을지 밝힌다. 오류는 스크립트가 처리해 다음 행동을 알려 주게 한다. 상수에는 근거 주석을 단다. Python은 `python3 -I`로 실행한다.
-- 실행 결과·백업·내려받은 파일을 스킬 폴더에 쌓지 않는다. 임시 파일은 scratchpad.
+- Put deterministic work in `scripts/` and say in SKILL.md whether to run or read each. Let scripts handle errors and tell the next action. Comment constants with their rationale. Run Python with `python3 -I`.
+- Do not pile run results, backups or downloads into the skill folder. Temp files go in the scratchpad.
 
-## 에이전트
+## Agents
 
-- frontmatter: `name`, `description`(무엇을 + 언제), `model: sonnet`, `tools`(조회 도구만: `Read, Grep, Glob`, 필요하면 `Bash`와 읽기 전용 MCP 도구 전체 이름).
-- 본문: 맡은 범위, "파일을 수정하지 않는다", 보고 형식, 확인한 것과 추정의 구분, 찾지 못한 것은 없다고 말하기.
+- Frontmatter: `name`, `description` (what + when), `model: sonnet`, `tools` (read-only only: `Read, Grep, Glob`, plus `Bash` and full names of read-only MCP tools if needed).
+- Body: assigned scope, "does not modify files", report format, separation of confirmed and guessed, saying plainly when something was not found.
 
-## 점검
+## Check
 
 ```bash
-python3 -I "${CLAUDE_PLUGIN_ROOT}/skills/suggest-skills/scripts/check_skill.py" <스킬 폴더> [...]
+python3 -I "${CLAUDE_PLUGIN_ROOT}/skills/suggest-skills/scripts/check_skill.py" <skill folder> [...]
 ```
 
-- `ERROR`는 고치고, `WARN`은 확인해 그대로 둘 이유가 있으면 보고에 적는다.
-- 스크립트가 못 보는 것: description만 보고 언제 쓰는지 알 수 있는가, 이미 아는 설명이 남았는가, 위험한 작업에 확인 단계가 있는가.
-- 평가 시나리오는 같은 세션에서 판정하지 않는다. 새 세션에서 `query`를 넣어 비교하도록 안내한다.
+- Fix `ERROR`s; review `WARN`s and note in the report if there is a reason to keep them.
+- What the script cannot see: whether the description alone tells when to use it, whether known explanations remain, whether risky tasks have a confirmation step.
+- Do not judge eval scenarios in the same session. Tell the user to compare by entering the `query` in a new session.

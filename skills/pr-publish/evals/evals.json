@@ -3,43 +3,43 @@
     "skills": [
       "pr-publish"
     ],
-    "query": "dev → main MR 올려줘",
+    "query": "Open the dev → main MR",
     "files": [],
     "expected_behavior": [
-      "원격 dev·main을 fetch해 SHA를 고정하고 그 SHA 기준으로 diff를 리뷰한다",
-      "초안과 열린 MR 여부를 보여 주고 게시 여부를 확인받는다",
-      "게시 직전 SHA를 다시 확인하고 glab으로 생성한 뒤 head SHA를 대조한다"
+      "Fetches remote dev and main, pins the SHAs, and reviews the diff at those SHAs",
+      "Shows the draft and whether an MR is already open, and confirms before publishing",
+      "Re-checks the SHA right before publishing, creates it with glab, then compares the head SHA"
     ]
   },
   {
     "skills": [
       "pr-publish"
     ],
-    "query": "리뷰하고 문제 없으면 바로 PR 올려",
+    "query": "Review it and open the PR right away if nothing is wrong",
     "files": [],
     "expected_behavior": [
-      "확인된 결함이 없으면 확인 질문 없이 게시하고, 결함이 있으면 다시 묻는다"
+      "Publishes without a confirmation question if no defects are confirmed; asks again if there are defects"
     ]
   },
   {
     "skills": [
       "pr-publish"
     ],
-    "query": "PR 본문만 갱신해줘",
+    "query": "Just update the PR body",
     "files": [],
     "expected_behavior": [
-      "새 PR을 만들지 않고 열린 PR의 제목·본문만 갱신한다",
-      "merge·승인은 하지 않는다"
+      "Does not create a new PR; updates only the title and body of the open PR",
+      "Does not merge or approve"
     ]
   },
   {
     "skills": [
       "pr-publish"
     ],
-    "query": "이 함수 리뷰해줘",
+    "query": "Review this function",
     "files": [],
     "expected_behavior": [
-      "pr-publish를 쓰지 않고 일반 코드 리뷰로 답한다"
+      "Answers as a normal code review without using pr-publish"
     ]
   }
 ]

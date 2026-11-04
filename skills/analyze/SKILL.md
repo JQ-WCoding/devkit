@@ -1,66 +1,66 @@
 ---
 name: analyze
-description: 요구·이슈·버그(출처 무관)를 고치기 전에 현행 추적·영향 범위·공통 위험 점검·구현 계획을 분석 문서로 만들고 승인받는다. "이슈 분석해줘", "어디 고쳐야 해", "버그 원인 찾아줘", "영향도 봐줘"에 쓴다.
-argument-hint: "<이슈 링크 | 파일 경로 | 요구 내용> [작업 ID]"
+description: Before changing code, turn a requirement, issue or bug (any source) into an analysis doc — current-code trace, impact, common risk check, implementation plan — and get approval. Use for "analyze this issue", "where do I fix this", "find the bug cause", "check impact".
+argument-hint: "<issue link | file path | requirement> [task ID]"
 ---
 
-# 분석
+# Analyze
 
-코드를 고치기 전에 무엇을 왜 어디까지 바꿀지 정한다. 이 스킬은 **파일을 고치지 않는다**(분석 문서만 쓴다). 입력으로 정할 수 없는 것은 추측으로 메우지 않고 `확인 필요`로 남겨 🛑에서 묻는다.
+Decide what to change, why and how far before touching code. This skill **does not edit files** (it writes only the analysis doc). Anything the input cannot settle is not filled in by guesswork; mark it `needs confirmation` and ask at the 🛑 gate.
 
-| 참고 | 언제 |
+| Reference | When |
 |---|---|
-| [analysis-template.md](references/analysis-template.md) | 분석 문서 양식 |
-| [risk-checklist.md](references/risk-checklist.md) | 4단계 위험 점검 |
+| [analysis-template.md](references/analysis-template.md) | Analysis doc format |
+| [risk-checklist.md](references/risk-checklist.md) | Step 4 risk check |
 
-## 0. 입력 읽기
+## 0. Read the input
 
-작업 출처는 가리지 않는다.
+Any task source is fine.
 
-| 입력 | 읽는 방법 |
+| Input | How to read |
 |---|---|
-| 붙여넣은 글·이미지·첨부 파일 | 그대로 읽는다. 이미지는 Read로 본다 |
-| 로컬 파일(Markdown·Obsidian 노트·PDF·문서) | 경로를 Read. 노트 안의 링크·첨부도 같은 폴더에서 찾는다 |
-| GitHub/GitLab 이슈 | `gh issue view <번호> --comments` / `glab issue view <번호> --comments` |
-| Jira·Notion·Confluence·Google 문서 등 링크 | 이 세션에 연결된 MCP 도구·CLI가 있으면 그것으로 읽는다. 없으면 본문을 붙여 달라고 요청한다 |
+| Pasted text, images, attachments | Read as is. Open images with Read |
+| Local file (Markdown, Obsidian note, PDF, document) | Read the path. Look for linked notes and attachments in the same folder |
+| GitHub/GitLab issue | `gh issue view <number> --comments` / `glab issue view <number> --comments` |
+| Jira, Notion, Confluence, Google Docs and other links | Read with an MCP tool or CLI connected to this session. If none, ask the user to paste the content |
 
-- 트래커에 댓글·상태 변경 같은 쓰기는 요청받았을 때만 한다.
-- 작업 ID: 인자 → 이슈 키(`ABC-123`, `#45`) → 날짜와 짧은 이름(`2026-11-04-refund-partial`) 순으로 정한다.
-- 작업 폴더: `docs/rules/`에 로컬 작업 폴더 규칙이 있으면 그것, 없으면 `<저장소>/.devkit/work/`. 이 폴더가 Git에 잡히면(`git check-ignore -q` 실패) `.git/info/exclude`에 `.devkit/`을 더하고 그렇게 했다고 알린다.
+- Write to a tracker (comments, status changes) only on request.
+- Task ID: argument → issue key (`ABC-123`, `#45`) → date plus short name (`2026-11-04-refund-partial`).
+- Work folder: the local work-folder rule in `docs/rules/` if any, else `<repo>/.devkit/work/`. If Git would track it (`git check-ignore -q` fails), add `.devkit/` to `.git/info/exclude` and say so.
 
-## 1. 요구 쪼개기
+## 1. Break down the requirement
 
-요구를 번호 항목으로 나누고, 원문 근거와 해석을 분리한다. 모호한 표현(“적절히”, “기존처럼”, “등”)은 해석을 적고 `확인 필요`에 올린다. 종류를 정한다: 기능 | 변경 | 버그 | 조사.
+Split the requirement into numbered items and keep the source wording apart from your interpretation. For vague wording ("as appropriate", "like before", "etc."), write the interpretation and list it under `needs confirmation`. Set the type: feature | change | bug | investigation.
 
-## 2. 현행 추적
+## 2. Trace the current code
 
-- 저장소 규칙(`CLAUDE.md`·`docs/rules/`)을 먼저 훑어 용어·구조를 맞춘다.
-- 요구와 관련된 진입점(화면·API·배치·메시지 수신) → 처리 → 저장(테이블·파일·외부)을 `파일:줄`로 따라간다. 진입점이 여럿이거나 훑을 파일이 10개를 넘으면 `devkit:code-reader`에 진입점 단위로 나눠 동시에 맡긴다. 그보다 작으면 직접 읽는다.
-- 동적 호출(문자열 경로·리플렉션·설정 라우팅)이 있으면 문자열 검색만으로 "쓰는 곳 없음"이라고 단정하지 않는다.
-- **버그**: 증상을 재현할 수 있는 최소 절차를 정하고, 원인은 근거(코드·로그·데이터)로 확정한다. 확정하지 못하면 가설과 확인 방법을 쓴다. 같은 원인이 다른 곳에도 있는지 찾는다. 운영 데이터 조회가 필요하면 읽기 전용 조회만, 대상 DB를 확인받고 한다.
+- Skim the repo rules (`CLAUDE.md`, `docs/rules/`) first to align terms and structure.
+- Follow entry points (screen, API, batch, message consumer) → processing → storage (table, file, external) as `file:line`. With several entry points or more than 10 files to scan, hand them to `devkit:code-reader` in parallel, one per entry point. Smaller than that, read directly.
+- With dynamic calls (string paths, reflection, config routing), do not conclude "unused" from a text search alone.
+- **Bug**: define the minimal reproduction steps and confirm the cause with evidence (code, logs, data). If not confirmed, write the hypothesis and how to check it. Look for the same cause elsewhere. If production data must be queried, use read-only queries only, after confirming the target DB.
 
-## 3. 차이와 영향 범위
+## 3. Differences and impact
 
-- 요구 항목별 `현행 / 변경 후 / 바꿀 곳`을 만든다. 변경이 없는 항목은 손대지 않는다고 적는다.
-- 영향 범위: 화면·API·배치·DB·외부 연동·권한·설정·문서. 같은 테이블·API·공통 컴포넌트를 쓰는 다른 기능을 **현행 유지 목록**으로 남긴다.
+- Per requirement item: `current / after / where to change`. Items with no change are marked as untouched.
+- Impact: screens, APIs, batches, DB, external integrations, permissions, config, docs. Record other features that use the same tables, APIs or shared components as the **keep-as-is list**.
 
-## 4. 위험 점검
+## 4. Risk check
 
-[risk-checklist.md](references/risk-checklist.md)에서 **해당 신호가 있는 항목만** 골라 질문과 답(근거 또는 `확인 필요`)을 쓴다. 해당 없는 항목을 나열하지 않는다.
+From [risk-checklist.md](references/risk-checklist.md), pick **only items whose signal appears** and write the question and answer (evidence or `needs confirmation`). Do not list items that do not apply.
 
-## 5. 구현 계획
+## 5. Implementation plan
 
-- 순서: 스키마·데이터 이전 → 데이터 접근(쿼리·매퍼·리포지토리) → 도메인·서비스 → API → 화면 → 설정·문서. 저장소 규칙에 순서가 있으면 그것을 따른다.
-- 단계마다 바꿀 파일·내용 한 줄·확인 방법. 따라 할 기존 구현(같은 종류의 최근 커밋·파일)을 `선례:`로 적는다.
-- DB 변경이 있으면 변경 SQL과 복구 SQL을 둘 위치를 정한다(실행은 사람).
-- 검증 계획: 자동 검사(`devkit:check`에서 고를 것), 화면·API 확인 절차, 테스트 데이터, 현행 유지 목록의 회귀 확인.
+- Order: schema and data migration → data access (queries, mappers, repositories) → domain and services → API → UI → config and docs. Follow the repo rules if they set an order.
+- Per step: files to change, one-line description, how to verify. Write the existing implementation to follow (a recent commit or file of the same kind) as `Precedent:`.
+- If there is a DB change, decide where the change SQL and rollback SQL go (a human runs them).
+- Verification plan: automated checks (to pick from `devkit:check`), screen and API checks, test data, regression check of the keep-as-is list.
 
-## 🛑 승인
+## 🛑 Approval
 
-분석 문서를 저장하고 요약(요구 수, 바뀌는 곳, 위험 점검에서 나온 주의, DB 변경 여부, 예상 범위)을 보여 준다. `확인 필요` 항목은 AskUserQuestion으로 묻는다(선택지와 권장안 포함). 답은 문서의 「결정 기록」에 날짜와 함께 남긴다.
+Save the analysis doc and show a summary (number of requirements, places that change, cautions from the risk check, whether there is a DB change, expected scope). Ask the `needs confirmation` items with AskUserQuestion (with options and a recommendation). Record the answers with the date in the doc's "Decision log".
 
-사용자가 분석만 원했으면 여기서 끝낸다. 진행하라고 하면 `devkit:develop`으로 넘어간다.
+If the user only wanted the analysis, stop here. If they say to proceed, move on to `devkit:develop`.
 
-## 보고
+## Report
 
-분석 문서 경로, 요구 항목 수, 남은 `확인 필요`, 구현 계획 단계 수를 알린다. 버그는 원인 확정 여부를 분명히 쓴다("확정" / "가설: …").
+Analysis doc path, number of requirement items, remaining `needs confirmation`, number of implementation steps. For a bug, state clearly whether the cause is confirmed ("confirmed" / "Hypothesis: …").

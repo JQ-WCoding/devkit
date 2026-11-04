@@ -3,46 +3,46 @@
     "skills": [
       "suggest-skills"
     ],
-    "query": "이 프로젝트에 필요한 스킬이랑 규칙 제안해줘",
+    "query": "Suggest the skills and rules this project needs",
     "files": [],
     "expected_behavior": [
-      "지문을 수집하고 계층별 devkit:code-reader를 한 메시지에서 동시에 띄운다",
-      "제안 표의 각 행에 파일:줄·커밋·지문 수치 같은 근거가 있고, 권장은 3개 이내다",
-      "사용자가 고르기 전에는 아무 파일도 만들지 않는다"
+      "Collects the fingerprint and launches one devkit:code-reader per layer concurrently in one message",
+      "Every row of the proposal table has evidence such as file:line, commits or fingerprint numbers, with at most 3 recommended",
+      "Creates no files before the user chooses"
     ]
   },
   {
     "skills": [
       "suggest-skills"
     ],
-    "query": "지난달 이후 fix 커밋 보고 규칙에 추가할 거 찾아줘",
+    "query": "Look at fix commits since last month and find rules to add",
     "files": [],
     "expected_behavior": [
-      "--since 기준점으로 지문을 다시 수집하고 fix 커밋 diff를 읽는다",
-      "기존 docs/rules에 이미 있는 행은 후보에서 빼고, 규칙과 코드가 어긋난 곳은 차이만 보고한다",
-      "고른 행만 기존 문체로 더한다"
+      "Recollects the fingerprint with a --since baseline and reads the fix commit diffs",
+      "Drops candidates already in docs/rules, and reports only the difference where rules and code disagree",
+      "Adds only the chosen rows in the existing style"
     ]
   },
   {
     "skills": [
       "suggest-skills"
     ],
-    "query": "설계서 보고 화면 만드는 거 매번 하는데 스킬로 만들어 둘까?",
+    "query": "I build screens from design specs every time. Should we make this a skill?",
     "files": [],
     "expected_behavior": [
-      "analyze·develop 공통 흐름은 그대로 두고 project-flow 설계도대로 이 저장소 고유 단계만 더하는 스킬을 제안한다",
-      "만들기로 하면 skill-authoring.md대로 evals 3개 이상을 만들고 check_skill.py로 점검한다",
-      "CLAUDE.md의 프로젝트 스킬·에이전트 절에 한 줄 더한다"
+      "Keeps the common analyze/develop flow and proposes a skill that adds only this repo's own steps per the project-flow blueprint",
+      "If chosen, creates 3+ evals per skill-authoring.md and checks with check_skill.py",
+      "Adds one line to the Project skills and agents section of CLAUDE.md"
     ]
   },
   {
     "skills": [
       "suggest-skills"
     ],
-    "query": "이 함수 이름 바꿔줘",
+    "query": "Rename this function",
     "files": [],
     "expected_behavior": [
-      "suggest-skills를 쓰지 않는다"
+      "Does not use suggest-skills"
     ]
   }
 ]

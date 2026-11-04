@@ -1,6 +1,6 @@
-"""devkit SessionStart 훅: using-devkit 본문(frontmatter 제외)을 세션 컨텍스트로 넣는다.
+"""devkit SessionStart hook: injects the using-devkit body (without frontmatter) into the session context.
 
-출력은 ASCII 이스케이프 JSON 이라 OS·콘솔 코드 페이지와 관계없이 깨지지 않는다.
+Output is ASCII-escaped JSON, so it survives any OS or console code page.
 """
 import json
 import os

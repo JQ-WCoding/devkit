@@ -1,80 +1,80 @@
 ---
 name: suggest-skills
-description: 코드 핀포인트·fix 커밋·반복 작업·반복 교정을 근거로 이 저장소에 맞는 규칙 행·스킬·에이전트를 제안하고 고른 것만 만든다. "스킬 제안해줘", "규칙에 추가할 거 찾아줘", "이 작업 스킬로 만들어 둘까"에 쓴다.
+description: Propose repo-specific rule rows, skills and agents from code pinpoints, fix commits, repeated tasks and repeated corrections; build only the chosen ones. Use for "suggest skills", "find rules to add", "make this a skill".
 argument-hint: "[rules | skills | all] [--since YYYY-MM-DD]"
 ---
 
-# 규칙·스킬·에이전트 제안
+# Suggest rules, skills and agents
 
-**근거 없이는 제안하지 않는다.** 근거는 대상 저장소의 `파일:줄`·커밋·지문 수치, 이 대화에서 반복된 작업, 사용자가 고쳐 준 말이다. 다른 프로젝트에서 본 규칙을 옮기지 않는다.
+**No suggestion without evidence.** Evidence is the target repo's `file:line`, commits and fingerprint numbers, tasks repeated in this conversation, and corrections the user gave. Do not carry over rules seen in other projects.
 
-| 참고 | 언제 |
+| Reference | When |
 |---|---|
-| [catalog.md](references/catalog.md) | 무엇을 어떤 조건에서 제안하나 |
-| [pinpoint-checklist.md](references/pinpoint-checklist.md) | 규칙 행 후보 찾기 — 서브에이전트에도 경로를 준다 |
-| [skill-authoring.md](references/skill-authoring.md) | 고른 스킬·에이전트를 만들 때 |
-| 설계도: [project-flow](references/blueprints/project-flow.md) · [db-analyst](references/blueprints/db-analyst.md) · [knowledge-reader](references/blueprints/knowledge-reader.md) · [spec-analyst](references/blueprints/spec-analyst.md) · [workspace-cleanup](references/blueprints/workspace-cleanup.md) · [visual-docs](references/blueprints/visual-docs.md) · [tool-skill](references/blueprints/tool-skill.md) | 만들기로 한 것만 읽는다 |
+| [catalog.md](references/catalog.md) | What to suggest under which conditions |
+| [pinpoint-checklist.md](references/pinpoint-checklist.md) | Finding rule row candidates — also pass its path to subagents |
+| [skill-authoring.md](references/skill-authoring.md) | When building a chosen skill or agent |
+| Blueprints: [project-flow](references/blueprints/project-flow.md) · [db-analyst](references/blueprints/db-analyst.md) · [knowledge-reader](references/blueprints/knowledge-reader.md) · [spec-analyst](references/blueprints/spec-analyst.md) · [workspace-cleanup](references/blueprints/workspace-cleanup.md) · [visual-docs](references/blueprints/visual-docs.md) · [tool-skill](references/blueprints/tool-skill.md) | Read only the ones you decide to build |
 
-인자: `rules`는 규칙 행만, `skills`는 스킬·에이전트만, 없으면 둘 다.
+Argument: `rules` for rule rows only, `skills` for skills and agents only, none for both.
 
-기준점(`--since`): 인자 → `docs/rules/`의 마지막 커밋 날짜(`git log -1 --format=%ad --date=short -- docs/rules`) → 전체 이력(`docs/rules/`를 방금 만들어 커밋이 없을 때도). 기준점 이후 커밋이 20개 미만이면 그 전 규칙 커밋 날짜로, 그래도 적으면 전체 이력으로 넓힌다. 기준점은 **새 fix 후보를 좁히는 데만** 쓰고, "같은 실수가 반복되는가"는 전체 이력으로 센다.
+Baseline (`--since`): argument → last commit date of `docs/rules/` (`git log -1 --format=%ad --date=short -- docs/rules`) → full history (also when `docs/rules/` was just created and has no commit). If fewer than 20 commits follow the baseline, widen to the previous rules commit date, and if still too few, to full history. The baseline **only narrows new fix candidates**; "does the same mistake recur" is always counted on full history.
 
-## 0. 대상 확인
+## 0. Check the target
 
-- `docs/rules/`가 없으면 `devkit:setup`을 먼저 하자고 제안한다. 사용자가 그냥 진행하라면 제안만 하고 규칙 행은 보고에 남긴다.
-- 이미 있는 프로젝트 스킬·에이전트(`.claude/skills/`·`.claude/agents/` 목록과 각 description), `CLAUDE.md`(「프로젝트 스킬·에이전트」 절이 없으면 전체), 사용자 레벨·다른 플러그인 스킬 목록을 읽어 겹치는 제안을 막는다. `disable-model-invocation` 스킬은 목록에 안 보이므로 폴더를 직접 본다.
+- If `docs/rules/` is missing, suggest running `devkit:setup` first. If the user says go ahead anyway, only make suggestions and leave rule rows in the report.
+- Read existing project skills and agents (`.claude/skills/` and `.claude/agents/` listings with each description), `CLAUDE.md` (its "Project skills and agents" section, or the whole file if absent), and user-level and other plugins' skill lists to avoid overlapping suggestions. Skills with `disable-model-invocation` do not show in the list, so look at the folders directly.
 
-## 1. 근거 모으기
+## 1. Gather evidence
 
-**지문**(실행할 스크립트):
+**Fingerprint** (script to run):
 
 ```bash
-python3 -I "${CLAUDE_PLUGIN_ROOT}/skills/setup/scripts/scan_repo.py" <저장소 루트> [--since <기준점>] --out <scratchpad>/fingerprint.json > <scratchpad>/fingerprint.md
+python3 -I "${CLAUDE_PLUGIN_ROOT}/skills/setup/scripts/scan_repo.py" <repo root> [--since <baseline>] --out <scratchpad>/fingerprint.json > <scratchpad>/fingerprint.md
 ```
 
-**규칙 행 후보**(`rules`·전체):
+**Rule row candidates** (`rules` or both):
 
-- 계층(하위 프로젝트·DB·인프라)마다 `devkit:code-reader`를 **한 메시지에서 동시에** 띄운다(effort lower). 하위 프로젝트 안이라도 fix 핫스팟이 몰린 하위 앱이나 규칙 문서가 "별도"라고 적은 경로는 따로 띄운다. 작은 저장소(소스 파일 200개 미만이고 계층 2개 이하)는 메인이 직접 한다.
-- 브리프에 넣을 것: 맡은 경로, 지문에서 그 경로에 해당하는 줄(내부 모듈·호출·경로 모양·주의 주석·fix 커밋 중 그 경로 것), 해당 `docs/rules/<계층>.md`의 경로와 "직접 읽고 이미 있는 행은 뺀다", [pinpoint-checklist.md](references/pinpoint-checklist.md) 절대 경로(`${CLAUDE_PLUGIN_ROOT}/skills/suggest-skills/references/pinpoint-checklist.md`)와 "채택 기준·영역별 질문·후보 형식을 따른다", "후보 표만 돌려준다 — `확인` 행 우선, 15행까지", "맡은 경로의 fix 커밋만 읽는다".
-- 지문 「확장자 상위」에 일반 소스가 아닌 확장자(리포트 양식·스키마·템플릿)가 있으면 그 부속 기능을 브리프에 따로 적는다. 빠뜨리면 그 절이 통째로 빠진다.
-- 서브에이전트가 `확인`으로 올린 S1·S3 행도 문서에 쓰기 전에 메인이 근거 파일이나 `git show`를 직접 본다(커밋 성격을 잘못 읽는 일이 있다).
-- 여러 계층에 걸친 fix 커밋은 메인이 `git show`로 읽어 "같은 실수가 다른 파일에서 다시 날 수 있는가"를 판단한다. 보관본·예전 템플릿 폴더(`archive`·`old`·`deprecated` 등)의 fix는 근거로 쓰지 않는다.
+- Launch one `devkit:code-reader` per layer (subproject, DB, infra) **concurrently in one message** (effort lower). Inside a subproject, also launch separate ones for a sub-app where fix hotspots cluster or a path the rules docs call "separate". In a small repo (fewer than 200 source files and at most 2 layers) the main agent does it directly.
+- Put in the brief: the assigned path; the fingerprint lines for that path (internal modules, calls, path shapes, warning comments, fix commits — only those for the path); the path of the matching `docs/rules/<layer>.md` with "read it yourself and drop rows that already exist"; the absolute path of [pinpoint-checklist.md](references/pinpoint-checklist.md) (`${CLAUDE_PLUGIN_ROOT}/skills/suggest-skills/references/pinpoint-checklist.md`) with "follow its adoption criteria, per-area questions and candidate format"; "return only the candidate table — `confirmed` rows first, up to 15 rows"; "read only the fix commits for your path".
+- If the fingerprint's "Top extensions" lists non-source extensions (report layouts, schemas, templates), name that side feature separately in the brief. Missing it drops that whole section.
+- Even S1 and S3 rows a subagent marked `confirmed` are checked by the main agent against the evidence file or `git show` before writing them into docs (subagents sometimes misread a commit's nature).
+- Fix commits spanning several layers are read by the main agent with `git show` to judge "could the same mistake happen again in another file". Fixes in archive or old template folders (`archive`, `old`, `deprecated` etc.) are not used as evidence.
 
-**스킬·에이전트 후보**(`skills`·전체): [catalog.md](references/catalog.md)의 조건을 지문·이력과 대조한다. 들어맞는지 판단하려고 설계도를 읽는 것은 괜찮다. 반복 작업은 같은 유형 커밋 묶음(같은 scope·같은 동사, 같은 폴더 패턴), 이 대화에서 같은 단계를 되풀이한 흔적, 사용자가 말해 준 반복 작업에서 찾는다.
+**Skill and agent candidates** (`skills` or both): match the conditions in [catalog.md](references/catalog.md) against the fingerprint and history. Reading a blueprint to judge fit is fine. Find repeated tasks in groups of same-type commits (same scope, same verb, same folder pattern), traces of repeating the same steps in this conversation, and repeated tasks the user mentioned.
 
-**교정**: 이 대화에서 사용자가 같은 지적을 두 번 이상 했으면 규칙 행이나 스킬 내용 후보로 올린다.
+**Corrections**: if the user made the same correction twice or more in this conversation, raise it as a rule row or skill content candidate.
 
-서브에이전트가 돌려준 원본 표는 `<scratchpad>/candidates.md`에, 메인이 합치고 판정한 결과는 `<scratchpad>/suggestions.md`(채택 후보·`확인 필요`·버림과 이유)에 저장한다.
+Save the raw tables returned by subagents to `<scratchpad>/candidates.md`, and the main agent's merged verdicts to `<scratchpad>/suggestions.md` (adopted candidates, `needs confirmation`, discarded with reasons).
 
-## 🛑 제안
+## 🛑 Proposal table
 
-한 표로 보여 주고 고르게 한다(AskUserQuestion multiSelect, 한 질문에 4개까지).
+Show one table and let the user choose (AskUserQuestion multiSelect, up to 4 per question).
 
-| 종류 | 이름·대상 | 왜(근거 한 구) | 만들 것 | 권장 |
+| Kind | Name / target | Why (one-phrase evidence) | What gets built | Recommended |
 |---|---|---|---|---|
 
-- 권장은 3개 이내, 나머지는 "다음 후보"로 한 줄씩.
-- 규칙 행은 들어갈 문서별 개수와 대표 행 2~3개를 보여 준다(전체는 `suggestions.md`).
-- 없는 계층 문서를 새로 만들어야 하는 규칙 행이 있으면 "새 문서 / 기존 문서의 절"을 따로 단일 선택으로 묻는다.
-- 기존 규칙과 코드가 어긋난 곳을 찾았으면 코드 기준으로 차이만 보고한다. 규칙을 몰래 고치지 않는다.
+- At most 3 recommended; the rest go on one line each as "next candidates".
+- For rule rows, show the count per target doc and 2–3 representative rows (the full set is in `suggestions.md`).
+- If a rule row needs a layer doc that does not exist yet, ask separately with a single choice: "new doc / section of an existing doc".
+- If you found places where existing rules and code disagree, report only the difference, taking code as the reference. Do not silently change rules.
 
-## 2. 만들기 (고른 것만)
+## 2. Build (chosen items only)
 
-- **규칙 행**: 해당 `docs/rules/<계층>.md`에 기존 문체로 더한다. 계층 문서가 없으면 setup의 계층 문서 골격으로 만들고 `docs/rules/README.md` 목차와 `CLAUDE.md` 표에 한 줄씩 더한다.
-- **에이전트**: 설계도의 골격을 `.claude/agents/<이름>.md`로 쓴다. `{{…}}`는 근거로 채우고, 근거가 없는 줄은 지운다. DB MCP 도구 이름은 이 세션에서 실제 보이는 이름을 넣는다.
-- **스킬**: [skill-authoring.md](references/skill-authoring.md)대로 `.claude/skills/<이름>/`에 만든다 — 평가 시나리오 3개 이상, 규칙은 `docs/rules/` 링크, 스크립트는 `python3 -I`.
-- 스킬·에이전트를 만들었으면 `CLAUDE.md`의 「프로젝트 스킬·에이전트」 절에 만든 것과 쓰는 조건을 한 줄씩 더한다.
-- 기존 파일은 Edit으로 더하기만 하고 줄바꿈을 보존한다. 커밋하지 않는다.
+- **Rule rows**: add to the matching `docs/rules/<layer>.md` in the existing style. If the layer doc is missing, create it from the setup layer doc skeleton and add one line each to the `docs/rules/README.md` index and the `CLAUDE.md` table.
+- **Agents**: write the blueprint skeleton to `.claude/agents/<name>.md`. Fill `{{…}}` from evidence and delete lines without evidence. Use the DB MCP tool names actually visible in this session.
+- **Skills**: build under `.claude/skills/<name>/` following [skill-authoring.md](references/skill-authoring.md) — at least 3 eval scenarios, rules as links to `docs/rules/`, scripts run with `python3 -I`.
+- If you built a skill or agent, add one line each (what it is and when to use it) to the "Project skills and agents" section of `CLAUDE.md`.
+- Only append to existing files with Edit and preserve line endings. Do not commit.
 
-## 3. 점검
+## 3. Check
 
 ```bash
-python3 -I "${CLAUDE_PLUGIN_ROOT}/skills/setup/scripts/check_docs.py" <저장소 루트>
-python3 -I "${CLAUDE_PLUGIN_ROOT}/skills/suggest-skills/scripts/check_skill.py" <저장소 루트>/.claude/skills/<만든 스킬>
+python3 -I "${CLAUDE_PLUGIN_ROOT}/skills/setup/scripts/check_docs.py" <repo root>
+python3 -I "${CLAUDE_PLUGIN_ROOT}/skills/suggest-skills/scripts/check_skill.py" <repo root>/.claude/skills/<built skill>
 ```
 
-`check_skill.py`는 스킬을 만들었을 때만 실행한다. `ERROR`는 고치고 다시 실행한다. 평가 시나리오는 이 세션에서 판정하지 않고, 새 세션에서 대표 요청으로 확인하도록 안내한다.
+Run `check_skill.py` only when you built a skill. Fix `ERROR`s and run again. Do not judge eval scenarios in this session; tell the user to confirm with a representative request in a new session.
 
-## 4. 보고
+## 4. Report
 
-만든 것과 파일, 고르지 않은 후보(다음에 다시 볼 것), 점검 결과, 확인하지 못한 것, 다음 기준점(오늘 날짜·마지막 커밋 해시)을 알린다.
+Report what was built and its files, candidates not chosen (to revisit), check results, what could not be verified, and the next baseline (today's date and last commit hash).

@@ -1,21 +1,21 @@
-# 설계도: 도구 스킬
+# Blueprint: tool skill
 
-설치·설정이 까다로운 외부 도구(리포트 디자이너, 실기기 검증, 사내 CLI·SDK)를 반복해 쓸 때 매번 하는 설명과 함정을 모은다.
+Collects the explanations and pitfalls repeated every time an external tool that is hard to install or configure (report designer, physical-device verification, in-house CLI or SDK) is used.
 
-## 만들 파일
+## Files to create
 
-- `SKILL.md` — 모드 표(예: `setup` · `design` · `integrate`, 또는 명령 표)와 모드 고르는 법, 공통 금지 사항
-- 모드가 둘 이상이면 모드별 문서(`setup.md` 등). 각 문서 끝에 "문제가 생기면" 표(증상 → 참고 문서)
-- `references/` — 도구 문서에서 이 프로젝트에 필요한 것만 요약. 100줄이 넘으면 `목차:` 줄
-- `scripts/` — 반복되는 결정적 작업(파일 변환·연결 확인·캡처). 오류 메시지가 다음 할 일을 알려 주게
-- `SETUP.md` — 사람용 설치 안내(SKILL.md에 넣지 않는다)
+- `SKILL.md` — mode table (e.g. `setup` · `design` · `integrate`, or a command table), how to pick a mode, common prohibitions
+- With two or more modes, one doc per mode (`setup.md` etc.). End each with a "When something goes wrong" table (symptom → reference doc)
+- `references/` — summaries of only what this project needs from the tool's docs. Over 100 lines gets a `Contents:` line
+- `scripts/` — repeated deterministic work (file conversion, connection checks, captures). Error messages should say what to do next
+- `SETUP.md` — human installation guide (not in SKILL.md)
 - `evals/evals.json`
 
-## 본문에 넣을 기준
+## Criteria for the body
 
-- 실기기·외부 서비스를 다루면 "건드리지 않는 것"(개인 탭·기기 설정·설치 명령 등)을 명시한다.
-- 개발 DB·외부 시스템에 쓰는 동작은 누르기·실행하기 전에 사용자 승인. 스킬 호출은 쓰기 승인이 아니다.
-- 서버를 기동·종료하지 않는다는 저장소 규칙을 링크한다.
-- 인증값(라이선스 키·비밀번호)은 명령 출력·대화·문서에 남기지 않는다.
-- 참고 문서와 실제 도구 동작이 다르면 실제 동작을 기준으로 하고, 사용자에게 알린 뒤 참고 문서를 고친다.
-- 기기·버전 같은 사실에는 `확인 범위(YYYY-MM-DD)`를 붙인다.
+- For physical devices or external services, state "what not to touch" (personal tabs, device settings, install commands, etc.).
+- Actions that write to a dev DB or external system need user approval before pressing or running. Invoking the skill is not write approval.
+- Link the repo rule that servers are not started or stopped.
+- Keep credentials (license keys, passwords) out of command output, conversation and docs.
+- If the reference docs and actual tool behavior differ, take actual behavior as the reference, tell the user, then fix the reference doc.
+- Attach `checked scope (YYYY-MM-DD)` to facts such as devices and versions.

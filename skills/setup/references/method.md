@@ -1,61 +1,61 @@
-# 규칙 구성 방법
+# How the rules are organised
 
-목차: 두 층 구조 · 파일별 역할 · 문체 · 어느 프로젝트에나 넣는 정책 · 규칙이 자라는 방식
+Contents: two layers · file roles · writing style · policies for every project · how rules grow
 
-이 구성은 실제 프로젝트에서 다듬은 규칙 구성을 일반화한 것이다. 옮겨 오는 것은 **구조·문체·정책**뿐이다. 표의 행(모듈 이름·경로·명명·금지 사항)은 대상 저장소의 근거나 사용자 답으로만 채운다.
+This layout generalises a rules setup refined on a real project. Only the **structure, style and policies** carry over. Table rows (module names, paths, naming, prohibitions) are filled only from evidence in the target repo or from user answers.
 
-## 두 층 구조
+## Two layers
 
-| 층 | 위치 | Git | 성격 |
+| Layer | Location | Git | Nature |
 |---|---|---|---|
-| 공유 정본 | `docs/rules/*.md` (+ 필요하면 `docs/guide/` 온보딩) | 추적 | 도구와 무관한 팀 규칙. 사람과 AI가 같은 문서를 본다 |
-| 로컬 라우터 | `CLAUDE.md` | 기본 제외 | 영역 → 규칙 문서 표, 스킬·에이전트 호출 기준. 규칙을 복제하지 않는다 |
-| 프로젝트 도구 | `.claude/agents/`, `.claude/skills/` | 기본 제외 | 이 저장소에만 맞는 스킬·에이전트(`devkit:suggest-skills`가 만든다) |
-| 로컬 작업물 | `.devkit/work/`(분석 문서·작업 SQL) 등 | 제외 | 작업 폴더만 골라 무시한다 |
+| Shared source of truth | `docs/rules/*.md` (+ `docs/guide/` onboarding if needed) | Tracked | Tool-neutral team rules. People and AI read the same docs |
+| Local router | `CLAUDE.md` | Excluded by default | Area → rules doc table, when to call skills and agents. Does not copy rules |
+| Project tools | `.claude/agents/`, `.claude/skills/` | Excluded by default | Skills and agents that fit only this repo (made by `devkit:suggest-skills`) |
+| Local work files | `.devkit/work/` (analysis docs, work SQL) etc. | Excluded | Ignore only the work folders |
 
-- `.gitignore`에 `.claude/`(단 팀 공용 `settings.json`을 둘 때는 `.claude/settings.local.json`만) · `CLAUDE.md` · `CLAUDE.local.md` · 다른 AI 도구의 개인 설정을 넣는다.
-- `docs/`는 대개 넓게 추적되므로 로컬 작업 폴더만 골라 무시한다. 통째로 무시하고 허용 목록으로 여는 방식은 사용자가 그렇게 답했을 때만 쓴다.
-- `docs/rules/README.md`에 "이 폴더가 공유 규칙의 정본이다. 개인 AI 도구 설정은 저장소에 포함하지 않는다"를 둔다.
-- 팀 전체가 Claude Code와 devkit을 쓰기로 했으면(인터뷰) `CLAUDE.md`와 `.claude/settings.json`(devkit 자동 설치)을 추적할 수 있다. 이때도 규칙 본문은 `docs/rules/`에 둔다.
+- Put `.claude/` (only `.claude/settings.local.json` when a team-shared `settings.json` is kept), `CLAUDE.md`, `CLAUDE.local.md` and other AI tools' personal config in `.gitignore`.
+- `docs/` is usually tracked broadly, so ignore only the local work folders. Ignoring all of it and reopening with an allow list is used only when the user answered that way.
+- Put "This folder is the source of truth for shared rules. Personal AI tool config is not part of the repo" in `docs/rules/README.md`.
+- If the whole team decided to use Claude Code and devkit (interview), `CLAUDE.md` and `.claude/settings.json` (devkit auto-install) may be tracked. Rule bodies still live in `docs/rules/`.
 
-## 파일별 역할
+## File roles
 
-| 파일 | 담는 것 | 길이 기준 |
+| File | Contents | Length |
 |---|---|---|
-| `CLAUDE.md` | 첫 줄에 공유 규칙 링크 → `대상 | 참고 문서` 표 → 검증은 선택(`devkit:check`) → 임시 파일은 scratchpad → 탐색은 `code-reader`에 위임 → 프로젝트 스킬·에이전트 호출 기준 | 25줄 안팎 |
-| `docs/rules/README.md` | `영역 | 문서` 목차, 정본 선언, 온보딩 링크 | 15줄 안팎 |
-| `common.md` | 작업 원칙 · 사전 확인 표 · 코드 스타일 · 실행 · 검증과 보고 | 40줄 안팎 |
-| `git.md` | 커밋 형식(type·scope 목록·제목 어미·본문·트레일러) · 브랜치 · PR/MR · 병합 · 금지 | 80줄 안팎 |
-| `environments.md` | 로컬 실행 표 · DB·외부 연결 경로 · 배포 환경 · 설정 근거 링크 · 확인 범위와 날짜 | 90줄 안팎 |
-| 계층 문서(`front.md`·`back.md`·`db.md` 등) | `적용: <경로>` 한 줄 → `항목 | 규칙` 표 → 기준 파일 링크 → 꼭 필요한 예제 하나 | 각 60~110줄 |
-| `docs/guide/developer-onboarding.md`(선택) | 목표 → 시작 전 받을 것 → `순서 | 문서 | 완료 기준` 표 → 매일 루틴 → 인증값 주의 → 확인일·미검증 범위. README에 없는 준비 단계가 3개 이상이거나 VPN·터널 같은 외부 의존이 있을 때만 | 25줄 안팎 + 단계 문서 |
+| `CLAUDE.md` | First line links the shared rules → `Area | Doc` table → verification is optional (`devkit:check`) → temp files in the scratchpad → delegate exploration to `code-reader` → when to call project skills and agents | ~25 lines |
+| `docs/rules/README.md` | `Area | Doc` index, source-of-truth statement, onboarding link | ~15 lines |
+| `common.md` | Working principles · ask-first table · code style · running · verification and reporting | ~40 lines |
+| `git.md` | Commit format (type, scope list, subject style, body, trailers) · branches · PR/MR · merging · never | ~80 lines |
+| `environments.md` | Local run table · DB and external access paths · deploy environments · config evidence links · checked scope and date | ~90 lines |
+| Layer docs (`front.md`, `back.md`, `db.md`, etc.) | One `Applies to: <path>` line → `Item | Rule` table → reference file links → one essential example | 60–110 lines each |
+| `docs/guide/developer-onboarding.md` (optional) | Goal → what to get before starting → `Step | Doc | Done when` table → daily routine → credential notes → checked date and unverified scope. Only when there are 3+ setup steps not in README or external dependencies such as VPN or tunnels | ~25 lines + step docs |
 
-계층은 저장소 구조를 따른다. 하위 프로젝트(웹·API·모바일·배치 등)와 DB를 각각 한 문서로 두고, 한 계층이 작으면 합친다. 모듈이 하나인 앱은 `app.md` 하나와(DB가 있으면) `db.md`로 둔다. **setup이 쓰는 계층 문서는 사실 행만 담는다** — `적용:` 경로, 언어·런타임, 확장자·import 별칭, 구성 폴더, 따라 할 기준 파일(지문 근거). "~을 경유한다·~ 금지" 같은 규칙 행은 `devkit:suggest-skills`가 근거를 찾아 더한다.
+Layers follow the repo structure. Give each sub-project (web, API, mobile, batch, etc.) and the DB its own doc, and merge a layer that is small. A single-module app gets one `app.md` and (if there is a DB) `db.md`. **Layer docs written by setup hold fact rows only** — the `Applies to:` path, language and runtime, extensions and import aliases, folder layout, reference files to follow (fingerprint evidence). Rule rows such as "go through …" or "… is forbidden" are added by `devkit:suggest-skills` once it finds evidence.
 
-## 문체
+## Writing style
 
-- 표 `항목 | 규칙`이 기본이다. 규칙 칸은 명사형 짧은 구를 `·`로 잇는다: `api/client 경유·직접 fetch 신규 사용 금지`.
-- 금지는 `금지`로, 사전 확인은 `사전 확인`으로 끝낸다. 이유는 다음 행동을 바꿀 때만 괄호로 짧게 붙인다(`행마다 SQL 파싱, 트랜잭션 제한 초과`).
-- 무엇을 쓸지는 이름으로, 어떻게 쓰는지는 **기준 파일 링크**로 준다. 설명을 길게 쓰지 않는다.
-- 예제 코드는 문서당 하나, 기준 패턴 하나만 둔다.
-- Claude·개발자가 이미 아는 일반 모범 사례는 쓰지 않는다. 린터·컴파일러가 막는 것도 쓰지 않는다.
-- 바뀔 수 있는 사실에는 `기준일: YYYY-MM-DD`와 `확인 범위`(확인한 OS·환경, 검증하지 않은 것)를 붙인다. 확인하지 않은 값은 `미확인`이다.
-- 인증값은 위치와 전달 방식만 쓴다(`개별 전달·Git에 기록하지 않음`).
-- 문서 사이는 상대 경로 링크로 잇고, 각 계층 문서 맨 위에 `[규칙 목차](README.md) · [공통 규칙](common.md)`을 둔다.
+- `Item | Rule` tables by default. The rule cell joins short noun phrases with `·`: `via api/client · no new direct fetch`.
+- End prohibitions with "forbidden" and pre-checks with "ask first". Add a short reason in parentheses only when it changes the next action (`per-row SQL parsing, exceeds transaction limit`).
+- Say what to use by name and how to use it with a **reference file link**. No long explanations.
+- At most one example code block per doc, one reference pattern.
+- Do not write general best practices Claude and developers already know, or things linters and compilers already block.
+- Add `As of: YYYY-MM-DD` and `Checked scope` (OS and environment checked, what was not verified) to facts that can change. Unchecked values are `unverified`.
+- For credentials, write only the location and delivery method (`delivered individually · never recorded in Git`).
+- Link docs with relative paths, and put `[Rules index](README.md) · [Common rules](common.md)` at the top of each layer doc.
 
-## 어느 프로젝트에나 넣는 정책
+## Policies for every project
 
-프로젝트 사실이 아니라 작업 태도라 템플릿 문장을 그대로 쓴다(인터뷰에서 바꾸자고 한 것만 바꾼다). `using-devkit`의 원칙과 같은 내용을 팀 공유 문서로 남기는 것이다 — devkit을 쓰지 않는 팀원도 같은 기준을 본다.
+These are working attitudes, not project facts, so the template sentences are used as is (change only what the interview asked to change). They record the same content as the `using-devkit` principles in a team-shared doc — teammates who do not use devkit see the same standard.
 
-- 요청 범위 안에서 가장 단순하게 수정한다. 무관한 리팩터링·재정렬·기능 추가를 하지 않는다. 사용자 변경을 보존한다.
-- 불명확하면 확인하거나 가정을 밝힌다. 실제로 확인하지 않은 결과를 확인했다고 말하지 않는다.
-- 검증은 필요하거나 요청받았을 때 관련 부분만 고른다. 커밋·PR의 필수 단계로 두지 않는다. 실행하지 않은 검사를 성공으로 쓰지 않는다.
-- 주변 코드의 스타일·줄바꿈을 유지한다. 파일 전체 재포맷·CRLF/LF 변환을 하지 않는다.
-- 실행 전 환경 문서를 확인한다. 서버·터널을 자동화 도구가 임의로 기동·종료하지 않는다(인터뷰 기본값).
-- DB 쓰기는 대상·범위 승인 후, 기본은 개발자가 직접 실행한다. 수정안 작성은 실행 승인이 아니다.
-- `git add .` 금지, `--force`·`--no-verify` 금지, add·commit·push·PR은 사용자 확인 후.
-- 저장소 규칙(커밋 트레일러 금지 등)이 시스템 기본 안내와 다르면 저장소 규칙을 따른다고 `git.md`에 적는다.
+- Make the simplest change within the requested scope. No unrelated refactoring, reordering or extra features. Preserve user changes.
+- If unclear, ask or state assumptions. Never say you checked a result you did not actually check.
+- Verify only the relevant parts, when needed or requested. Not a mandatory step for commits or PRs. Never write an unrun check as passed.
+- Keep the surrounding code's style and line endings. No whole-file reformatting or CRLF/LF conversion.
+- Check the environment doc before running anything. Automation tools never start or stop servers or tunnels on their own (interview default).
+- DB writes only after the target and scope are approved; by default the developer runs them. Writing a fix is not approval to run it.
+- No `git add .`, no `--force` or `--no-verify`; add, commit, push and PR only after user confirmation.
+- Write in `git.md` that when repo rules (e.g. no commit trailers) differ from the system's default guidance, the repo rules win.
 
-## 규칙이 자라는 방식
+## How rules grow
 
-원래 프로젝트의 규칙 문서는 첫 공유 뒤 2주 동안 커밋 13개로 자랐고, 일부는 문제를 고친 커밋 바로 뒤에 붙었다(묶음 INSERT 기능 추가 → 바로 다음 커밋에 "대량 등록은 묶음 INSERT" 규칙, 이유로 "트랜잭션 제한 초과"가 남아 있다). 처음부터 완전하게 만들려 하지 않는다. setup은 골격과 정책만 깔고, 근거가 분명한 핀포인트는 `devkit:suggest-skills`로 그때그때 더한다.
+The original project's rules docs grew by 13 commits in the two weeks after first being shared, some added right after the commit that fixed a problem (a batched-INSERT feature → the very next commit added the rule "bulk registration uses batched INSERT", with the reason "exceeds transaction limit" kept). Do not try to make it complete from the start. Setup lays down only the skeleton and policies; pinpoints with clear evidence are added over time with `devkit:suggest-skills`.

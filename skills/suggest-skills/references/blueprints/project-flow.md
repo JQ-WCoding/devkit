@@ -1,47 +1,47 @@
-# 설계도: 프로젝트 작업 흐름 스킬 (project-flow)
+# Blueprint: project work flow skill (project-flow)
 
-`devkit:analyze`·`devkit:develop`의 공통 흐름은 그대로 쓰고, **이 저장소에서만 반복되는 단계**만 더한 스킬이다. 공통 흐름을 복제하지 않는다. 이름은 이 저장소의 작업 이름으로 짓는다(예: `screen-dev`, `pg-integration`, `mes-report`).
+A skill that keeps the common `devkit:analyze`/`devkit:develop` flow and adds only **the steps that repeat in this repo**. Do not duplicate the common flow. Name it after this repo's task (e.g. `screen-dev`, `pg-integration`, `mes-report`).
 
-## 만들 조건(근거)
+## Conditions to build (evidence)
 
-다음 중 하나가 3번 이상 반복됐다.
+One of the following has repeated 3+ times.
 
-- 정해진 양식의 입력(슬라이드 설계서·화면 정의서·엑셀 요구서·외부사 연동 명세서)을 매번 같은 방식으로 읽어야 한다
-- 공통 분석 문서에 없는 판정이 매번 필요하다(설계서 상태 판정, 메뉴·권한·코드 등록, 외부사 인증 절차)
-- 구현 후 같은 고유 검증을 한다(목업 대조, 외부사 테스트 서버 호출, 설비 시뮬레이터)
+- A fixed-format input (slide design spec, screen definition, spreadsheet requirements, partner integration spec) must be read the same way every time
+- A verdict missing from the common analysis doc is needed every time (spec status verdict, menu/permission/code registration, partner auth procedure)
+- The same project-specific verification follows implementation (mockup comparison, partner test server calls, equipment simulator)
 
-## 만들 파일
+## Files to create
 
-- `SKILL.md` — 아래 골격
-- `input-template.md`(선택) — 고유 입력 양식을 분석 문서의 어느 절로 옮기는지 대응표
-- `glossary.md`(선택) — 입력 용어 ↔ 코드 용어. 사용자에게 확인받은 대응만
+- `SKILL.md` — skeleton below
+- `input-template.md` (optional) — mapping table from the specific input format to sections of the analysis doc
+- `glossary.md` (optional) — input terms ↔ code terms. Only mappings the user confirmed
 - `evals/evals.json`
 
-## SKILL.md 골격
+## SKILL.md skeleton
 
 ```markdown
 ---
-name: {{작업 이름}}
-description: {{고유 입력}}을 받아 {{대상}}을 개발할 때 devkit:analyze·develop 흐름에 이 저장소 고유 단계({{단계 이름 나열}})를 더해 진행한다. "{{실제 요청 표현 2~3개}}" 같은 요청에 사용한다.
-argument-hint: "{{입력 형식}}"
+name: {{task name}}
+description: When developing {{target}} from {{specific input}}, runs the devkit:analyze/develop flow plus this repo's own steps ({{list of step names}}). Use for requests like "{{2–3 real request phrases}}".
+argument-hint: "{{input format}}"
 ---
 
-# {{작업 이름}}
+# {{task name}}
 
-흐름은 `devkit:analyze` → 🛑 → `devkit:develop`을 따른다. 아래는 그 사이에 더하는 단계뿐이다.
+The flow follows `devkit:analyze` → 🛑 → `devkit:develop`. Below are only the steps added in between.
 
-| 끼우는 곳 | 고유 단계 | 산출물 |
+| Inserted at | Specific step | Output |
 |---|---|---|
-| analyze 0단계 | {{입력 읽기: 형식별 방법}} | 분석 문서의 「요구 요약」 |
-| analyze 3단계 뒤 | {{고유 판정}} | 분석 문서에 추가한 절 |
-| develop 3단계 | {{고유 검증}} | 분석 문서의 「검증」 |
+| analyze step 0 | {{reading input: method per format}} | "Requirement summary" of the analysis doc |
+| after analyze step 3 | {{specific verdict}} | Section added to the analysis doc |
+| develop step 3 | {{specific verification}} | "Verification plan" of the analysis doc |
 
-## {{고유 단계마다 절 하나}}
+## {{one section per specific step}}
 
-판단 기준·명령·금지 사항만. 규칙은 `docs/rules/` 링크.
+Only judgment criteria, commands and prohibitions. Rules are links to `docs/rules/`.
 ```
 
-## 넣지 않을 것
+## Leave out
 
-- 공통 흐름의 단계 설명(분석 양식, 위험 점검, DB 변경 SQL, 보고 형식) — `devkit:analyze`·`develop`에 있다.
-- 한 번만 쓴 판단 — 분석 문서의 「결정 기록」으로 충분하다.
+- Descriptions of common-flow steps (analysis format, risk check, DB change SQL, report format) — they are in `devkit:analyze`/`develop`.
+- Judgments used only once — the analysis doc's "Decision log" is enough.

@@ -1,35 +1,36 @@
-"""스킬 폴더가 작성 원칙을 지키는지 점검한다. 파일은 고치지 않는다.
+"""Check that skill folders follow the authoring principles. Never modifies files.
 
-사용: python3 -I check_skill.py <스킬 폴더> [<스킬 폴더> ...]
-ERROR가 하나라도 있으면 종료 코드 1.
+Usage: python3 -I check_skill.py <skill folder> [<skill folder> ...]
+Exits 1 if there is any ERROR.
 """
 import json
 import re
 import sys
 from pathlib import Path
 
-# 공식 frontmatter 제약
+# Official frontmatter limits
 NAME_MAX = 64
 DESC_MAX = 1024
 RESERVED = ('claude', 'anthropic')
-# 공식 권장: SKILL.md 본문 500줄 미만
+# Official guidance: SKILL.md body under 500 lines
 BODY_MAX_LINES = 500
-# 공식 권장: 100줄 넘는 참조 파일은 맨 위에 목차
+# Official guidance: reference files over 100 lines start with a table of contents
 TOC_REQUIRED_LINES = 100
-# 목차는 앞부분만 읽어도 보여야 하므로 제목에서 이 줄 수 안에 있어야 한다
+# The contents must be visible from a partial read, so it has to sit within this many lines of the top
 TOC_SEARCH_LINES = 15
-# 공식 권장: 평가 시나리오 최소 3개
+# Official guidance: at least 3 evaluation scenarios
 EVALS_MIN = 3
-# 무엇+언제를 담기에 이보다 짧으면 대개 언제 쓰는지가 빠져 있다(경험치, 경고만)
+# Shorter than this usually means the "when to use" part is missing (rule of thumb, warning only)
 DESC_SHORT = 100
-# 스킬 폴더에 쌓인 실행 결과·백업을 잡기 위한 기준
+# Threshold to catch run outputs or backups piling up in a skill folder
 LARGE_FILE_BYTES = 1024 * 1024
 SKIP_DIRS = {'node_modules', '.git', '__pycache__'}
 ARCHIVE_SUFFIXES = ('.tgz', '.tar.gz', '.zip', '.dmp', '.tar')
-STALE_WORDS = re.compile(r'아직|곧 |최근에|이번 주|이번 달|올해|처음 실행할 때')
+# Korean and English phrases that go stale over time
+STALE_WORDS = re.compile(r'아직|곧 |최근에|이번 주|이번 달|올해|처음 실행할 때|\b(soon|recently|this week|this month|this year|for now)\b', re.I)
 DATE = re.compile(r'\d{4}-\d{2}-\d{2}')
 QUOTED = re.compile(r'"[^"]*"|“[^”]*”|「[^」]*」')
-FIRST_PERSON =re.compile(r'\b(I can|I will|You can)\b|저는 |제가 ')
+FIRST_PERSON = re.compile(r'\b(I can|I will|You can)\b|저는 |제가 ')
 LINK = re.compile(r'\]\(([^)\s]+)\)')
 XML_TAG = re.compile(r'<[A-Za-z/][^>]*>')
 
@@ -56,7 +57,7 @@ def walk(root):
 
 
 def parse_frontmatter(text):
-    """간단한 YAML 파서: 최상위 키와 `>-`·`|` 여러 줄 값만 다룬다."""
+    """Minimal YAML parser: top-level keys and `>-` / `|` multi-line values only."""
     lines = text.split('\n')
     if not lines or lines[0].strip() != '---':
         return None, text
@@ -76,7 +77,7 @@ def parse_frontmatter(text):
 
 
 def prose_lines(text):
-    """코드 펜스 밖 줄을 인라인 코드를 지운 채 (번호, 내용)으로 돌려준다."""
+    """Yield (line number, text) for lines outside code fences, with inline code removed."""
     inside = False
     for no, line in enumerate(text.split('\n'), 1):
         if line.lstrip().startswith('```'):
@@ -88,35 +89,35 @@ def prose_lines(text):
 
 def check_frontmatter(rep, skill_md, meta):
     if meta is None:
-        rep.add('ERROR', skill_md, 'frontmatter(--- ... ---)가 없다')
+        rep.add('ERROR', skill_md, 'no frontmatter (--- ... ---)')
         return {}
     name = meta.get('name', '')
     if not name:
-        rep.add('ERROR', skill_md, 'name이 없다')
+        rep.add('ERROR', skill_md, 'missing name')
     else:
         if len(name) > NAME_MAX or not re.fullmatch(r'[a-z0-9-]+', name):
-            rep.add('ERROR', skill_md, f'name "{name}": {NAME_MAX}자 이하 소문자·숫자·하이픈만 쓴다')
+            rep.add('ERROR', skill_md, f'name "{name}": use only lowercase letters, digits and hyphens, at most {NAME_MAX} chars')
         if any(word in name.lower() for word in RESERVED):
-            rep.add('ERROR', skill_md, f'name "{name}"에 예약어(claude·anthropic)가 있다')
+            rep.add('ERROR', skill_md, f'name "{name}" contains a reserved word (claude, anthropic)')
         if name != rep.root.name:
-            rep.add('WARN', skill_md, f'name "{name}"이 폴더 이름 "{rep.root.name}"과 다르다')
+            rep.add('WARN', skill_md, f'name "{name}" differs from folder name "{rep.root.name}"')
     desc = meta.get('description', '')
     if not desc:
-        rep.add('ERROR', skill_md, 'description이 비어 있다')
+        rep.add('ERROR', skill_md, 'description is empty')
     else:
         if len(desc) > DESC_MAX:
-            rep.add('ERROR', skill_md, f'description {len(desc)}자 — {DESC_MAX}자 이하로 줄인다')
+            rep.add('ERROR', skill_md, f'description is {len(desc)} chars; shorten to at most {DESC_MAX}')
         if XML_TAG.search(desc):
-            rep.add('ERROR', skill_md, 'description에 XML 태그가 있다')
+            rep.add('ERROR', skill_md, 'description contains an XML tag')
         if FIRST_PERSON.search(desc):
-            rep.add('WARN', skill_md, 'description이 1·2인칭이다. 3인칭 서술로 쓴다')
+            rep.add('WARN', skill_md, 'description is in first or second person; write it in third person')
         if len(desc) < DESC_SHORT and meta.get('disable-model-invocation') != 'true':
-            rep.add('WARN', skill_md, f'description {len(desc)}자 — 언제 쓰는지(요청 표현)가 들어 있는지 확인한다')
+            rep.add('WARN', skill_md, f'description is {len(desc)} chars; check that it says when to use it (request phrases)')
     return meta
 
 
 def check_links(rep, path, text):
-    """상대 링크가 실제 파일을 가리키는지 확인하고, 가리키는 경로를 돌려준다."""
+    """Check that relative links point to existing files; return the targets."""
     targets = set()
     for no, line in prose_lines(text):
         for link in LINK.findall(line):
@@ -124,7 +125,7 @@ def check_links(rep, path, text):
                 continue
             target = (path.parent / link.split('#')[0]).resolve()
             if not target.exists():
-                rep.add('ERROR', f'{path}:{no}', f'링크 대상이 없다: {link}')
+                rep.add('ERROR', f'{path}:{no}', f'link target missing: {link}')
             else:
                 targets.add(target)
     return targets
@@ -134,44 +135,44 @@ def check_skill(root):
     rep = Report(root)
     skill_md = root / 'SKILL.md'
     if not skill_md.is_file():
-        rep.add('ERROR', root, 'SKILL.md가 없다')
+        rep.add('ERROR', root, 'no SKILL.md')
         return rep
     text = skill_md.read_text(encoding='utf-8')
     meta, body = parse_frontmatter(text)
     meta = check_frontmatter(rep, skill_md, meta)
     body_lines = body.count('\n')
     if body_lines >= BODY_MAX_LINES:
-        rep.add('ERROR', skill_md, f'본문 {body_lines}줄 — {BODY_MAX_LINES}줄 미만으로 나눈다')
+        rep.add('ERROR', skill_md, f'body is {body_lines} lines; split it to under {BODY_MAX_LINES}')
 
     direct = check_links(rep, skill_md, text)
     for path in walk(root):
         rel = path.relative_to(root)
         size = path.stat().st_size
         if size > LARGE_FILE_BYTES or path.name.endswith(ARCHIVE_SUFFIXES):
-            rep.add('WARN', rel, f'큰 파일·압축 파일({size // 1024}KB). 실행 결과·백업이면 스킬 폴더 밖으로 옮긴다')
+            rep.add('WARN', rel, f'large or archive file ({size // 1024}KB); move run outputs or backups out of the skill folder')
         if path.suffix != '.md' or path == skill_md:
             continue
         md = path.read_text(encoding='utf-8')
         check_links(rep, path, md)
         covered = path.resolve() in direct or any(t.is_dir() and t in path.resolve().parents for t in direct)
         if not covered and rel.parts[0] != 'evals':
-            rep.add('WARN', rel, 'SKILL.md에서 직접 링크하지 않는다(참조는 한 단계로)')
+            rep.add('WARN', rel, 'not linked directly from SKILL.md (keep references one level deep)')
         lines = md.split('\n')
         if len(lines) > TOC_REQUIRED_LINES:
             head = '\n'.join(lines[:TOC_SEARCH_LINES])
-            if not re.search(r'^(목차|## 목차|## Contents)', head, re.M):
-                rep.add('WARN', rel, f'{len(lines)}줄인데 앞 {TOC_SEARCH_LINES}줄 안에 목차가 없다')
+            if not re.search(r'^(목차|## 목차|Contents|## Contents|Table of contents)', head, re.M):
+                rep.add('WARN', rel, f'{len(lines)} lines but no table of contents in the first {TOC_SEARCH_LINES} lines')
 
     for path in [skill_md] + [p for p in walk(root) if p.suffix == '.md' and p != skill_md]:
         content = path.read_text(encoding='utf-8')
-        # 머리에 기준일이 있는 문서는 시점 표현이 그 날짜 기준이라 건너뛴다
+        # Docs with a date near the top are dated, so time-relative phrases are fine there
         dated_doc = DATE.search('\n'.join(content.split('\n')[:5]))
         for no, line in prose_lines(content):
             if re.search(r'[A-Za-z0-9_]\\+[A-Za-z0-9_]+\.[a-z]{1,4}\b', line):
-                rep.add('WARN', f'{path.relative_to(root)}:{no}', '백슬래시 경로. `/`로 쓴다')
+                rep.add('WARN', f'{path.relative_to(root)}:{no}', 'backslash path; use `/`')
             unquoted = QUOTED.sub('', line)
             if not dated_doc and not DATE.search(line) and STALE_WORDS.search(unquoted):
-                rep.add('WARN', f'{path.relative_to(root)}:{no}', f'시간이 지나면 틀려질 수 있는 표현: {line.strip()[:60]}')
+                rep.add('WARN', f'{path.relative_to(root)}:{no}', f'phrase that may go stale: {line.strip()[:60]}')
 
     evals = root / 'evals' / 'evals.json'
     auto = meta.get('disable-model-invocation') != 'true'
@@ -179,14 +180,14 @@ def check_skill(root):
         try:
             cases = json.loads(evals.read_text(encoding='utf-8'))
         except json.JSONDecodeError as e:
-            rep.add('ERROR', 'evals/evals.json', f'JSON 오류: {e}')
+            rep.add('ERROR', 'evals/evals.json', f'JSON error: {e}')
         else:
             if not isinstance(cases, list) or not all(isinstance(c, dict) and c.get('query') and c.get('expected_behavior') for c in cases):
-                rep.add('ERROR', 'evals/evals.json', '각 항목에 query와 expected_behavior가 있어야 한다')
+                rep.add('ERROR', 'evals/evals.json', 'every item needs query and expected_behavior')
             elif len(cases) < EVALS_MIN:
-                rep.add('WARN', 'evals/evals.json', f'시나리오 {len(cases)}개 — {EVALS_MIN}개 이상 권장')
+                rep.add('WARN', 'evals/evals.json', f'{len(cases)} scenarios; at least {EVALS_MIN} recommended')
     elif auto:
-        rep.add('WARN', root, f'evals/evals.json이 없다(시나리오 {EVALS_MIN}개 이상 권장)')
+        rep.add('WARN', root, f'no evals/evals.json (at least {EVALS_MIN} scenarios recommended)')
     return rep
 
 
@@ -198,7 +199,7 @@ def main(argv):
     for arg in argv:
         root = Path(arg).expanduser().resolve()
         if not root.is_dir():
-            print(f'== {arg}\n  ERROR  ' + ('경로가 없다' if not Path(arg).exists() else '폴더가 아니다'))
+            print(f'== {arg}\n  ERROR  ' + ('path does not exist' if not Path(arg).exists() else 'not a folder'))
             total_errors += 1
             continue
         rep = check_skill(root)

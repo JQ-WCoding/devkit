@@ -3,31 +3,41 @@
     "skills": [
       "using-devkit"
     ],
+    "query": "What is devkit? Which skills does it have?",
+    "files": [],
+    "expected_behavior": [
+      "Explains the working principles and when to use each devkit skill"
+    ]
+  },
+  {
+    "skills": [
+      "using-devkit"
+    ],
     "query": "devkit이 뭐야? 어떤 스킬 있어?",
     "files": [],
     "expected_behavior": [
-      "작업 원칙과 스킬 5개를 언제 쓰는지 표로 설명한다"
+      "Answers in Korean, the user's language, although the principles and skills are written in English"
     ]
   },
   {
     "skills": [
       "using-devkit"
     ],
-    "query": "(같은 다단계 작업을 세 번째 요청)",
+    "query": "(the third request for the same multi-step task)",
     "files": [],
     "expected_behavior": [
-      "작업을 끝낸 뒤 한 줄로 devkit:suggest-skills를 한 번 제안한다",
-      "거절하면 같은 세션에서 다시 꺼내지 않는다"
+      "After finishing the task, suggests devkit:suggest-skills once in one line",
+      "If declined, does not bring it up again in the same session"
     ]
   },
   {
     "skills": [
       "using-devkit"
     ],
-    "query": "서버 띄워서 확인해줘",
+    "query": "Start the server and check it",
     "files": [],
     "expected_behavior": [
-      "저장소 규칙이 허용하지 않으면 서버를 직접 기동하지 않고 사용자에게 기동을 요청한다"
+      "Unless repo rules allow it, does not start the server itself and asks the user to start it"
     ]
   }
 ]

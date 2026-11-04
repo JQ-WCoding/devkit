@@ -1,25 +1,25 @@
-# 설계도: workspace-cleanup 스킬
+# Blueprint: workspace-cleanup skill
 
-작업 중 만든 임시 파일을 찾아 확인 후 휴지통으로 옮긴다. `disable-model-invocation: true`.
+Finds temp files made during work and moves them to the trash after confirmation. `disable-model-invocation: true`.
 
-## 만들 파일
+## Files to create
 
-- `SKILL.md` — 조회 → 확인 → 정리·보고 3단계
-- `scripts/scan.py` — 나열만 하는 스캔(삭제하지 않음). 저장소 루트와 현재 세션 ID를 인자로 받는다. 경로는 하드코딩하지 않는다
+- `SKILL.md` — 3 steps: scan → confirm → clean and report
+- `scripts/scan.py` — a list-only scan (deletes nothing). Takes the repo root and current session ID as arguments. No hard-coded paths
 - `evals/evals.json`
 
-## 분류 기준(스크립트와 SKILL.md에 같은 표)
+## Classification (same table in the script and SKILL.md)
 
-| 구분 | 내용 | 처리 |
+| Class | Content | Handling |
 |---|---|---|
-| 제거 후보 | 루트·`docs/` 아래 `_dryrun*`·`_tmp*`·`tmp*`·`scratch*` 폴더, `*.bak`·`*.orig`·`*.tmp`·`*~`·`*.swp`·`*.rej`, 작업 폴더 밖 캡처 이미지, 루트의 임시 스크립트·메모 | 확인 후 정리 |
-| 확인 필요 | 위 형태가 아닌 기타 미추적 파일 | 목록만, 사용자가 지목할 때만 |
-| 보호 | 추적 파일, 소스·DB 기준본의 진행 중 변경, {{이 저장소의 로컬 작업 폴더}}, 규칙·가이드 문서, 테스트, 빌드 산출물·의존성·로그, `.claude/`·`CLAUDE.md`·`.env*` | 나열하지 않고 건드리지 않음 |
-| 지난 세션 scratchpad | 현재 세션을 뺀 scratchpad 폴더 | 사용자가 원할 때만 |
+| Removal candidates | `_dryrun*`, `_tmp*`, `tmp*`, `scratch*` folders under the root or `docs/`; `*.bak`, `*.orig`, `*.tmp`, `*~`, `*.swp`, `*.rej`; capture images outside the work folder; temp scripts and notes at the root | Clean after confirmation |
+| Needs confirmation | Other untracked files not of the shapes above | List only; act only when the user points to them |
+| Protected | Tracked files, in-progress changes to source and DB baselines, {{this repo's local work folder}}, rules and guide docs, tests, build output, dependencies and logs, `.claude/`, `CLAUDE.md`, `.env*` | Not listed, not touched |
+| Past session scratchpads | Scratchpad folders except the current session's | Only when the user wants |
 
-## 반드시 넣을 것
+## Must include
 
-- "Git 미추적·ignore = 임시"로 판단하지 않는다.
-- 삭제는 `trash`로만 한다(`rm` 금지). 정리 후 `git status --porcelain`으로 추적 파일·진행 중 변경이 그대로인지 확인한다.
-- 확인 필요 항목이 남아 있으면 "깨끗하다"고 하지 않는다. 휴지통에서 복구할 수 있음을 알린다.
-- 훅이나 작업 종료 자동 실행으로 연결하지 않는다.
+- Do not treat "untracked or ignored by Git" as temporary.
+- Delete only with `trash` (no `rm`). After cleaning, confirm with `git status --porcelain` that tracked files and in-progress changes are intact.
+- Do not say "clean" while needs-confirmation items remain. Tell the user files can be restored from the trash.
+- Do not wire it to a hook or automatic run at task end.

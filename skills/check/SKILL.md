@@ -1,40 +1,40 @@
 ---
 name: check
-description: 변경과 관련된 lint·타입·빌드·테스트만 골라 실행하고 실제 결과만 보고한다. 사용자가 직접 부를 때만 쓴다.
+description: Run only the lint, type, build and test checks related to the change and report real results. Only when the user invokes it.
 disable-model-invocation: true
-argument-hint: "[lint | type | build | test] [경로...]"
+argument-hint: "[lint | type | build | test] [paths...]"
 ---
 
-# 선택 검증
+# Selective verification
 
-필요한 검사만 골라 실행한다. 생략해도 작업·커밋·PR을 막지 않는다.
+Pick and run only the checks that are needed. Skipping them never blocks work, commits or PRs.
 
-## 1. 명령 찾기
+## 1. Find the commands
 
-1. 저장소 규칙(`docs/rules/`·`CLAUDE.md`·프로젝트 `.claude/skills/*check*`)에 검사 명령이 적혀 있으면 그것을 쓴다.
-2. 없으면 후보를 찾는다(실행할 스크립트, 읽을 필요 없음):
+1. If repo rules (`docs/rules/`, `CLAUDE.md`, project `.claude/skills/*check*`) list check commands, use them.
+2. Otherwise find candidates (a script to run, no need to read it):
 
 ```bash
-python3 -I "${CLAUDE_PLUGIN_ROOT}/skills/check/scripts/discover.py" <저장소 루트>
+python3 -I "${CLAUDE_PLUGIN_ROOT}/skills/check/scripts/discover.py" <repo root>
 ```
 
-CI 설정이 있으면 실제로 도는 검사와 맞는지 대조한다. 후보가 없으면 사용자에게 묻는다.
+If there is a CI config, compare against the checks it actually runs. If there are no candidates, ask the user.
 
-## 2. 고르기
+## 2. Choose
 
-- 인자가 있으면 그 종류·경로만 한다.
-- 없으면 `git status`·`git diff --name-only`로 바뀐 파일을 보고 해당 하위 프로젝트의 lint·타입 검사를 고른다. 빌드는 빌드 설정·의존성·import 경로가 바뀌었거나 사용자가 원할 때, 테스트는 바뀐 코드에 테스트가 있을 때 고른다.
-- 고른 명령과 고른 이유를 한 줄로 알리고 실행한다.
+- With arguments, do only that kind or those paths.
+- Without, look at changed files with `git status` and `git diff --name-only` and choose lint and type checks for those subprojects. Choose a build when build config, dependencies or import paths changed or the user wants one; choose tests when the changed code has tests.
+- State the chosen commands and the reason in one line, then run them.
 
-## 3. 실행할 때 지킬 것
+## 3. Rules while running
 
-- 서버·DB·컨테이너를 띄우는 명령(`dev`·`start`·`serve`·`bootRun`·`docker compose up` 등)은 실행하지 않는다.
-- 의존성 설치(`npm install`·`npm ci`·`pip install` 등)가 필요하면 먼저 묻는다. lock 파일이나 설치된 모듈이 바뀔 수 있다.
-- 자동 수정(`--fix`·포맷터)을 파일 전체에 돌리지 않는다. 바꿀 줄이 요청 범위 안일 때만 확인받고 쓴다.
-- DB·외부 서비스가 필요한 테스트는 대상 환경을 확인받은 뒤에만 돌린다.
-- 오래 걸리는 빌드·테스트는 백그라운드로 실행하고 완료 알림을 기다린다.
-- 검사 때문에 stash·스테이징 변경·브랜치 전환을 하지 않는다.
+- Do not run commands that start servers, DBs or containers (`dev`, `start`, `serve`, `bootRun`, `docker compose up` and so on).
+- If dependency installation (`npm install`, `npm ci`, `pip install` and so on) is needed, ask first. Lock files or installed modules may change.
+- Do not run autofix (`--fix`, formatters) over whole files. Use it only after confirmation when the lines it changes are within the request.
+- Run tests that need a DB or external services only after confirming the target environment.
+- Run long builds and tests in the background and wait for the completion notice.
+- Do not stash, change the staging area or switch branches for a check.
 
-## 4. 결과
+## 4. Results
 
-실행한 명령, 종료 코드, 변경과 관련된 오류·경고만 알린다. 기존 위반은 이번 변경과 관련된 것만 판단하고 나머지는 개수만 적는다. 실행하지 않은 검사는 `미실행`, 도구가 없으면 없다고 쓴다. 증빙 파일·검증 이력을 만들지 않는다.
+Report the commands run, exit codes, and only the errors and warnings related to the change. For existing violations, judge only the ones related to this change and give a count for the rest. Write checks that were not run as `not run`; if a tool is missing, say so. Do not create evidence files or verification logs.

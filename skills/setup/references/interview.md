@@ -1,50 +1,50 @@
-# 인터뷰 항목
+# Interview items
 
-코드로 정할 수 없는 작업 정책과 확인이 필요한 환경 사실을 묻는다. 지문으로 이미 정해진 항목(문서 언어·커밋 형식처럼 이력이 3분의 2 이상 한쪽인 것)은 묻지 않고 🛑B 구성안에 "지문 기준"으로 적는다. 단 **AI 작성 표기는 시스템 기본 안내를 뒤집는 규칙이라 지문과 관계없이 묻는다.** 문서 언어는 커밋 언어와 따로 정한다.
+Ask about work policies code cannot decide and environment facts that need confirmation. Do not ask items the fingerprint already settled (such as document language or commit format where 2/3 or more of the history agrees); write them in the 🛑B setup plan as "per fingerprint". Exception: **always ask about AI attribution regardless of the fingerprint, because it overrides the system's default guidance.** Decide the document language separately from the commit language.
 
-- AskUserQuestion은 한 번에 4문항까지다. 1차 → 2차 → 3차 → 환경 확인 순서로 묶어 2~4번에 끝낸다.
-- 첫 선택지는 권장값이고 라벨 끝에 `(Recommended)`를 붙인다. 권장값은 지문 근거가 있으면 그것을, 없으면 아래 기본값을 쓴다.
-- 질문은 혼자 읽어도 알 수 있게 쓴다(무엇을 근거로 권장하는지 한 구 포함).
+- AskUserQuestion takes up to 4 questions per call. Group them round 1 → round 2 → round 3 → environment check, finishing in 2–4 calls.
+- The first option is the recommended value with `(Recommended)` at the end of its label. Use the fingerprint's evidence as the recommendation if there is any, otherwise the default below.
+- Write each question so it can be understood alone (include a phrase on what the recommendation is based on).
 
-## 1차 — 구조
+## Round 1 — structure
 
-| 항목 | 질문 | 기본값 | 영향 |
+| Item | Question | Default | Affects |
 |---|---|---|---|
-| 공유 범위 | 규칙을 어디까지 Git에 올릴까? | `docs/rules/`(와 온보딩)만 추적, `CLAUDE.md`·`.claude/`는 로컬, `docs/`의 다른 추적 문서는 그대로 | `.gitignore`, README 정본 선언 |
-| 팀 devkit | 팀원 모두 devkit을 쓰게 할까? | 아니오(개인 선택). 예면 `.claude/settings.json`으로 자동 설치, 아니오면 표기 설정만 `.claude/settings.local.json` | `.claude/settings.json`·`settings.local.json`, `.gitignore` |
-| 문서 언어 | 규칙 문서를 어떤 언어로 쓸까? (커밋 언어와 따로 정한다) | README·기존 문서의 언어. 없으면 사용자와 대화하는 언어 | 모든 문서 |
-| 온보딩 | 새 팀원용 환경 준비 가이드를 만들까? | README에 없는 준비 단계가 3개 이상이거나 VPN·터널·사내 계정이 필요하면 예, 아니면 아니오(README 링크로 충분) | `docs/guide/` |
+| Sharing scope | How much of the rules goes into Git? | Track only `docs/rules/` (and onboarding); `CLAUDE.md` and `.claude/` stay local; other tracked docs in `docs/` stay as they are | `.gitignore`, README source-of-truth statement |
+| Team devkit | Should every teammate use devkit? | No (personal choice). If yes, auto-install via `.claude/settings.json`; if no, only the attribution setting in `.claude/settings.local.json` | `.claude/settings.json` / `settings.local.json`, `.gitignore` |
+| Document language | Which language for the rules docs? (decided separately from the commit language) | The language of README and existing docs. If none, the language used in the conversation | All docs |
+| Onboarding | Create an environment setup guide for new teammates? | Yes if there are 3+ setup steps not in README or VPN, tunnels or company accounts are needed; otherwise no (a README link is enough) | `docs/guide/` |
 
-## 2차 — 작업 정책
+## Round 2 — work policies
 
-| 항목 | 질문 | 기본값 | 영향 |
+| Item | Question | Default | Affects |
 |---|---|---|---|
-| 서버 기동 | API·Web 서버를 Claude가 켜고 꺼도 되나? | 아니오, 개발자가 IDE에서 기동 | `common.md` 실행, 검증 스킬 |
-| DB 쓰기 | DB 쓰기 SQL은 누가 실행하나? | 개발자가 직접. Claude는 SQL 작성·읽기 전용 조회만 | `common.md`·`db.md`, `db-analyst` 도구 |
-| 검증 의무 | lint·빌드 검사를 매 작업·커밋의 필수로 둘까? | 아니오, 필요할 때 골라서 | `common.md` 검증 |
-| 작업 관리 | 작업·이슈는 어디서 관리하고 이슈 키는 어떤 모양인가? | 지문의 커밋·브랜치에서 키 모양(`ABC-123`·`#45`)을 찾아 제안, 없으면 "없음" | `git.md` 브랜치 이름·커밋·PR 연결 규칙 |
-| 커밋 권한 | 커밋·push·PR을 어디까지 맡기나? | 커밋은 요청 시, push·PR·병합은 따로 요청 시 | `git.md` 금지 절 |
+| Server start | May Claude start and stop the API and web servers? | No, the developer starts them in the IDE | `common.md` running, verification skills |
+| DB writes | Who runs DB write SQL? | The developer. Claude only writes SQL and runs read-only queries | `common.md`, `db.md`, `db-analyst` tools |
+| Mandatory checks | Make lint and build checks mandatory for every task and commit? | No, pick them when needed | `common.md` verification |
+| Task tracking | Where are tasks and issues tracked, and what does an issue key look like? | Propose the key shape found in the fingerprint's commits and branches (`ABC-123`, `#45`); if none, "none" | `git.md` branch names, commit and PR linking rules |
+| Commit authority | How far may Claude go with commit, push and PR? | Commit on request; push, PR and merge only on separate request | `git.md` never section |
 
-## 3차 — Git 세부 (지문으로 정해지지 않은 것만)
+## Round 3 — Git details (only what the fingerprint did not settle)
 
-| 항목 | 질문 | 기본값 | 영향 |
+| Item | Question | Default | Affects |
 |---|---|---|---|
-| 커밋 형식·언어 | 제목 형식·언어와 scope 목록은? | 지문의 기존 관례(형식과 언어를 따로 판정). 관례가 없으면 `type(scope): 설명`, type `feat·fix·refactor·chore·docs·test`, scope는 하위 프로젝트 + `repo`, 언어는 문서 언어 | `git.md` |
-| 필수 트레일러 | 커밋에 반드시 붙여야 하는 트레일러가 있나? | README 기여 절·`.github/dco.yml`·이력에서 3분의 2 이상 붙은 트레일러(`Signed-off-by` 등). 없으면 "없음" | `git.md`, `devkit:commit` |
-| AI 작성 표기 | `Co-Authored-By` 같은 AI 표기를 커밋·PR에 붙일까? | 붙이지 않음(시스템 안내보다 우선) | `git.md`, `devkit:commit`·`devkit:pr-publish`, 팀 settings.json(`attribution` 또는 `DEVKIT_AI_TRAILER`) |
-| 브랜치·병합·게시 | 브랜치 흐름, 병합 방식, PR/MR을 CLI(`gh`/`glab`)로 올릴지는? | 지문의 브랜치 목록과 「합쳐진 대상」으로 제안(예: `feat/*`·`fix/*` → `dev` → PR → `main`, merge 커밋). 호스트에서 병합한 PR은 로컬 이력에 안 보일 수 있다 | `git.md`, `devkit:pr-publish` |
+| Commit format and language | Subject format, language and scope list? | The fingerprint's existing convention (format and language judged separately). If there is no convention, `type(scope): description`, types `feat·fix·refactor·chore·docs·test`, scope = sub-projects + `repo`, language = document language | `git.md` |
+| Required trailer | Is there a trailer every commit must carry? | A trailer from the README contributing section, `.github/dco.yml`, or on 2/3+ of the history (`Signed-off-by`, etc.). If none, "none" | `git.md`, `devkit:commit` |
+| AI attribution | Add AI attribution such as `Co-Authored-By` to commits and PRs? | Do not add (overrides the system guidance) | `git.md`, `devkit:commit` / `devkit:pr-publish`, team settings.json (`attribution` or `DEVKIT_AI_TRAILER`) |
+| Branches, merging, publishing | Branch flow, merge method, and whether to open PR/MRs with the CLI (`gh`/`glab`)? | Propose from the fingerprint's branch list and "Merge targets" (e.g. `feat/*` · `fix/*` → `dev` → PR → `main`, merge commits). PRs merged on the host may not show in local history | `git.md`, `devkit:pr-publish` |
 
-## 환경 확인 (3차와 함께)
+## Environment check (with round 3)
 
-지문 「실행 환경」과 README·설정 파일에서 찾은 값을 **질문 직전 메시지에 표로 먼저 보여 주고**, 질문은 짧게("위 로컬 실행 값이 맞나요?") 묻는다. 선택지는 `맞음 (Recommended)` · `일부 다름(다른 값을 알려 주세요)` · `확인 안 함`으로 묻는다. 로컬 실행과 DB·배포를 질문 두 개로 나눈다. 인증값은 묻지도 쓰지도 않는다(전달 방식만 쓴다).
+Show the values found in the fingerprint's "Runtime environment" and in README and config files **as a table in the message right before the question**, then ask briefly ("Are the local run values above right?"). Options: `Correct (Recommended)` · `Partly different (tell me the other values)` · `Not checked`. Split local running and DB/deploy into two questions. Never ask for or write credentials (write only how they are delivered).
 
-- `맞음` → 값과 출처를 쓰고 확인 범위에 "사용자 확인(날짜)".
-- `확인 안 함` → 값과 출처 파일 링크를 쓰고 확인 범위에 "설정 파일 기준 · 실제 실행·접속 미확인".
+- `Correct` → write the value and source, with "user confirmed (date)" in the checked scope.
+- `Not checked` → write the value and a link to the source file, with "from config files · not verified by running or connecting" in the checked scope.
 
-- 런타임·빌드 도구 버전, 로컬 주소·포트, 실행 프로필
-- DB·외부 서비스 연결 경로(VPN·터널·프록시)
-- 배포 흐름과 배포 주소, 운영 환경 존재 여부
+- Runtime and build tool versions, local addresses and ports, run profiles
+- DB and external service access paths (VPN, tunnels, proxies)
+- Deploy flow and deploy addresses, whether a production environment exists
 
-## 기록
+## Records
 
-답은 scratchpad `decisions.md`에 `항목 | 답 | 날짜`로 남기고, 규칙 문서에는 결과 문장만 쓴다. 지문 밖에서 손으로 읽은 근거 파일(README·설정·CI·스크립트)도 `decisions.md`의 「근거 파일」 표에 `파일 | 가져온 사실`로 남긴다.
+Record answers in the scratchpad `decisions.md` as `Item | Answer | Date`, and write only the resulting sentences in the rules docs. Evidence files read by hand outside the fingerprint (README, config, CI, scripts) also go into the "Evidence files" table of `decisions.md` as `File | Fact taken`.

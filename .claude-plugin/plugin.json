@@ -1,7 +1,7 @@
 {
   "name": "devkit",
-  "version": "0.3.0",
-  "description": "어느 저장소·업무 영역에서나 같은 개발 흐름을 까는 팀 개발 키트: 분석·구현·검증·커밋·push·PR/MR, 규칙 세팅과 프로젝트 맞춤 스킬 제안",
+  "version": "0.4.0",
+  "description": "Team dev kit that sets up the same workflow in any repo and business domain: analyze, implement, verify, commit, push, PR/MR, plus rule setup and project-specific skill suggestions",
   "author": {
     "name": "JQ"
   }

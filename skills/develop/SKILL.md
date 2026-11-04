@@ -1,49 +1,49 @@
 ---
 name: develop
-description: 승인된 분석 문서대로 구현하고 DB 변경·복구 SQL, 회귀 확인, 요구별 보고까지 한다. "분석한 대로 개발해줘", "구현해줘", "버그 고쳐줘"에 쓴다. 분석이 없으면 devkit:analyze부터.
-argument-hint: "[작업 ID | 분석 문서 경로]"
+description: Implement an approved analysis doc — code, DB change and rollback SQL, regression check, per-requirement report. Use for "implement what we analyzed", "implement this", "fix the bug". Without an analysis, run devkit:analyze first.
+argument-hint: "[task ID | analysis doc path]"
 ---
 
-# 구현
+# Implement
 
-승인된 계획 밖의 변경은 하지 않는다. 계획대로 할 수 없는 것을 발견하면 멈추고 알린다.
+Make no changes outside the approved plan. If something in the plan cannot be done as written, stop and say so.
 
-## 0. 시작 조건
+## 0. Preconditions
 
-- 분석 문서를 찾는다: 인자 → 이 대화에서 방금 승인한 분석 → 작업 폴더(`docs/rules/`의 로컬 작업 폴더 규칙, 없으면 `.devkit/work/`)에서 브랜치 이름·이슈 키가 맞는 `analysis.md` → 가장 최근 `analysis.md`(어느 것인지 확인받는다). 없으면 `devkit:analyze`를 먼저 실행한다. 아주 작은 변경(한 파일·몇 줄·위험 점검 해당 없음)이면 분석 문서 없이 요약 세 줄을 보여 주고 진행해도 되는지 한 번 묻는다.
-- 분석의 기준 커밋 이후 관련 파일이 바뀌었으면(`git log <기준 커밋>..HEAD -- <파일>`) 알리고 분석을 갱신할지 묻는다.
-- 브랜치: 사용자가 요청하지 않으면 현재 브랜치에서 작업한다. 새 브랜치 요청을 받으면 `docs/rules/git.md`의 이름 규칙(없으면 `feat/<작업 ID>-<짧은 이름>`·`fix/…`)을 따른다.
-- 작업 트리에 이번 작업과 무관한 변경이 있으면 알리고 그 파일은 건드리지 않는다.
+- Find the analysis doc: argument → the analysis just approved in this conversation → an `analysis.md` in the work folder (the local work-folder rule in `docs/rules/`, else `.devkit/work/`) whose branch name or issue key matches → the most recent `analysis.md` (confirm which). If none, run `devkit:analyze` first. For a tiny change (one file, a few lines, no risk-check items), you may show a three-line summary without an analysis doc and ask once whether to proceed.
+- If related files changed since the analysis's base commit (`git log <base commit>..HEAD -- <files>`), say so and ask whether to update the analysis.
+- Branch: unless the user asks, work on the current branch. When asked for a new branch, follow the naming rule in `docs/rules/git.md` (else `feat/<task ID>-<short name>`, `fix/…`).
+- If the working tree has changes unrelated to this task, say so and do not touch those files.
 
-## 1. 구현
+## 1. Implement
 
-- 계획의 순서대로 한 단계씩 한다. 단계를 끝낼 때 분석 문서의 해당 단계에 `완료`를 표시한다.
-- 따라 할 기존 파일의 방식과 `docs/rules/`를 따른다. 공통 모듈·공용 스타일·공통 컴포넌트는 고치지 않는 것이 기본이고, 꼭 필요하면 이유를 들어 먼저 확인받는다.
-- 바꾸는 줄은 요구 항목에 대응해야 한다. 지나가다 본 결함은 고치지 않고 보고에 남긴다.
-- 스크립트로 파일을 고칠 때는 줄바꿈(CRLF/LF)과 인코딩을 보존한다.
+- Do the plan one step at a time, in order. When a step is done, mark it `done` in the analysis doc.
+- Follow the approach of the existing files you are imitating and `docs/rules/`. By default do not modify shared modules, shared styles or shared components; if it is truly needed, give the reason and confirm first.
+- Every changed line must map to a requirement item. Defects you happen to see are not fixed; list them in the report.
+- When editing files with a script, preserve line endings (CRLF/LF) and encoding.
 
-## 2. DB 변경 (있으면)
+## 2. DB change (if any)
 
-- 스키마를 저장소에서 관리하면(마이그레이션 도구·초기화 스크립트·DDL 기준본·ORM 엔티티) 그 방식으로 먼저 고친다. 마이그레이션 도구가 있으면 실행용 SQL도 그 도구의 새 마이그레이션 파일로 만들고 커밋 대상에 넣는다.
-- 저장소가 관리하지 않는 실행용 SQL은 작업 폴더에 둔다. 번호는 실행 순서다: `00_check.sql`(읽기 전용 사전 조회, 예: 중복 건수) → `01_…`, `02_…`(데이터 정리·변경·등록, 재실행 가능하게) → `99_rollback.sql`(복구, 기존 객체를 바꿨으면 변경 전 정의 포함). DB 종류가 여럿이면 `01_change.<db>.sql`처럼 접미사로 나눈다.
-- 기동할 때 스키마를 자동 적용하는 저장소면, 기존 데이터 때문에 새 제약 생성이 실패해 앱이 뜨지 않을 수 있다. 적용 순서(데이터 정리 → 배포)를 🛑에서 안내한다.
-- 변경 전 원본 정의가 필요하면 읽기 전용 조회로 가져오거나 사용자에게 요청한다. 쓰기 SQL은 실행하지 않는다.
+- If the repo manages the schema (migration tool, init scripts, DDL baseline, ORM entities), change it that way first. If there is a migration tool, create the executable SQL as a new migration file of that tool and include it in the commit.
+- Executable SQL that the repo does not manage goes in the work folder. Numbers are the run order: `00_check.sql` (read-only pre-check, e.g. duplicate count) → `01_…`, `02_…` (data cleanup, change, inserts; re-runnable) → `99_rollback.sql` (rollback, including the previous definition if an existing object changed). With several DB vendors, split by suffix such as `01_change.<db>.sql`.
+- If the repo applies the schema automatically at startup, a new constraint can fail on existing data and the app will not start. Explain the apply order (data cleanup → deploy) at the 🛑 gate.
+- If the original definition is needed, fetch it with a read-only query or ask the user. Do not run write SQL.
 
-## 3. 검증
+## 3. Verify
 
-- 자동 검사: 바꾼 하위 프로젝트에 해당하는 검사를 `devkit:check`로 제안한다(직접 호출 스킬이라 사용자에게 실행 여부를 묻거나, 사용자가 검사를 요청했으면 그 절차대로 실행한다).
-- 동작 확인: 서버를 직접 켜지 않는다. 사용자가 띄운 환경에서만 화면·API를 확인하고, 저장한 값은 재조회로 확인한다. 테스트 데이터는 알아볼 수 있는 더미 값으로 넣고 남긴 데이터를 보고한다.
-- 회귀: 분석 문서의 **현행 유지 목록**을 하나씩 확인한다.
-- 설계·목업이 있으면 결과 화면을 캡처해 항목별로 대조한다. 빌드 통과만으로 "요구와 일치"라고 하지 않는다.
-- 실패하면 고치고 같은 검증을 다시 한다. 실행하지 않은 검증은 `미실행`으로 적는다.
+- Automated checks: suggest the checks for the changed subprojects via `devkit:check` (a user-invoked skill, so ask whether to run it, or follow its steps if the user asked for checks).
+- Behavior check: do not start servers yourself. Check screens and APIs only in an environment the user started, and confirm saved values by querying again. Insert recognizable dummy test data and report what was left behind.
+- Regression: go through the analysis doc's **keep-as-is list** one by one.
+- If there is a design or mockup, capture the result screen and compare item by item. Do not say "matches the requirement" just because the build passes.
+- If something fails, fix it and run the same verification again. Write verification that was not run as `not run`.
 
-## 🛑 DB 적용
+## 🛑 DB apply
 
-DB 변경이 있으면 적용 대상(로컬·개발·운영)과 실행 순서·계정·트랜잭션 COMMIT 지점을 안내하고 사람이 실행하게 한다. 실행 후 조회로 객체 상태·데이터를 함께 확인한다. 운영 반영은 이 스킬의 범위가 아니다.
+If there is a DB change, explain the target (local, dev, prod), run order, account and transaction COMMIT point, and let a human run it. After it runs, check object state and data with queries together. Applying to production is outside this skill.
 
-## 4. 보고
+## 4. Report
 
-- 요구 항목별 `구현 / 보류(사유) / 확인 필요`
-- 바꾼 파일, SQL 파일, 실행한 검증과 결과(`미실행` 포함), 남긴 테스트 데이터, 발견했지만 고치지 않은 결함
-- 다음 단계 한 줄: 커밋은 `devkit:commit`, push는 `devkit:push`, PR/MR은 `devkit:pr-publish` — 요청받으면 진행한다
-- 분석 문서의 「결정 기록」에 구현 중 정한 것을 더한다
+- Per requirement item: `implemented / deferred (reason) / needs confirmation`
+- Changed files, SQL files, verification run and results (including `not run`), test data left behind, defects found but not fixed
+- One line on next steps: commit with `devkit:commit`, push with `devkit:push`, PR/MR with `devkit:pr-publish` — done when requested
+- Add decisions made during implementation to the analysis doc's "Decision log"

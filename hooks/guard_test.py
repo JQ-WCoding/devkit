@@ -1,4 +1,4 @@
-"""guard.py 판정 시험. 사용: python3 -I hooks/guard_test.py"""
+"""guard.py decision tests (Korean commit messages are intentional multibyte test data). Usage: python3 -I hooks/guard_test.py"""
 import json
 import os
 import subprocess
@@ -24,19 +24,19 @@ EOF
 )"'''
 
 CASES = [
-    # 막는다
+    # deny
     ('git add .', 'deny'), ('git add -A', 'deny'), ('git add --all', 'deny'), ('git add -u', 'deny'),
     ('cd app && git add .', 'deny'), ('git -C sub add .', 'deny'),
     ('git commit -am "x"', 'deny'), ('git commit -n -m x', 'deny'), ('git commit --no-verify -m x', 'deny'),
     ('git push --force origin feat', 'deny'), ('git push -f', 'deny'), ('git push origin +feat', 'deny'),
     ('git push --no-verify', 'deny'), ('git commit -m "x" && git push --force', 'deny'),
     (HEREDOC_AI, 'deny'), (f'git commit -F {TMP}/msg-ai.txt', 'deny'),
-    # 묻는다
+    # ask
     ('git push --force-with-lease origin feat', 'ask'), ('git push -u origin main', 'ask'),
     ('git push origin HEAD:release/1.2', 'ask'), ('git commit --amend --no-edit', 'ask'),
     ('./gradlew bootRun', 'ask'), ('./mvnw spring-boot:run', 'ask'), ('npm run dev', 'ask'),
     ('cd web && pnpm dev', 'ask'), ('docker compose up -d', 'ask'),
-    # 통과
+    # pass
     ('git add -- src/a.java .gitignore', None), ('git add ./src/x.java', None), ('git status --porcelain', None),
     ('git commit -m "fix(api): 수정"', None), (f'git commit -F {TMP}/msg-ok.txt', None), ('git commit -s -m x', None),
     (HEREDOC_OK, None), ('git commit -m "a; npm run dev 문구"', None), ('git push -u origin feat/ABC-1-x', None), ('git push -n origin main:feat', None),
@@ -53,13 +53,13 @@ def run(command, env=None, tool='Bash'):
     p = subprocess.run([sys.executable, '-I', GUARD], input=payload.encode('utf-8'), capture_output=True,
                        env={**os.environ, **(env or {})})
     assert p.returncode == 0, p.stderr
-    out = p.stdout.decode('ascii')  # 출력은 항상 ASCII 여야 한다(코드 페이지 무관)
+    out = p.stdout.decode('ascii')  # output must always be ASCII (code-page independent)
     return json.loads(out)['hookSpecificOutput']['permissionDecision'] if out.strip() else None
 
 
 fails, total = [], 0
-for label, cases, kw in (('Bash 도구', CASES, {}),
-                         ('PowerShell 도구', [('git add .', 'deny'), ('git.exe add -A', 'deny'), ('git add -- a.txt', None)],
+for label, cases, kw in (('Bash tool', CASES, {}),
+                         ('PowerShell tool', [('git add .', 'deny'), ('git.exe add -A', 'deny'), ('git add -- a.txt', None)],
                           {'tool': 'PowerShell'})):
     for c, want in cases:
         total += 1
@@ -77,5 +77,5 @@ if p.returncode or not ctx.startswith('# devkit'):
     fails.append(('session_start.py', '', '# devkit…', ctx[:20]))
 for label, c, want, got in fails:
     print(f'FAIL [{label}] want={want} got={got}: {c!r}')
-print(f'{total - len(fails)}/{total} 통과')
+print(f'{total - len(fails)}/{total} passed')
 sys.exit(1 if fails else 0)

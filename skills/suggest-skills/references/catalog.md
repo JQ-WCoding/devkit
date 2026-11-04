@@ -1,41 +1,41 @@
-# 제안 카탈로그
+# Suggestion catalog
 
-목차: 제안 원칙 · 에이전트 · 스킬 · 규칙 행 · 제안하지 않는 것
+Contents: Principles · Agents · Skills · Rule rows · Not suggested
 
-## 제안 원칙
+## Principles
 
-- 조건이 **근거로** 맞을 때만 제안한다. 근거는 지문의 수치·파일·커밋, 이 대화에서 반복된 작업, 사용자가 말해 준 반복 작업이다.
-- 한 번에 많이 제안하지 않는다. 권장 3개 이내, 나머지는 "다음 후보"로 한 줄씩.
-- devkit이 이미 제공하는 것(`analyze`·`develop`·`check`·`commit`·`push`·`pr-publish`·`code-reader`)과 같은 역할은 만들지 않는다. `check`처럼 직접 호출 전용 스킬은 세션 스킬 목록에 안 보인다. 이 저장소에만 있는 검사·게시 절차가 있으면 그 내용을 `docs/rules/`에 행으로 더하는 쪽을 먼저 제안한다.
-- 비용을 함께 적는다: 만들 파일 수, 필요한 외부 도구·MCP, 유지할 것.
+- Suggest only when a condition is met **by evidence**: fingerprint numbers, files and commits, tasks repeated in this conversation, repeated tasks the user described.
+- Do not suggest many at once. At most 3 recommended; the rest go on one line each as "next candidates".
+- Do not build anything with the same role as what devkit already provides (`analyze`, `develop`, `check`, `commit`, `push`, `pr-publish`, `code-reader`). User-invoked-only skills such as `check` do not appear in the session skill list. If this repo has its own check or publish procedure, first suggest adding it as rows in `docs/rules/`.
+- State the cost: number of files to create, external tools or MCP needed, what must be maintained.
 
-## 에이전트
+## Agents
 
-모두 `model: sonnet`, 조회 도구만, 파일 수정 금지, `파일:줄` 중심 보고, 확인과 추정을 구분한다. 설계도는 `blueprints/`에 있다.
+All use `model: sonnet`, read-only tools, no file edits, `file:line`-centered reports, and separate confirmed from guessed. Blueprints are in `blueprints/`.
 
-| 에이전트 | 조건(근거) | 설계도 |
+| Agent | Condition (evidence) | Blueprint |
 |---|---|---|
-| `db-analyst` | 지문 「DB 흔적」에 스키마 정의(마이그레이션·초기화 스크립트·DDL 기준본·ORM 엔티티·SQL 매퍼·프로시저)가 수십 개 이상 있고, DB 객체를 바꾸는 작업이 이력에 자주 있다 | `blueprints/db-analyst.md` |
-| `knowledge-reader` | 업무 용어·결정 문서(위키·노트 폴더·문서 사이트·`docs/` 아래 업무 문서 등, 도구는 가리지 않음)가 있고, 업무 의미를 묻는 작업이 있다 | `blueprints/knowledge-reader.md` |
-| `spec-analyst` | 정해진 양식의 기획서·설계서·화면 정의서를 받아 개발하는 일이 반복되고, 양식이 `analysis-template`만으로는 담기지 않는다 | `blueprints/spec-analyst.md` |
+| `db-analyst` | The fingerprint's "DB traces" shows dozens or more schema definitions (migrations, init scripts, DDL baselines, ORM entities, SQL mappers, procedures), and history often has tasks changing DB objects | `blueprints/db-analyst.md` |
+| `knowledge-reader` | Business terminology or decision docs exist (wiki, notes folder, docs site, business docs under `docs/` — any tool), and tasks ask about business meaning | `blueprints/knowledge-reader.md` |
+| `spec-analyst` | Developing from fixed-format plans, design specs or screen definitions recurs, and the format does not fit `analysis-template` alone | `blueprints/spec-analyst.md` |
 
-## 스킬
+## Skills
 
-| 스킬 | 조건(근거) | 설계도 |
+| Skill | Condition (evidence) | Blueprint |
 |---|---|---|
-| 프로젝트 작업 흐름 | `devkit:analyze`·`develop`의 공통 흐름 위에 이 저장소만의 단계(특정 양식의 설계서 읽기, 상태 판정, 메뉴·권한 등록, 목업 대조 등)가 3번 이상 반복됐다 | `blueprints/project-flow.md` |
-| `workspace-cleanup` | 작업 중 만든 임시 파일(드라이런 폴더·`.bak`·캡처·루트 임시 스크립트)이 미추적 파일로 남아 있거나 정리를 요청받은 적이 있다 | `blueprints/workspace-cleanup.md` |
-| `visual-docs` | 흐름도·시퀀스·ERD를 문서로 남겨 달라는 요청이 반복되거나 `docs/`에 Mermaid 문서가 여럿 있다 | `blueprints/visual-docs.md` |
-| 반복 유지보수 절차 | 같은 동사의 커밋 묶음(의존성 올리기·릴리스 준비·데이터 보정·인증서 교체 등)이 수십 번 있고 매번 같은 확인을 한다 | `blueprints/tool-skill.md`의 구성(절차·명령·확인·금지)을 따른다 |
-| 도구 스킬 | 설치·설정이 까다로운 외부 도구(리포트 디자이너, 실기기, 사내 CLI 등)를 반복해 쓰고, 매번 같은 설명을 해야 한다 | `blueprints/tool-skill.md` |
+| Project work flow | On top of the common `devkit:analyze`/`develop` flow, repo-specific steps (reading a specific spec format, status verdicts, menu and permission registration, mockup comparison, etc.) have repeated 3+ times | `blueprints/project-flow.md` |
+| `workspace-cleanup` | Temp files made during work (dry-run folders, `.bak`, captures, root temp scripts) remain as untracked files, or cleanup was requested before | `blueprints/workspace-cleanup.md` |
+| `visual-docs` | Requests to document flowcharts, sequences or ERDs recur, or `docs/` has several Mermaid docs | `blueprints/visual-docs.md` |
+| Recurring maintenance procedure | Dozens of commits with the same verb (dependency bumps, release prep, data correction, certificate rotation, etc.) with the same checks every time | Follow the structure of `blueprints/tool-skill.md` (procedure, commands, checks, prohibitions) |
+| Tool skill | An external tool that is hard to install or configure (report designer, physical device, in-house CLI, etc.) is used repeatedly and needs the same explanation each time | `blueprints/tool-skill.md` |
 
-## 규칙 행
+## Rule rows
 
-`pinpoint-checklist.md`의 채택 기준을 통과한 후보만 제안한다. 행은 해당 `docs/rules/<계층>.md`에 같은 문체로 더하고, 계층 문서가 없으면 새로 만들지 먼저 묻는다.
+Suggest only candidates that pass the adoption criteria in `pinpoint-checklist.md`. Add rows to the matching `docs/rules/<layer>.md` in the same style; if the layer doc does not exist, ask first whether to create it.
 
-## 제안하지 않는 것
+## Not suggested
 
-- 일반 개발 지식만 담는 스킬(코딩 스타일 일반론, 언어 튜토리얼).
-- 한 번만 한 작업의 스킬화. 두 번째까지는 규칙 행이나 메모로 충분하다.
-- 쓰기 권한이 필요한 에이전트. 쓰기는 메인이 한다.
-- 다른 플러그인·사용자 레벨 스킬과 같은 이름. 겹치면 이름을 바꾸거나 description에 서로 쓰지 않는 경우를 적는다.
+- Skills holding only general development knowledge (generic coding style, language tutorials).
+- Turning a one-off task into a skill. Up to the second time, a rule row or note is enough.
+- Agents that need write access. The main agent does writes.
+- Names identical to other plugin or user-level skills. If they overlap, rename or state in each description when not to use it.

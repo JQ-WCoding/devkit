@@ -1,9 +1,9 @@
-"""저장소의 지문(구성·관례·이력)을 모아 핀포인트 분석의 출발점을 만든다. 파일은 고치지 않는다.
+"""Collect a repository fingerprint (layout, conventions, history) as the starting point for pinpoint analysis. Never modifies files.
 
-사용: python3 -I scan_repo.py <저장소 루트> [--since <YYYY-MM-DD | 커밋>] [--out <결과.json>]
-- 표준 출력: 사람이 읽을 요약(Markdown). --out 에는 전체 결과를 JSON으로 쓴다.
-- --since 를 주면 이력 항목(fix 커밋·핫스팟·문서 커밋)을 그 이후로 한정한다(갱신 모드).
-필요: Python 3.8 이상. git 이 없거나 저장소가 아니면 이력 항목만 건너뛴다.
+Usage: python3 -I scan_repo.py <repo root> [--since <YYYY-MM-DD | commit>] [--out <result.json>]
+- stdout: human-readable summary (Markdown). --out writes the full result as JSON.
+- --since limits history items (fix commits, hotspots, doc commits) to after that point (update mode).
+Requires: Python 3.8+. Without git or outside a repository, only the history items are skipped.
 """
 import json
 import os
@@ -13,18 +13,18 @@ import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
-# 생성물·의존성·도구 폴더는 프로젝트 관례가 아니므로 건너뛴다
+# Generated, dependency and tool folders are not project conventions, so skip them
 SKIP_DIRS = {
     '.git', 'node_modules', 'build', 'dist', 'out', 'target', '.gradle', '.idea', '.vscode',
     'vendor', 'venv', '.venv', '__pycache__', 'coverage', '.next', '.nuxt', 'bin', 'obj',
     'logs', '.claude', '.codex', '.agents', '.cache', 'tmp',
 }
-# 아주 큰 저장소에서도 1~2분 안에 끝나도록 읽는 파일 수를 제한한다
+# Cap the number of files read so even very large repos finish in 1-2 minutes
 MAX_WALK_FILES = 40000
 MAX_READ_FILES = 15000
 MAX_READ_BYTES = 1024 * 1024
 STYLE_SAMPLE_PER_EXT = 300
-# fix 커밋 핫스팟은 최근 이력이 의미 있으므로 이 개수까지만 본다
+# Fix-commit hotspots matter for recent history, so look at this many commits only
 HISTORY_LIMIT = 600
 
 SOURCE_EXTS = {'.properties', '.yml', '.yaml', '.gradle', '.js', '.jsx', '.ts', '.tsx', '.vue', '.svelte', '.java', '.kt', '.py', '.go',
@@ -36,12 +36,12 @@ MANIFESTS = {
     'composer.json': 'php', 'Dockerfile': 'docker', 'docker-compose.yml': 'compose',
     'docker-compose.yaml': 'compose', 'compose.yml': 'compose', 'compose.yaml': 'compose',
 }
-# package.json 에서 구조 판단에 쓰는 의존성(버전을 함께 보여 준다)
+# package.json dependencies used to judge structure (shown with versions)
 NODE_HINTS = re.compile(
     r'^(react|react-dom|react-router-dom|vue|nuxt|next|@angular/core|svelte|vite|webpack|typescript|'
     r'eslint|prettier|jest|vitest|axios|redux|@reduxjs/toolkit|zustand|@tanstack/react-query|'
     r'tailwindcss|express|@nestjs/core|@syncfusion/.+|ag-grid.*|antd|@mui/material|electron)$')
-# 빌드 설정에 들어 있는 포맷·정적 검사 도구 — "린터가 이미 막는 것"을 판단하는 근거다
+# Format and static-analysis tools in the build config: evidence for "what the linter already blocks"
 QUALITY_TOOLS = re.compile(r'(spring-javaformat|checkstyle|spotless|pmd|spotbugs|errorprone|ktlint|detekt|nohttp|'
                            r'eslint|prettier|stylelint|biome|ruff|black|flake8|mypy|pylint|golangci|rubocop|license-maven-plugin)', re.I)
 JVM_HINTS = {
@@ -61,10 +61,10 @@ STYLE_CONFIG = re.compile(r'^(\.editorconfig|\.prettierrc.*|prettier\.config\..*
 DB_KINDS = [('h2', r'jdbc:h2|\bh2\b'), ('oracle', r'jdbc:oracle|oracle\.jdbc'), ('postgres', r'jdbc:postgresql|postgres://'),
             ('mysql', r'jdbc:mysql|jdbc:mariadb|mysql://'), ('sqlserver', r'jdbc:sqlserver'),
             ('sqlite', r'sqlite'), ('mongodb', r'mongodb(\+srv)?://')]
-# 작성자가 남긴 주의 표시는 사고·함정의 흔적이다(S3 후보)
+# Warning marks left by authors are traces of incidents and pitfalls (S3 candidates). Korean markers stay so Korean repos still match
 WARN_MARK = re.compile(r'(주의|반드시|금지|하지 말 것|하지 않는다|절대|IMPORTANT|WARNING|CAUTION|HACK|FIXME|XXX|'
                        r"[Dd]on't|[Dd]o not|[Mm]ust not|[Nn]ever |[Nn]eeds to stay|[Kk]eep in sync|[Cc]areful)")
-# 결함 수정 커밋은 'fix' 외의 동사로도 쓴다(Prevent HTTP 500…, Validate…, Mitigate…)
+# Defect-fix commits use verbs other than 'fix' too (Prevent HTTP 500…, Validate…, Mitigate…); Korean verbs match Korean repos
 FIX_SUBJECT = re.compile(r'^(fix|hotfix|revert|prevent|validate|mitigate|handle|correct|resolve|avoid|guard)\b|\bfix(es|ed)?\b|^Revert |버그|오류 수정|장애|방지', re.I)
 CONVENTIONAL = re.compile(r'^(\w+)(?:\(([^)]+)\))?!?: ?(.+)$')
 HANGUL = re.compile(r'[가-힣]')
@@ -75,14 +75,14 @@ PY_IMPORT = re.compile(r'^\s*(?:from\s+([\w.]+)\s+import|import\s+([\w.]+))', re
 JS_PATH_LITERAL = re.compile(r'''['"`](/[A-Za-z][\w-]*(?:/[\w{}:.-]+){1,4})['"`]''')
 JAVA_MAPPING = re.compile(r'@(?:Request|Get|Post|Put|Delete|Patch)Mapping\s*\(\s*(?:value\s*=\s*|path\s*=\s*)?\{?\s*"([^"]+)"')
 SECRET_IN_URL = re.compile(r'//[^/@\s]+@')
-# 확장자 순위에서 뺄 자산·생성물(관례 판단에 쓸모없다)
+# Assets and generated files excluded from the extension ranking (useless for conventions)
 ASSET_EXTS = {'.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico', '.webp', '.woff', '.woff2', '.ttf', '.eot',
               '.otf', '.rels', '.map', '.lock', '.DS_Store', '.pdf', '.zip', '.jar', '.class', '.mp4', '.mp3'}
-# 보관본·예전 코드 폴더. fix 핫스팟에 나오면 근거로 쓰지 않도록 표시한다
+# Archive or old-code folders; flagged in fix hotspots so they are not used as evidence
 ARCHIVE_DIR = re.compile(r'(^|/)(archive|archived|old|deprecated|legacy|backup)(/|$)', re.I)
-# 주입 필드·공통 객체는 import 로 안 잡히므로 `수신자.메서드(` 호출을 파일 수로 센다(S1·S2 후보)
+# Injected fields and shared objects don't show up as imports, so count `receiver.method(` calls by file (S1/S2 candidates)
 MEMBER_CALL = re.compile(r'\b([A-Za-z_]\w*)\.([A-Za-z_]\w*)\s*\(')
-# 언어 내장·지역 변수로 흔한 수신자는 프로젝트 관례가 아니므로 뺀다
+# Receivers that are language built-ins or common local names are not project conventions, so skip them
 GENERIC_RECEIVERS = {
     'console', 'Math', 'Object', 'Array', 'JSON', 'Promise', 'window', 'document', 'this', 'super',
     'props', 'String', 'Number', 'Date', 'e', 'event', 'res', 'response', 'data', 'list', 'item',
@@ -234,7 +234,7 @@ def scan_ai_config(root, files):
 
 
 def indent_of(text):
-    """파일의 들여쓰기 단위를 추정한다: 'tab' | 2 | 4 | 기타 숫자 | None."""
+    """Estimate a file's indent unit: 'tab' | 2 | 4 | other number | None."""
     tabs, widths = 0, Counter()
     prev = 0
     for line in text.splitlines()[:400]:
@@ -334,11 +334,11 @@ def scan_style_and_code(root, files):
 
 
 def resolve_js(rel, spec):
-    """import 경로를 저장소 기준 모듈 키로 바꾼다. 내부 모듈은 '@internal:' 접두어를 붙인다."""
+    """Map an import path to a repo-relative module key. Internal modules get the '@internal:' prefix."""
     if spec.startswith('.'):
         target = os.path.normpath(os.path.join(str(rel.parent), spec))
         parts = target.split('/')
-        # 상대 경로와 `@/` 별칭이 같은 모듈을 가리키면 하나로 센다(src 아래를 `@/` 로 본다)
+        # Count a relative path and the `@/` alias for the same module once (treat src/ as `@/`)
         if 'src' in parts:
             target = '@/' + '/'.join(parts[parts.index('src') + 1:])
         return '@internal:' + re.sub(r'\.(jsx?|tsx?|vue)$', '', target)
@@ -361,14 +361,14 @@ PROXY_TARGET = re.compile(r'target\s*:\s*[\'"]([^\'"]+)[\'"]')
 CONFIG_FILE = re.compile(r'(^|/)(application[\w-]*\.(ya?ml|properties)|\.env[\w.-]*|(vite|webpack|next|nuxt)\.config\.[cm]?[jt]s|'
                          r'docker-compose[\w.-]*\.ya?ml|compose\.ya?ml|settings[\w-]*\.py|appsettings[\w.-]*\.json|config/[\w.-]+\.(json|ya?ml|toml))$')
 SECRET_KEY = re.compile(r'(?i)^\s*["\']?([\w.-]*(password|passwd|pwd|(?<![a-z])pass(?![a-z])|secret|api[_-]?key|access[_-]?key|token|private[_-]?key)[\w.-]*)["\']?\s*[:=]\s*["\']?([^\s"\'#,]+)')
-# 비밀값이 아니라 이름·형식을 담는 키(tokenName, secretHeader 등)는 뺀다
+# Skip keys that hold a name or format rather than a secret (tokenName, secretHeader, ...)
 NAME_LIKE_KEY = re.compile(r'(?i)(name|header|type|url|uri|path|expire[sd]?|expiration|validity|length|prefix|enabled)$')
 SPRING_DEFAULT = re.compile(r'^\$\{[\w.-]+:([^}]*)\}')
 PLACEHOLDER = re.compile(r'^(\$\{|<|\{\{|%|changeme|change-me|your[_-]|xxx|\*+$|null$|none$|true$|false$|""$|\'\'$)', re.I)
 
 
 def scan_env(root, files):
-    """실행 환경 사실(버전·포트·프로필·프록시)과 추적 중인 설정 파일의 평문 비밀값 위치를 모은다. 값은 비밀값이면 출력하지 않는다."""
+    """Collect runtime facts (versions, ports, profiles, proxies) and locations of plaintext secrets in tracked config files. Secret values are never output."""
     versions, ports, proxies, profiles, secrets = {}, [], [], set(), []
     for name in VERSION_FILES:
         p = root / name
@@ -423,9 +423,9 @@ def scan_env(root, files):
                 value = sm.group(3)
                 default = SPRING_DEFAULT.match(value)
                 if default:
-                    # ${ENV:기본값} 의 기본값이 평문이면 그것도 저장소에 남은 비밀값이다
+                    # A plaintext default in ${ENV:default} is also a secret left in the repo
                     value = default.group(1)
-                    where = '(기본값 · 개발용 값일 수 있음)'
+                    where = '(default · may be a dev value)'
                 else:
                     where = ''
                 if value and not PLACEHOLDER.match(value) and len(value) >= 4:
@@ -441,17 +441,17 @@ def scan_git(root, since):
     host_kind = 'gitlab' if any('gitlab' in r for r in remotes) else 'github' if any('github' in r for r in remotes) \
         else 'bitbucket' if any('bitbucket' in r for r in remotes) else ('other' if remotes else 'none')
     if host_kind in ('other', 'none'):
-        # 원격 주소로 못 정하면 CI 설정으로 추정한다
+        # If the remote URL doesn't tell, infer the host from the CI config
         if (root / '.gitlab-ci.yml').exists():
-            host_kind = 'gitlab(CI 설정으로 추정)'
+            host_kind = 'gitlab (inferred from CI config)'
         elif (root / '.github' / 'workflows').is_dir():
-            host_kind = 'github(CI 설정으로 추정)'
+            host_kind = 'github (inferred from CI config)'
     remote_names = set((run(['git', 'remote'], root) or '').split())
     branches = [b for b in (run(['git', 'branch', '-a', '--format=%(refname:short)'], root) or '').split()
                 if b not in remote_names and not b.endswith('/HEAD')]
     rng = []
     if since:
-        # 날짜만 주면 git 이 그날의 현재 시각을 써서 같은 날 커밋이 빠진다 — 0시로 고정한다
+        # With a bare date git uses the current time of day and drops same-day commits, so pin it to midnight
         rng = [f'--since={since}T00:00:00'] if re.match(r'\d{4}-\d{2}-\d{2}$', since) else [f'{since}..HEAD']
     log = run(['git', 'log', '--no-merges', f'-n{HISTORY_LIMIT}', '--date=short', '--name-only',
                '--format=%x1e%h%x1f%ad%x1f%s%x1f%b%x1d'] + rng, root) or ''
@@ -493,7 +493,7 @@ def scan_git(root, since):
         if m:
             merge_into[m.group(1)] += 1
         elif re.match(r"Merge (branch|pull request|remote-tracking branch)", subj):
-            merge_into['(기본 브랜치)'] += 1
+            merge_into['(default branch)'] += 1
     shallow = (run(['git', 'rev-parse', '--is-shallow-repository'], root) or '').strip() == 'true'
     total = run(['git', 'rev-list', '--count', 'HEAD'], root)
     merges = run(['git', 'rev-list', '--merges', '--count', 'HEAD'], root)
@@ -514,84 +514,84 @@ def scan_git(root, since):
 
 
 def to_markdown(r):
-    out = [f"# 저장소 지문: {r['root']}", '']
+    out = [f"# Repository fingerprint: {r['root']}", '']
     if r['walk_truncated']:
-        out.append(f'> 파일이 {MAX_WALK_FILES}개를 넘어 일부만 보았다. 하위 폴더를 따로 지정해 다시 실행할 수 있다.\n')
-    out.append('## 구성')
+        out.append(f'> More than {MAX_WALK_FILES} files; only part was scanned. Rerun on a subfolder if needed.\n')
+    out.append('## Layout')
     for m in r['manifests']:
         extra = {k: v for k, v in m.items() if k not in ('path', 'kind') and v}
         out.append(f"- `{m['path']}` ({m['kind']}) {json.dumps(extra, ensure_ascii=False) if extra else ''}")
-    out.append(f"- 확장자 상위: {', '.join(f'{e} {c}' for e, c in r['ext_counts'])}")
+    out.append(f"- Top extensions: {', '.join(f'{e} {c}' for e, c in r['ext_counts'])}")
     out.append('\n## CI')
     for f, lines in r['ci'].items():
         out.append(f'- `{f}`: ' + ' / '.join(lines[:8]))
     if not r['ci']:
-        out.append('- 없음')
+        out.append('- none')
     d = r['db']
-    out.append('\n## DB 흔적')
-    mapper = f" · SQL 매퍼(MyBatis) {d['mybatis_mappers']}개 {d['mapper_roots']}" if d['mybatis_mappers'] else ''
-    out.append(f"- SQL 파일 {d['sql_files']}개 {d['sql_dirs'][:5]} · ORM 엔티티 {d['orm_entities']}개{mapper}")
-    out.append(f"- 초기화 스크립트 {d['init_scripts'] or '없음'}")
-    out.append(f"- 마이그레이션 폴더 {d['migration_dirs'] or '없음'} · 설정의 DB 종류 {d['db_kinds_in_config'] or '없음'}")
+    out.append('\n## DB traces')
+    mapper = f" · SQL mappers (MyBatis) {d['mybatis_mappers']} {d['mapper_roots']}" if d['mybatis_mappers'] else ''
+    out.append(f"- SQL files {d['sql_files']} {d['sql_dirs'][:5]} · ORM entities {d['orm_entities']}{mapper}")
+    out.append(f"- Init scripts {d['init_scripts'] or 'none'}")
+    out.append(f"- Migration folders {d['migration_dirs'] or 'none'} · DB kinds in config {d['db_kinds_in_config'] or 'none'}")
     a = r['ai_config']
-    out.append('\n## 기존 규칙·AI 설정')
-    out.append(f"- 있는 파일: {a['present'] or '없음'} · .mcp.json {'있음' if a['has_mcp_json'] else '없음'}")
+    out.append('\n## Existing rules and AI config')
+    out.append(f"- Present: {a['present'] or 'none'} · .mcp.json {'yes' if a['has_mcp_json'] else 'no'}")
     for k, v in a['detail'].items():
         out.append(f'- `{k}`: {v}')
-    out.append(f"- .gitignore 관련 줄: {a['gitignore_lines'] or '없음'}")
-    out.append(f"- docs/ 최상위: {a['docs_top'] or '없음'} · docs/ 추적 파일 {a['docs_tracked'] if a['docs_tracked'] is not None else '알 수 없음'}개")
+    out.append(f"- Related .gitignore lines: {a['gitignore_lines'] or 'none'}")
+    out.append(f"- docs/ top level: {a['docs_top'] or 'none'} · Tracked docs/ files {a['docs_tracked'] if a['docs_tracked'] is not None else 'unknown'}")
     e = r['env']
-    out.append('\n## 실행 환경 (설정 파일 기준 · 실제 실행은 미확인)')
-    out.append(f"- 버전: {e['versions'] or '없음'}")
-    out.append(f"- 프로필: {e['profiles'] or '없음'}")
-    out.append('- 포트: ' + (' · '.join(e['ports']) if e['ports'] else '없음'))
-    out.append('- 프록시 대상: ' + (' · '.join(e['proxy_targets']) if e['proxy_targets'] else '없음'))
+    out.append('\n## Runtime environment (from config files · not verified by running)')
+    out.append(f"- Versions: {e['versions'] or 'none'}")
+    out.append(f"- Profiles: {e['profiles'] or 'none'}")
+    out.append('- Ports: ' + (' · '.join(e['ports']) if e['ports'] else 'none'))
+    out.append('- Proxy targets: ' + (' · '.join(e['proxy_targets']) if e['proxy_targets'] else 'none'))
     if e['tracked_plain_secrets']:
-        out.append(f"- ⚠ Git 추적 설정 파일의 평문 비밀값 의심 {len(e['tracked_plain_secrets'])}곳(값은 출력하지 않음): "
+        out.append(f"- ⚠ Possible plaintext secrets in Git-tracked config files: {len(e['tracked_plain_secrets'])} (values not shown): "
                    + ', '.join(e['tracked_plain_secrets'][:12]))
     c = r['code']
-    out.append('\n## 코드 스타일')
+    out.append('\n## Code style')
     for ext, s in c['style'].items():
-        out.append(f"- `{ext}` {s['files']}개 · 들여쓰기 {s['indent']} · CRLF {s['crlf_files']}/{s['sampled']}(표본)")
-    out.append(f"- 스타일 설정: {c['style_configs'] or '없음'}")
-    out.append('\n## 많이 쓰는 내부 모듈 (S1 후보: 파일 수 기준)')
-    for title, key in (('JS 내부', 'js_internal_imports'), ('Java 내부', 'java_internal_imports'),
-                       ('Python 내부', 'python_internal_imports'), ('JS 외부', 'js_external_imports')):
+        out.append(f"- `{ext}` {s['files']} files · indent {s['indent']} · CRLF {s['crlf_files']}/{s['sampled']} (sampled)")
+    out.append(f"- Style configs: {c['style_configs'] or 'none'}")
+    out.append('\n## Most-used internal modules (S1 candidates, by file count)')
+    for title, key in (('JS internal', 'js_internal_imports'), ('Java internal', 'java_internal_imports'),
+                       ('Python internal', 'python_internal_imports'), ('JS external', 'js_external_imports')):
         if c[key]:
             out.append(f'- {title}: ' + ', '.join(f'`{m}` {n}' for m, n in c[key][:20]))
     if c['js_member_calls']:
-        out.append('- JS 호출(수신자.메서드): ' + ', '.join(f'`{m}` {n}' for m, n in c['js_member_calls'][:20]))
+        out.append('- JS calls (receiver.method): ' + ', '.join(f'`{m}` {n}' for m, n in c['js_member_calls'][:20]))
     if c['java_receivers']:
-        out.append('- Java 호출 수신자(주입 필드·공통 클래스): ' + ', '.join(f'`{m}` {n}' for m, n in c['java_receivers'][:20]))
-    out.append('\n## 경로 모양 (S2 후보)')
+        out.append('- Call receivers (Java: injected fields, shared classes): ' + ', '.join(f'`{m}` {n}' for m, n in c['java_receivers'][:20]))
+    out.append('\n## Path shapes (S2 candidates)')
     for seg, items in c['front_path_literals'].items():
         out.append(f'- `/{seg}/…`: ' + ', '.join(f'`{p}` {n}' for p, n in items))
     if c['java_mappings']:
-        out.append('- Java 매핑: ' + ', '.join(f'`{p}` {n}' for p, n in c['java_mappings'][:20]))
+        out.append('- Java mappings: ' + ', '.join(f'`{p}` {n}' for p, n in c['java_mappings'][:20]))
     w = c['warning_comments']
-    out.append(f"\n## 주의 주석 (S3 후보) {w['counts']}")
+    out.append(f"\n## Warning comments (S3 candidates) {w['counts']}")
     out.extend(f'- {s}' for s in w['samples'][:30])
     g = r['git']
     out.append('\n## Git')
     if not g.get('available'):
-        out.append('- git 저장소가 아니거나 git 이 없다')
+        out.append('- not a git repository, or git is unavailable')
     else:
-        out.append(f"- 원격 {g['remotes']} ({g['host_kind']}) · 브랜치 {g['branches'][:15]}")
+        out.append(f"- Remotes {g['remotes']} ({g['host_kind']}) · branches {g['branches'][:15]}")
         if g.get('shallow'):
-            out.append('- ⚠ 얕은 복제(shallow) — 커밋 수·반복 횟수가 전체 이력보다 적게 나온다')
-        out.append(f"- 커밋 {g['total_commits']} (merge {g['merge_commits']}, 합쳐진 대상 {g['merge_into'] or '없음'}) · 분석 {g['analyzed_commits']}"
+            out.append('- ⚠ Shallow clone: commit counts and repetitions are lower than the full history')
+        out.append(f"- Commits {g['total_commits']} (merge {g['merge_commits']}, Merge targets {g['merge_into'] or 'none'}) · analyzed {g['analyzed_commits']}"
                    f"{' · since ' + g['since'] if g['since'] else ''}")
         na = lambda v: 'n/a' if v is None else v
-        out.append(f"- conventional 비율 {na(g['conventional_ratio'])} · 한글 제목 비율 {na(g['hangul_subject_ratio'])}"
-                   f" · type {g['types']} · scope {g['scopes']} · 트레일러 {g['trailers'] or '없음'}")
-        out.append('- 제목 예: ' + ' | '.join(g['subject_samples'][:8]))
-        out.append(f"\n### fix 커밋 {len(g['fix_commits'])}개 (S3 후보)")
+        out.append(f"- conventional ratio {na(g['conventional_ratio'])} · Korean-subject ratio {na(g['hangul_subject_ratio'])}"
+                   f" · type {g['types']} · scope {g['scopes']} · trailers {g['trailers'] or 'none'}")
+        out.append('- Subject samples: ' + ' | '.join(g['subject_samples'][:8]))
+        out.append(f"\n### Fix commits: {len(g['fix_commits'])} (S3 candidates)")
         out.extend(f'- {s}' for s in g['fix_commits'][:30])
-        mark = lambda f: ' (보관본?)' if ARCHIVE_DIR.search(f) else ''
-        out.append('- fix 핫스팟 파일: ' + ', '.join(f'`{f}` {n}{mark(f)}' for f, n in g['fix_hot_files'][:12]))
-        out.append('- fix 핫스팟 폴더: ' + ', '.join(f'`{f}` {n}{mark(f)}' for f, n in g['fix_hot_dirs'][:8]))
-        out.append('- 변경 많은 파일: ' + ', '.join(f'`{f}` {n}' for f, n in g['churn_files'][:10]))
-        out.append(f"\n### 규칙·문서 커밋 {len(g['doc_commits'])}개 (규칙이 자란 기록)")
+        mark = lambda f: ' (archive?)' if ARCHIVE_DIR.search(f) else ''
+        out.append('- Fix hotspots (files): ' + ', '.join(f'`{f}` {n}{mark(f)}' for f, n in g['fix_hot_files'][:12]))
+        out.append('- Fix hotspots (folders): ' + ', '.join(f'`{f}` {n}{mark(f)}' for f, n in g['fix_hot_dirs'][:8]))
+        out.append('- Most-changed files: ' + ', '.join(f'`{f}` {n}' for f, n in g['churn_files'][:10]))
+        out.append(f"\n### Rule and doc commits: {len(g['doc_commits'])} (how the rules grew)")
         out.extend(f'- {s}' for s in g['doc_commits'][:20])
     return '\n'.join(out)
 
@@ -606,7 +606,7 @@ def main(argv):
         return 2
     root = Path(args[0]).expanduser().resolve()
     if not root.is_dir():
-        print(f'저장소 루트가 아니다: {root} — 경로를 확인해 다시 실행한다.', file=sys.stderr)
+        print(f'not a repository root: {root}; check the path and rerun.', file=sys.stderr)
         return 2
     since = args[args.index('--since') + 1] if '--since' in args else None
     out = args[args.index('--out') + 1] if '--out' in args else None

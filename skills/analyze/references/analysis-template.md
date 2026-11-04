@@ -1,61 +1,61 @@
-# 분석 문서 양식
+# Analysis doc template
 
-`<작업 폴더>/<작업 ID>/analysis.md`로 쓴다. 해당 없는 절은 지운다. 추정은 `추정:`, 모르는 것은 `확인 필요`로 쓴다.
+Write to `<work folder>/<task ID>/analysis.md`. Delete sections that do not apply. Mark estimates `Estimate:` and unknowns `needs confirmation`.
 
 ```markdown
-# <작업 ID> <제목>
+# <task ID> <title>
 
-- 출처: <이슈 링크·파일·붙여넣기> · 읽은 날짜 · 종류: 기능 | 변경 | 버그 | 조사
-- 브랜치: <현재 또는 제안> · 기준 커밋: <짧은 SHA>
+- Source: <issue link · file · paste> · date read · type: feature | change | bug | investigation
+- Branch: <current or proposed> · base commit: <short SHA>
 
-## 요구 요약
-요구 항목을 번호로 쪼갠다. 원문 표현은 짧게 인용하고, 해석이 필요한 곳은 해석을 따로 적는다.
+## Requirement summary
+Split the requirement into numbered items. Quote the source wording briefly and write interpretations separately.
 
-| 번호 | 요구 | 원문 근거 | 해석·질문 |
+| No. | Requirement | Source wording | Interpretation · question |
 |---|---|---|---|
 
-## 용어
-요구서 용어 ↔ 코드 용어(테이블·클래스·화면 이름). 처음 보는 업무 용어만.
+## Terms
+Requirement terms ↔ code terms (table, class, screen names). Only unfamiliar domain terms.
 
-## 현행
-요구와 관련된 지금 동작. 진입점(화면·API·배치·메시지) → 처리 → 저장소 순서로 `파일:줄`.
+## Current behavior
+What happens today for this requirement, as `file:line` in the order entry point (screen · API · batch · message) → processing → storage.
 
-## 버그일 때
-- 증상·재현 절차·기대 동작
-- 원인: 근거(`파일:줄`, 로그, 데이터)와 함께. 확인 못 했으면 가설과 확인 방법
-- 같은 원인이 다른 곳에도 있는지
+## If it is a bug
+- Symptom · reproduction steps · expected behavior
+- Cause, with evidence (`file:line`, logs, data). If not confirmed, the hypothesis and how to check it
+- Whether the same cause exists elsewhere
 
-## 변경 요구 대비 차이
-| 번호 | 현행 | 변경 후 | 바꿀 곳 |
+## Differences from the requirement
+| No. | Current | After | Where to change |
 |---|---|---|---|
 
-## 영향 범위
-| 구분 | 대상 | 변경 | 근거 |
+## Impact
+| Area | Target | Change | Evidence |
 |---|---|---|---|
-| 화면·API·배치·DB·외부 연동·권한·설정·문서 | | 추가/수정/삭제 | |
+| Screen · API · batch · DB · external integration · permission · config · docs | | add/modify/delete | |
 
-### 현행 유지 목록
-바꾸지 않지만 이번 변경에 깨질 수 있는 것: 같은 테이블·API·컴포넌트를 쓰는 다른 기능, 부수 효과, 저장 전 검증, 권한 범위. 구현 후 회귀 확인에 쓴다.
+### Keep-as-is list
+Things that do not change but could break: other features using the same tables, APIs or components, side effects, pre-save validation, permission scope. Used for the regression check after implementation.
 
-## 위험 점검
-해당 신호가 있는 항목만. | 항목 | 질문 | 현행·답(근거) | 대응 |
+## Risk check
+Only items whose signal appears. | Item | Question | Current · answer (evidence) | Action |
 
-## 구현 계획
-선례: <따라 할 기존 커밋·파일>
+## Implementation plan
+Precedent: <existing commit or file to follow>
 
-순서대로. 각 단계: 바꿀 파일 · 내용 한 줄 · 확인 방법.
+In order. Per step: file to change · one-line change · how to verify.
 
-## DB 변경 (있으면)
-객체·변경 내용·기존 데이터 영향·변경 SQL과 복구 SQL 파일 위치. 실행은 사람이 한다.
+## DB change (if any)
+Objects · change · impact on existing data · location of change SQL and rollback SQL. A human runs them.
 
-## 검증 계획
-| 확인 | 방법(자동 검사·화면·API·DB 조회) | 데이터 |
+## Verification plan
+| Check | Method (automated check · screen · API · DB query) | Data |
 |---|---|---|
 
-## 확인 필요
-- [ ] 사람이 정해야 할 것. 선택지가 있으면 선택지와 권장안.
+## Needs confirmation
+- [ ] Decisions a person must make. If there are options, list them with a recommendation.
 
-## 결정 기록
-| 날짜 | 질문 | 결정 |
+## Decision log
+| Date | Question | Decision |
 |---|---|---|
 ```

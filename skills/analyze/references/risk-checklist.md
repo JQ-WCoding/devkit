@@ -1,102 +1,102 @@
-# 공통 위험 점검표
+# Common risk checklist
 
-목차: 쓰는 법 · 데이터·트랜잭션 · 동시성·중복 · 상태 · 숫자·시간 · 권한·보안 · 외부 연동 · 대량·성능 · 이력·운영 · 배포·호환 · 표시·오류
+Contents: How to use · Data and transactions · Concurrency and duplicates · State · Numbers and time · Permissions and security · External integrations · Volume and performance · History and operations · Deployment and compatibility · Display and errors
 
-업무 영역과 관계없이 사고가 반복되는 지점이다. 항목마다 **해당 신호**가 변경에 보이면 분석 문서의 「위험 점검」에 질문과 답(근거 `파일:줄` 또는 `확인 필요`)을 남긴다. 해당 없는 항목은 적지 않는다.
+These are the places where incidents recur regardless of the business domain. When an item's **signal** shows up in the change, write the question and answer (evidence `file:line` or `needs confirmation`) under "Risk check" in the analysis doc. Do not write items that do not apply.
 
-## 쓰는 법
+## How to use
 
-- 변경 범위(바뀌는 테이블·API·화면·배치)를 먼저 정하고, 그 범위에 대해서만 훑는다.
-- 답은 코드에서 확인한 현행 방식으로 쓴다. 이 저장소의 방식이 `docs/rules/`에 있으면 그것을 따른다.
-- 답할 수 없으면 추측하지 않고 `확인 필요`로 올려 🛑에서 묻는다.
+- Fix the change scope (tables, APIs, screens, batches that change) first, and scan only that scope.
+- Answer with the current approach confirmed in code. If `docs/rules/` describes this repo's approach, follow it.
+- If you cannot answer, do not guess; raise it as `needs confirmation` and ask at the 🛑 gate.
 
-## 데이터·트랜잭션
+## Data and transactions
 
-| 항목 | 해당 신호 | 확인할 것 |
+| Item | Signal | What to check |
 |---|---|---|
-| 원자성 | 한 요청이 두 개 이상 테이블·저장소를 바꾼다 | 한 트랜잭션인가, 중간 실패 시 무엇이 남는가, 롤백되지 않는 부수 효과(파일·메시지·외부 호출)는 커밋 뒤로 미뤘는가 |
-| 정합성 규칙 | 합계·잔액·재고·실적처럼 다른 값에서 파생되는 값 | 파생 값과 원천이 어긋날 수 있는 경로, 재계산·대사(reconciliation) 방법 |
-| 삭제 | 삭제·취소 기능 | 논리/물리 삭제 중 무엇인가, 참조하는 데이터는 어떻게 되는가 |
-| 빈 조건 | 동적 WHERE·필터로 UPDATE/DELETE | 조건이 비면 전체가 바뀌지 않는가 |
+| Atomicity | One request changes two or more tables or stores | Is it one transaction, what is left after a mid-way failure, are non-rollbackable side effects (files, messages, external calls) deferred until after commit |
+| Consistency rules | Values derived from others: totals, balances, stock, production results | Paths where derived values and sources can diverge, how to recalculate or reconcile |
+| Deletion | Delete or cancel features | Logical or physical delete, what happens to referencing data |
+| Empty condition | UPDATE/DELETE with dynamic WHERE or filters | Does an empty condition change everything |
 
-## 동시성·중복
+## Concurrency and duplicates
 
-| 항목 | 해당 신호 | 확인할 것 |
+| Item | Signal | What to check |
 |---|---|---|
-| 공유 수량 | 재고·좌석·잔액·쿠폰 수량·설비 가용량을 여러 사용자가 동시에 바꾼다 | 잠금(행 잠금·선점) 또는 버전 비교, 음수·초과 할당 방지 |
-| 유일성 | 하나만 있어야 하는 값(같은 날 같은 대상의 예약, 주문번호, 회원 이메일)을 여러 요청이 등록한다 | DB 유일 제약이 있는가(조회 후 삽입만으로는 동시 요청에 뚫린다), 위반 예외를 사용자 오류로 바꾸는가(제약 이름으로 구분), 기존 중복 데이터 정리 |
-| 멱등성 | 결제 결과 통지·웹훅·메시지 수신, 재시도되는 배치, 더블 클릭 가능한 저장 | 같은 요청이 두 번 와도 한 번만 반영되는가(멱등 키·처리 상태 확인) |
-| 순서 | 비동기 이벤트·메시지 | 순서가 바뀌어 도착하면 어떻게 되는가 |
-| 동시 편집 | 같은 문서·주문을 두 화면에서 고친다 | 나중 저장이 앞 저장을 덮어쓰지 않는가 |
+| Shared quantity | Several users change stock, seats, balances, coupon counts or equipment capacity at once | Locking (row lock, reservation) or version comparison, prevention of negative or over-allocation |
+| Uniqueness | Several requests register a value that must be unique (one reservation per target per day, order number, member email) | Is there a DB unique constraint (check-then-insert alone fails under concurrent requests), is the violation turned into a user error (distinguished by constraint name), cleanup of existing duplicates |
+| Idempotency | Payment notifications, webhooks, message consumers, retried batches, double-clickable saves | Is the same request applied once even if it arrives twice (idempotency key, processed-state check) |
+| Ordering | Async events and messages | What happens if they arrive out of order |
+| Concurrent edits | The same document or order edited in two screens | Does a later save overwrite an earlier one |
 
-## 상태
+## State
 
-| 항목 | 해당 신호 | 확인할 것 |
+| Item | Signal | What to check |
 |---|---|---|
-| 상태 전이 | 주문·결제·작업지시·출고·정산처럼 상태 코드가 있다 | 허용되는 전이 목록, 이 변경이 새 전이를 만드는가, 어느 상태에서 수정·취소가 막히는가 |
-| 역처리 | 취소·환불·반품·재작업 | 원래 처리의 모든 부수 효과(수량·금액·이력·외부 통지)를 되돌리는가, 부분 취소 |
-| 마감 | 일·월 마감, 정산 확정, 실적 확정 | 마감된 기간의 데이터를 바꾸는 경로가 막혀 있는가 |
+| State transitions | Status codes on orders, payments, work orders, shipments, settlements | Allowed transitions, whether this change adds a transition, in which states edit or cancel is blocked |
+| Reversal | Cancel, refund, return, rework | Are all side effects of the original (quantity, amount, history, external notifications) reversed, partial cancellation |
+| Closing | Daily or monthly close, settlement or result confirmation | Are paths that change data in a closed period blocked |
 
-## 숫자·시간
+## Numbers and time
 
-| 항목 | 해당 신호 | 확인할 것 |
+| Item | Signal | What to check |
 |---|---|---|
-| 금액 | 가격·결제·수수료·세금·정산 | 부동소수 대신 정수·고정소수, 반올림 위치와 규칙, 통화, 합계와 개별 합의 차이 |
-| 수량·단위 | 단위 환산(박스↔낱개, kg↔g), 소수 수량 | 환산 기준의 출처, 환산 오차 누적 |
-| 시간대 | 일자 기준 집계, 마감 시각, 해외 사용자·서버 | 저장 시간대, 표시 시간대, "오늘"의 기준 |
-| 영업일 | 배송일·정산일·유효기간 계산 | 휴일·주말 처리, 경계일 포함 여부 |
+| Money | Prices, payments, fees, taxes, settlements | Integers or fixed decimals instead of floating point, where and how rounding happens, currency, difference between the total and the sum of items |
+| Quantity and units | Unit conversion (box↔piece, kg↔g), fractional quantities | Source of the conversion basis, accumulated conversion error |
+| Time zone | Date-based aggregation, cut-off times, overseas users or servers | Stored time zone, displayed time zone, what "today" means |
+| Business days | Delivery dates, settlement dates, validity periods | Holidays and weekends, whether boundary days are included |
 
-## 권한·보안
+## Permissions and security
 
-| 항목 | 해당 신호 | 확인할 것 |
+| Item | Signal | What to check |
 |---|---|---|
-| 데이터 범위 | 회사·사업장·창고·판매자·고객 등 범위로 나뉜 데이터 | 조회·수정 쿼리마다 범위 조건이 서버에서 붙는가(화면 값을 믿지 않는가), 다른 범위의 ID를 넣으면 막히는가 |
-| 기능 권한 | 관리·승인·정산 기능 | 메뉴 숨김만이 아니라 서버에서 권한을 확인하는가 |
-| 개인정보 | 이름·연락처·주소·주민번호 등 | 저장 시 암호화·마스킹, 로그·오류 메시지·내보내기 파일에 노출되지 않는가 |
-| 결제 정보 | 카드·계좌 | 카드 번호 등 저장 금지 항목을 저장하지 않는가, 결제 대행사 토큰만 쓰는가 |
-| 입력 검증 | 사용자 입력이 쿼리·파일 경로·HTML·명령에 들어간다 | 바인딩·이스케이프·허용 목록 |
-| 비밀값 | 키·토큰·접속정보 | 코드·설정 파일·로그에 들어가지 않는가 |
+| Data scope | Data split by company, site, warehouse, seller, customer | Does every read and write query get the scope condition on the server (not trusting screen values), is an ID from another scope blocked |
+| Function permission | Admin, approval, settlement functions | Does the server check the permission, not just hide the menu |
+| Personal data | Name, phone, address, national ID and the like | Encryption or masking at rest, not exposed in logs, error messages or export files |
+| Payment data | Cards, bank accounts | Not storing forbidden items such as card numbers, using only payment-gateway tokens |
+| Input validation | User input reaches a query, file path, HTML or command | Binding, escaping, allow lists |
+| Secrets | Keys, tokens, connection info | Not in code, config files or logs |
 
-## 외부 연동
+## External integrations
 
-| 항목 | 해당 신호 | 확인할 것 |
+| Item | Signal | What to check |
 |---|---|---|
-| 실패 처리 | 결제 대행사·택배사·설비(PLC)·ERP·마켓 API 호출 | 타임아웃, 재시도 횟수와 간격, 실패 시 상태, 사람이 다시 처리하는 방법 |
-| 트랜잭션 경계 | DB 트랜잭션 안에서 외부 호출 | 외부 지연이 DB 잠금·커넥션을 붙잡지 않는가, 외부는 성공·DB는 롤백인 경우 |
-| 결과 불명 | 응답 없음·타임아웃 | 결과를 조회해 맞추는 방법(대사), 중복 요청 방지 |
-| 계약 | 외부 응답 필드·코드값 | 문서 근거, 알 수 없는 코드값이 오면 어떻게 하는가 |
+| Failure handling | Calls to payment gateways, carriers, equipment (PLC), ERP, marketplace APIs | Timeout, retry count and interval, state on failure, how a person reprocesses |
+| Transaction boundary | External call inside a DB transaction | Does external latency hold DB locks or connections, the case where the external side succeeds and the DB rolls back |
+| Unknown result | No response, timeout | How to query the result and reconcile, prevention of duplicate requests |
+| Contract | External response fields and code values | Documented source, what happens with an unknown code value |
 
-## 대량·성능
+## Volume and performance
 
-| 항목 | 해당 신호 | 확인할 것 |
+| Item | Signal | What to check |
 |---|---|---|
-| 반복 안 호출 | 목록을 돌며 쿼리·API 호출 | 묶음 처리 가능 여부, 예상 건수 × 1건 시간 |
-| 페이징 | 목록 조회·내보내기 | 페이지 크기 상한, 전체 건수 쿼리 비용 |
-| 인덱스 | 새 조회 조건·정렬 | 조건 컬럼 인덱스, 실행 계획 확인이 필요한가 |
-| 시간 제한 | 업로드·일괄 처리·배치 | 트랜잭션·요청·프록시 시간 제한과 예상 소요 시간 |
+| Calls in a loop | Querying or calling an API per list item | Can it be batched, expected count × time per item |
+| Paging | List queries, exports | Page size limit, cost of the total-count query |
+| Indexes | New query conditions or sorting | Indexes on condition columns, whether an execution plan check is needed |
+| Time limits | Uploads, bulk processing, batches | Transaction, request and proxy time limits vs expected duration |
 
-## 이력·운영
+## History and operations
 
-| 항목 | 해당 신호 | 확인할 것 |
+| Item | Signal | What to check |
 |---|---|---|
-| 감사 이력 | 금액·수량·상태·권한 변경 | 누가·언제·무엇을 바꿨는지 남는가 |
-| 로그 | 오류·외부 연동 | 원인을 찾을 수 있는 키(요청 ID·주문번호)가 로그에 있는가, 민감정보는 빠졌는가 |
-| 운영 대응 | 실패가 사람 손으로 복구된다 | 재처리 화면·스크립트, 알림 |
+| Audit history | Changes to amounts, quantities, states, permissions | Is who changed what and when recorded |
+| Logs | Errors, external integrations | Do logs carry a key to trace the cause (request ID, order number), are sensitive values left out |
+| Operational response | Failures are recovered by hand | Reprocessing screen or script, alerts |
 
-## 배포·호환
+## Deployment and compatibility
 
-| 항목 | 해당 신호 | 확인할 것 |
+| Item | Signal | What to check |
 |---|---|---|
-| 스키마 변경 | 컬럼·테이블·제약 변경 | 기존 코드가 새 스키마에서, 새 코드가 옛 스키마에서 도는가(추가 → 이전 → 제거 순서), 변경·복구 SQL, 앱이 기동할 때 스키마를 적용하는가(그러면 제약 생성 실패가 기동 실패), `IF NOT EXISTS` 같은 기준본이 기존 DB에 실제로 반영되는가, DB 종류가 여럿이면 모두 고쳤는가 |
-| 데이터 이전 | 기존 데이터 변환 | 건수, 소요 시간, 재실행 가능 여부, 되돌리기 |
-| API 호환 | 다른 앱·외부가 호출하는 API·메시지 | 필드 추가는 호환, 제거·이름 변경·의미 변경은 호출부 확인 |
-| 설정 | 새 환경 변수·설정 키 | 모든 환경(로컬·개발·운영)에 값이 있는가, 기본값 |
-| 되돌리기 | 배포 후 문제 | 코드만 되돌려도 되는가, 데이터·스키마도 되돌려야 하는가 |
+| Schema change | Column, table, constraint changes | Does old code run on the new schema and new code on the old schema (add → migrate → remove), change and rollback SQL, does the app apply the schema at startup (then a failed constraint creation is a failed boot), is a baseline such as `IF NOT EXISTS` actually applied to existing DBs, if there are several DB vendors were all updated |
+| Data migration | Converting existing data | Row count, duration, re-runnable, how to revert |
+| API compatibility | APIs or messages called by other apps or externals | Adding fields is compatible; removal, renaming or meaning changes need a caller check |
+| Config | New environment variables or config keys | Is there a value in every environment (local, dev, prod), default value |
+| Rollback | Problems after deployment | Is reverting the code enough, or must data and schema be reverted too |
 
-## 표시·오류
+## Display and errors
 
-| 항목 | 해당 신호 | 확인할 것 |
+| Item | Signal | What to check |
 |---|---|---|
-| 오류 처리 | 예외를 잡는 코드 | 실패를 성공으로 숨기지 않는가, 사용자 메시지와 로그를 나눴는가 |
-| 다국어 | 새 문구 | 메시지 키·번역 방식이 저장소 규칙을 따르는가 |
-| 형식 | 날짜·숫자·금액 표시 | 표시 형식과 저장 형식을 섞지 않는가 |
+| Error handling | Code that catches exceptions | Does it hide failure as success, are the user message and the log separated |
+| Localization | New wording | Do message keys and translation follow the repo rules |
+| Formatting | Date, number, money display | Are display format and storage format kept apart |

@@ -3,45 +3,45 @@
     "skills": [
       "setup"
     ],
-    "query": "이 저장소 devkit 세팅해줘",
+    "query": "Set up devkit in this repo",
     "files": [],
     "expected_behavior": [
-      "scan_repo.py를 ${CLAUDE_PLUGIN_ROOT} 경로로 실행해 지문을 scratchpad에 저장한다",
-      "커밋 관례·서버 기동·DB 쓰기·공유 범위 중 지문으로 정해지지 않은 것만 AskUserQuestion으로 묻는다",
-      "파일 구성안과 .gitignore 변경(docs/ 추적 파일 수 포함)을 보여 주고 승인 전에는 파일을 만들지 않는다",
-      "작성 후 check_docs.py를 실행하고 커밋하지 않으며, 끝에 devkit:suggest-skills를 한 줄로 제안한다"
+      "Runs scan_repo.py via the ${CLAUDE_PLUGIN_ROOT} path and saves the fingerprint in the scratchpad",
+      "Asks with AskUserQuestion only the items (commit convention, server start, DB writes, sharing scope) the fingerprint did not settle",
+      "Shows the file plan and .gitignore changes (including the tracked docs/ file count) and creates no files before approval",
+      "After writing, runs check_docs.py, does not commit, and ends by suggesting devkit:suggest-skills in one line"
     ]
   },
   {
     "skills": [
       "setup"
     ],
-    "query": "이미 docs/rules 있는 저장소인데 devkit 기본 틀에 맞게 보강해줘",
+    "query": "This repo already has docs/rules — extend it to the devkit skeleton",
     "files": [],
     "expected_behavior": [
-      "기존 docs/rules·CLAUDE.md를 정본으로 두고 빠진 파일·절만 더한다",
-      "기존 파일을 덮어쓰지 않고 Edit으로 더하며 줄바꿈을 보존한다"
+      "Treats the existing docs/rules and CLAUDE.md as the source of truth and adds only missing files and sections",
+      "Does not overwrite existing files; adds with Edit and preserves line endings"
     ]
   },
   {
     "skills": [
       "setup"
     ],
-    "query": "팀원 모두 devkit 쓰게 저장소에 설정해줘",
+    "query": "Configure the repo so every teammate uses devkit",
     "files": [],
     "expected_behavior": [
-      ".claude/settings.json에 extraKnownMarketplaces와 enabledPlugins를 넣는 구성안을 보여 준다",
-      ".gitignore를 .claude/* 와 !.claude/settings.json 으로 바꾸는 것을 승인받은 뒤에만 쓴다"
+      "Shows a plan that puts extraKnownMarketplaces and enabledPlugins in .claude/settings.json",
+      "Changes .gitignore to .claude/* and !.claude/settings.json only after approval"
     ]
   },
   {
     "skills": [
       "setup"
     ],
-    "query": "출고 화면 버그 고쳐줘",
+    "query": "Fix the bug on the shipping screen",
     "files": [],
     "expected_behavior": [
-      "setup을 쓰지 않는다"
+      "Does not use setup"
     ]
   }
 ]

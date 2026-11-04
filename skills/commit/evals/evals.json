@@ -3,45 +3,45 @@
     "skills": [
       "commit"
     ],
-    "query": "방금 고친 거 커밋해줘",
+    "query": "Commit what I just fixed",
     "files": [],
     "expected_behavior": [
-      "docs/rules/git.md가 있으면 그 형식을, 없으면 최근 커밋 관례를 따른다",
-      "파일을 지정해 git add -- 로 스테이징하고 git add . 을 쓰지 않는다",
-      "저장소 규칙에 없으면 Co-Authored-By 트레일러를 붙이지 않는다",
-      "push하지 않는다"
+      "Follows docs/rules/git.md if present, otherwise the recent commit convention",
+      "Stages named files with git add -- and does not use git add .",
+      "Does not add a Co-Authored-By trailer unless the repo rules require it",
+      "Does not push"
     ]
   },
   {
     "skills": [
       "commit"
     ],
-    "query": "web이랑 api 바뀐 거 나눠서 커밋해줘",
+    "query": "Split the web and api changes into separate commits",
     "files": [],
     "expected_behavior": [
-      "하위 프로젝트별로 파일을 나눠 커밋을 두 개 만든다",
-      "무관한 사용자 변경이 섞여 있으면 알리고 넣지 않는다"
+      "Splits files by subproject and makes two commits",
+      "If unrelated user changes are mixed in, says so and leaves them out"
     ]
   },
   {
     "skills": [
       "commit"
     ],
-    "query": "커밋하고 push해서 PR까지 올려줘",
+    "query": "Commit, push and open a PR",
     "files": [],
     "expected_behavior": [
-      "커밋은 commit 스킬로 하고 push·PR은 devkit:pr-publish로 넘긴다",
-      "PR 게시 전 초안 확인을 받는다"
+      "Commits with the commit skill and hands push and PR to devkit:push and devkit:pr-publish",
+      "Gets the draft confirmed before publishing the PR"
     ]
   },
   {
     "skills": [
       "commit"
     ],
-    "query": "이 커밋 메시지 형식 어때?",
+    "query": "Is this commit message format OK?",
     "files": [],
     "expected_behavior": [
-      "커밋을 만들지 않고 규칙과 비교한 의견만 준다"
+      "Does not create a commit; only gives an opinion compared with the rules"
     ]
   }
 ]

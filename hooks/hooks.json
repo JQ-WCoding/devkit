@@ -1,5 +1,5 @@
 {
-  "description": "세션 시작 때 devkit 판단 원칙을 넣고, 셸 명령 실행 전 Git·서버 기동 규칙을 코드로 강제한다. Python 3(python3 명령)이 필요하다",
+  "description": "Injects the devkit judgment principles at session start and enforces Git and server-start rules in code before shell commands. Requires Python 3 (the python3 command)",
   "hooks": {
     "SessionStart": [
       {

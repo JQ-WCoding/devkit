@@ -1,8 +1,8 @@
-"""저장소에서 검사(lint·타입·빌드·테스트) 후보 명령을 찾아 나열한다. 아무것도 실행하지 않는다.
+"""List candidate check commands (lint, type, build, test) in a repository. Runs nothing.
 
-사용: python3 -I discover.py <저장소 루트>
-출력: 하위 프로젝트 · 종류 · 명령 · 근거 표. 서버 기동·배포·자동 수정 명령은 '제외'로 따로 보여 준다.
-필요: Python 3.8 이상(3.11 미만이면 pyproject 의 도구 설정은 문자열 검색으로만 본다).
+Usage: python3 -I discover.py <repo root>
+Output: a subproject · kind · command · evidence table. Server-start, deploy and autofix commands are listed separately as excluded.
+Requires: Python 3.8+ (below 3.11, pyproject tool settings are only found by text search).
 """
 import json
 import os
@@ -13,7 +13,7 @@ from pathlib import Path
 SKIP_DIRS = {'.git', 'node_modules', 'build', 'dist', 'out', 'target', '.gradle', 'vendor', 'venv',
              '.venv', '__pycache__', '.claude', '.next', '.nuxt', 'coverage'}
 MAX_DEPTH = 3
-# package.json scripts 이름으로 종류를 정한다. 기동·배포·자동 수정은 검사가 아니므로 제외 목록으로 보낸다
+# Kind is decided by the package.json script name. Start, deploy and autofix are not checks, so they go to the excluded list
 KIND_BY_SCRIPT = [
     ('lint', re.compile(r'^(lint|eslint|stylelint)(:.*)?$')),
     ('type', re.compile(r'^(typecheck|type-check|tsc|check-types|types)(:.*)?$')),
@@ -52,18 +52,18 @@ def node(root, rel, rows, excluded):
     for name, body in sorted(pkg.get('scripts', {}).items()):
         cmd = f'{lock} run {name}'
         if EXCLUDE_SCRIPT.match(name):
-            excluded.append((str(rel), cmd, '기동·배포·자동 수정'))
+            excluded.append((str(rel), cmd, 'start/deploy/autofix'))
             continue
         for kind, pat in KIND_BY_SCRIPT:
             if pat.match(name):
                 note = f'package.json scripts.{name} = {body[:60]}'
                 if not has_modules:
-                    note += ' · node_modules 없음(설치는 사용자 확인 후)'
+                    note += ' · no node_modules (install only after the user confirms)'
                 rows.append((str(rel), kind, cmd, note))
                 break
     if 'typescript' in {**pkg.get('dependencies', {}), **pkg.get('devDependencies', {})} \
             and not any(r[0] == str(rel) and r[1] == 'type' for r in rows):
-        rows.append((str(rel), 'type', 'npx tsc --noEmit', 'typescript 의존성 · scripts 에 타입 검사 없음'))
+        rows.append((str(rel), 'type', 'npx tsc --noEmit', 'typescript dependency · no type-check script'))
 
 
 def gradle(root, rel, rows, excluded):
@@ -73,10 +73,10 @@ def gradle(root, rel, rows, excluded):
     for marker, task in (('spring-javaformat', 'checkFormat'), ('checkstyle', 'checkstyleMain'),
                          ('spotless', 'spotlessCheck'), ('ktlint', 'ktlintCheck'), ('detekt', 'detekt')):
         if marker in text:
-            rows.append((str(rel), 'lint', f'{wrapper} --no-daemon {task}', f'build.gradle 의 {marker}'))
+            rows.append((str(rel), 'lint', f'{wrapper} --no-daemon {task}', f'{marker} in build.gradle'))
     rows.append((str(rel), 'build', f'{wrapper} --no-daemon compileJava', 'build.gradle'))
-    rows.append((str(rel), 'test', f'{wrapper} --no-daemon test', 'build.gradle · DB 등 외부 의존 테스트인지 먼저 확인'))
-    excluded.append((str(rel), f'{wrapper} bootRun', '서버 기동'))
+    rows.append((str(rel), 'test', f'{wrapper} --no-daemon test', 'build.gradle · first check whether tests need a DB or other external service'))
+    excluded.append((str(rel), f'{wrapper} bootRun', 'server start'))
 
 
 def maven(root, rel, rows, excluded):
@@ -85,10 +85,10 @@ def maven(root, rel, rows, excluded):
     for marker, goal in (('spring-javaformat', 'spring-javaformat:validate'), ('maven-checkstyle-plugin', 'checkstyle:check'),
                          ('spotless', 'spotless:check'), ('nohttp', 'validate')):
         if marker in text:
-            rows.append((str(rel), 'lint', f'{mvn} -q {goal}', f'pom.xml 의 {marker}'))
+            rows.append((str(rel), 'lint', f'{mvn} -q {goal}', f'{marker} in pom.xml'))
     rows.append((str(rel), 'build', f'{mvn} -q compile', 'pom.xml'))
-    rows.append((str(rel), 'test', f'{mvn} -q test', 'pom.xml · 외부 의존 테스트인지 먼저 확인'))
-    excluded.append((str(rel), f'{mvn} spring-boot:run', '서버 기동'))
+    rows.append((str(rel), 'test', f'{mvn} -q test', 'pom.xml · first check whether tests need external services'))
+    excluded.append((str(rel), f'{mvn} spring-boot:run', 'server start'))
 
 
 def python(root, rel, rows, excluded):
@@ -98,11 +98,11 @@ def python(root, rel, rows, excluded):
         if p.exists():
             text += p.read_text(encoding='utf-8', errors='replace')
     if 'ruff' in text or (root / rel / 'ruff.toml').exists():
-        rows.append((str(rel), 'lint', 'ruff check <파일>', 'ruff 설정'))
+        rows.append((str(rel), 'lint', 'ruff check <files>', 'ruff config'))
     if 'mypy' in text:
-        rows.append((str(rel), 'type', 'mypy <경로>', 'mypy 설정'))
+        rows.append((str(rel), 'type', 'mypy <path>', 'mypy config'))
     if 'pytest' in text or (root / rel / 'tests').is_dir():
-        rows.append((str(rel), 'test', 'pytest <경로>', 'pytest 설정 또는 tests/'))
+        rows.append((str(rel), 'test', 'pytest <path>', 'pytest config or tests/'))
 
 
 def go(root, rel, rows, excluded):
@@ -121,11 +121,11 @@ def make(root, rel, rows, excluded):
     text = (root / rel / 'Makefile').read_text(encoding='utf-8', errors='replace')
     for target in sorted(set(MAKE_TARGETS.findall(text))):
         rows.append((str(rel), 'lint' if target in ('lint', 'vet', 'check') else target if target in ('test', 'build') else 'type',
-                     f'make {target}', 'Makefile 타깃'))
+                     f'make {target}', 'Makefile target'))
 
 
 def ci_commands(path):
-    """CI 파일에서 실행 명령 줄을 뽑는다(GitHub `run:`, GitLab `script:` 목록). 서버 기동·배포는 표시만 한다."""
+    """Extract command lines from a CI file (GitHub `run:`, GitLab `script:` lists)."""
     try:
         lines = path.read_text(encoding='utf-8', errors='replace').splitlines()
     except OSError:
@@ -148,7 +148,7 @@ def ci_commands(path):
             continue
         if re.match(r'(before_script|script):\s*$', stripped):
             block, block_indent = True, indent
-    # 검사·빌드에 해당하는 명령만 남긴다(셸 제어문·배포·설치 줄은 기준이 아니다)
+    # Keep only check/build commands (shell control, deploy and install lines are not the baseline)
     keep = re.compile(r'\b(test|lint|build|verify|check|compile|eslint|tsc|pytest|ruff|mypy|gradlew|mvnw|mvn|gradle|'
                       r'npm|yarn|pnpm|bun|go (vet|test|build)|cargo|make)\b')
     return [c for c in dict.fromkeys(cmds) if c and c not in ('|', '>') and not c.startswith('#') and keep.search(c)]
@@ -164,7 +164,7 @@ def main(argv):
         return 2
     root = Path(argv[1]).expanduser().resolve()
     if not root.is_dir():
-        print(f'저장소 루트가 아니다: {root}', file=sys.stderr)
+        print(f'not a repository root: {root}', file=sys.stderr)
         return 2
     rows, excluded, seen = [], [], set()
     for rel, name in find(root, set(HANDLERS)):
@@ -175,20 +175,20 @@ def main(argv):
         HANDLERS[name](root, rel, rows, excluded)
     tools = {r[2].split()[0] for r in rows}
     if {'./mvnw', 'mvn'} & tools and {'./gradlew', 'gradle'} & tools:
-        print('빌드 도구가 둘이다(Maven·Gradle). 아래 CI 명령에서 쓰는 쪽을 권한다.\n')
+        print('Two build tools (Maven and Gradle). Prefer the one the CI commands below use.\n')
     ci = [p for p in ('.gitlab-ci.yml', 'Jenkinsfile', 'azure-pipelines.yml') if (root / p).exists()]
     ci += [str(p.relative_to(root)) for p in sorted((root / '.github' / 'workflows').glob('*.y*ml'))] \
         if (root / '.github' / 'workflows').is_dir() else []
     if not rows:
-        print('검사 후보 명령을 찾지 못했다. 저장소 규칙(docs/rules)·CI 설정에서 명령을 찾거나 사용자에게 묻는다.')
+        print('No candidate check commands found. Look in the repo rules (docs/rules) and CI config, or ask the user.')
     else:
-        print('| 하위 프로젝트 | 종류 | 명령 | 근거 |\n|---|---|---|---|')
+        print('| Subproject | Kind | Command | Evidence |\n|---|---|---|---|')
         for r in rows:
             print(f'| `{r[0]}` | {r[1]} | `{r[2]}` | {r[3]} |')
     if excluded:
-        print('\n제외(검사가 아님): ' + ', '.join(f'`{c}`({w}, {why})' for w, c, why in excluded))
+        print('\nExcluded (not checks): ' + ', '.join(f'`{c}`({w}, {why})' for w, c, why in excluded))
     if ci:
-        print('\nCI 설정이 실행하는 명령(검사 기준으로 쓴다):')
+        print('\nCommands run by CI (use as the check baseline):')
         for c in ci:
             for cmd in ci_commands(root / c)[:8]:
                 print(f'- `{c}`: `{cmd}`')

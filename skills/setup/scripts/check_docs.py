@@ -1,47 +1,47 @@
-"""생성한 규칙·라우터·가이드·에이전트·스킬 문서를 점검한다. 파일은 고치지 않는다.
+"""Check generated rule, router, guide, agent and skill docs. Never modifies files.
 
-사용: python3 -I check_docs.py <저장소 루트> [--allow <식별자> ...]
-  --allow: 저장소에 없어도 의도해서 쓴 식별자(외부 도구·제품·표준 이름)를 근거 검사에서 뺀다.
+Usage: python3 -I check_docs.py <repo root> [--allow <identifier> ...]
+  --allow: exclude identifiers that are intentionally absent from the repo (external tools, products, standards) from the evidence check.
 
-검사 대상: CLAUDE.md · docs/rules/*.md · docs/guide/*.md · .claude/agents/*.md · .claude/skills/*/*.md
-검사 항목:
-  ERROR  깨진 상대 링크 · 비밀값 형태 · 채우지 않은 템플릿 빈칸 `{{…}}` · 에이전트 frontmatter 누락
-  WARN   규칙 문서의 코드 표기(`…`) 중 저장소에서 근거를 찾지 못한 식별자 · 길이 초과 · 쓰기 도구가 있는 에이전트
-         · 루트 README 에서 docs/rules·docs/guide 로 가는 깨진 링크
-  INFO   `확인 필요`·`미확인`·TODO 남은 개수
-ERROR 가 하나라도 있으면 종료 코드 1. 스킬 폴더 자체 점검은 suggest-skills 의 check_skill.py 로 한다.
+Scope: CLAUDE.md · docs/rules/*.md · docs/guide/*.md · .claude/agents/*.md · .claude/skills/*/*.md
+Checks:
+  ERROR  broken relative links · secret-like values · unfilled template slots `{{…}}` · missing agent frontmatter
+  WARN   inline-code identifiers (`…`) in rule docs with no evidence in the repo · over length · agents with write tools
+         · broken links from the root README into docs/rules or docs/guide
+  INFO   count of open markers: `needs confirmation`/`확인 필요`, `unverified`/`미확인`, TODO
+Exits 1 if there is any ERROR. Check skill folders themselves with suggest-skills' check_skill.py.
 """
 import re
 import subprocess
 import sys
 from pathlib import Path
 
-# 라우터는 매 세션 읽히므로 짧아야 한다(원래 프로젝트 CLAUDE.md 21줄 기준, 여유를 둔 경고선)
+# The router is read every session, so keep it short (origin project CLAUDE.md was 21 lines; warning line with headroom)
 CLAUDE_MD_WARN = 40
-# 규칙 문서 하나가 이보다 길면 영역을 나누는 편이 읽기 쉽다(원래 프로젝트 최대 111줄 기준)
+# A rule doc longer than this reads better split by area (origin project max was 111 lines)
 RULE_DOC_WARN = 150
 GENERATED_GLOBS = ['CLAUDE.md', 'docs/rules/*.md', 'docs/guide/*.md', '.claude/agents/*.md',
                    '.claude/skills/*/SKILL.md', '.claude/skills/*/*.md']
-# 근거 검사는 규칙 정본에만 한다(스킬·에이전트에는 명령 예시가 많아 잡음이 크다)
+# Evidence check runs on the canonical rules only (skills and agents have many command examples, too noisy)
 EVIDENCE_GLOBS = ['CLAUDE.md', 'docs/rules/*.md']
 LINK = re.compile(r'\]\(([^)\s]+)\)')
 FENCE = re.compile(r'```.*?```', re.S)
 INLINE_CODE = re.compile(r'`([^`\n]+)`')
-# 길이 제한 없이 한 줄 안의 빈칸을 모두 잡는다
+# Catch every slot within a line, no length cap
 SLOT = re.compile(r'\{\{[^\n]*?\}\}')
-OPEN_MARKS = re.compile(r'확인 필요|미확인|TODO|TBD')
+OPEN_MARKS = re.compile(r'(?i:needs confirmation|unverified)|확인 필요|미확인|TODO|TBD')
 SECRETS = [
-    ('AWS 액세스 키', re.compile(r'AKIA[0-9A-Z]{16}')),
-    ('개인 키', re.compile(r'-----BEGIN [A-Z ]*PRIVATE KEY-----')),
-    ('GitLab/GitHub 토큰', re.compile(r'\b(glpat-[\w-]{20,}|gh[pousr]_[A-Za-z0-9]{30,})')),
-    ('Slack 토큰', re.compile(r'\bxox[abpr]-[\w-]{10,}')),
-    ('URL 안 계정', re.compile(r'://[^/\s:@]+:[^/\s@<>{}$]+@')),
-    ('비밀번호 값', re.compile(r'(?i)(password|passwd|pwd|secret|api[_-]?key|token)\s*[:=]\s*["\']?(?![<${*]|\s|$|개별|별도|환경변수|미확인)[^\s"\'`|]{4,}')),
+    ('AWS access key', re.compile(r'AKIA[0-9A-Z]{16}')),
+    ('private key', re.compile(r'-----BEGIN [A-Z ]*PRIVATE KEY-----')),
+    ('GitLab/GitHub token', re.compile(r'\b(glpat-[\w-]{20,}|gh[pousr]_[A-Za-z0-9]{30,})')),
+    ('Slack token', re.compile(r'\bxox[abpr]-[\w-]{10,}')),
+    ('credentials in URL', re.compile(r'://[^/\s:@]+:[^/\s@<>{}$]+@')),
+    ('password value', re.compile(r'(?i)(password|passwd|pwd|secret|api[_-]?key|token)\s*[:=]\s*["\']?(?![<${*]|\s|$|개별|별도|환경변수|미확인|provided|shared|separately|environment|unverified)[^\s"\'`|]{4,}')),
 ]
-# 식별자로 볼 코드 표기: 경로·점 표기·밑줄·camelCase·접두어 형태. 공백이 있으면 명령이라 뺀다
+# Inline code treated as an identifier: paths, dotted names, underscores, camelCase, prefixes. Anything with spaces is a command and skipped
 IDENT_LIKE = re.compile(r'^[@\w./:{}*-]+$')
 IDENT_SIGNAL = re.compile(r'[./_]|[a-z][A-Z]|^[A-Z]{2,}[A-Z_]*_$')
-# 어느 저장소에나 쓰는 일반 표기(근거 검사 제외)
+# Generic names valid in any repo (excluded from the evidence check)
 GENERIC = {
     'docs/rules', 'docs/rules/', 'docs/guide', 'docs/guide/', 'CLAUDE.md', 'CLAUDE.local.md', '.claude/',
     '.gitignore', 'README.md', 'git.md', 'common.md', 'environments.md', 'git add .', '--force', '--no-verify',
@@ -74,34 +74,34 @@ def check_links(root, path, text, rep, level='ERROR', only_prefix=None):
         if only_prefix and not any(rel.startswith(p) for p in only_prefix):
             continue
         if rel and not (path.parent / rel).exists():
-            rep.add(level, path.relative_to(root), f'깨진 링크: {target}')
+            rep.add(level, path.relative_to(root), f'broken link: {target}')
 
 
 def check_secrets(root, path, text, rep):
     for name, pat in SECRETS:
         for m in pat.finditer(text):
             line = text.count('\n', 0, m.start()) + 1
-            rep.add('ERROR', f'{path.relative_to(root)}:{line}', f'{name} 형태 — 값을 지우고 "개별 전달"로 쓴다')
+            rep.add('ERROR', f'{path.relative_to(root)}:{line}', f'looks like a {name}; remove the value and write "provided separately"')
 
 
 def check_agent(root, path, text, rep):
     m = re.match(r'---\n(.*?)\n---', text, re.S)
     if not m:
-        rep.add('ERROR', path.relative_to(root), 'frontmatter 없음')
+        rep.add('ERROR', path.relative_to(root), 'no frontmatter')
         return
     fm = m.group(1)
     for key in ('name', 'description', 'tools'):
         if not re.search(rf'^{key}:', fm, re.M):
-            rep.add('ERROR', path.relative_to(root), f'frontmatter `{key}` 없음')
+            rep.add('ERROR', path.relative_to(root), f'frontmatter has no `{key}`')
     tools = re.search(r'^tools:\s*(.+)$', fm, re.M)
     if tools and re.search(r'\b(Edit|Write|NotebookEdit)\b', tools.group(1)):
-        rep.add('WARN', path.relative_to(root), '쓰기 도구가 있다 — 조회 담당 에이전트면 뺀다')
+        rep.add('WARN', path.relative_to(root), 'has write tools; remove them for a read-only agent')
     if not re.search(r'^model:', fm, re.M):
-        rep.add('WARN', path.relative_to(root), '`model` 없음 — 탐색 담당은 sonnet 으로 둔다')
+        rep.add('WARN', path.relative_to(root), 'no `model`; use sonnet for an exploration agent')
 
 
 def evidence_checker(root):
-    """식별자가 저장소(규칙 문서 제외)의 경로나 내용에 있는지 본다. git 이 없으면 None."""
+    """Check whether an identifier appears in repo paths or content (rule docs excluded). None without git."""
     listed = subprocess.run(['git', 'ls-files', '--cached', '--others', '--exclude-standard'],
                             cwd=root, capture_output=True, text=True)
     if listed.returncode != 0:
@@ -119,7 +119,7 @@ def evidence_checker(root):
             found = subprocess.run(['git', 'grep', '-q', '-F', '--untracked', probe, '--', '.'] + excludes,
                                    cwd=root, capture_output=True).returncode == 0
         if not found:
-            # `User.name`·`value/onChange`·`_ID/_NO` 같은 표기는 조각이 모두 있으면 근거가 있다고 본다
+            # Names like `User.name`, `value/onChange`, `_ID/_NO` count as evidenced when every part is found
             parts = [x.strip('*') for x in re.split(r'[/.]', probe) if len(x.strip('*')) >= 2]
             found = len(parts) >= 2 and all(has(x) for x in parts)
         cache[token] = found
@@ -130,7 +130,7 @@ def evidence_checker(root):
 def check_evidence(root, files, rep, allow):
     has = evidence_checker(root)
     if has is None:
-        rep.add('WARN', '.', 'git 저장소가 아니라 식별자 근거 검사를 건너뛴다')
+        rep.add('WARN', '.', 'not a git repository; skipping the identifier evidence check')
         return
     for path in files:
         text = FENCE.sub('', path.read_text(encoding='utf-8', errors='replace'))
@@ -145,7 +145,7 @@ def check_evidence(root, files, rep, allow):
                 missing.append(t)
         if missing:
             rep.add('WARN', path.relative_to(root),
-                    f'저장소에서 근거를 찾지 못한 식별자 {len(missing)}개: {missing[:8]} — 다른 프로젝트에서 옮겼거나 오타인지 확인한다')
+                    f'{len(missing)} identifiers with no evidence in the repo: {missing[:8]}; check for copies from another project or typos')
 
 
 def main(argv):
@@ -157,7 +157,7 @@ def main(argv):
     rep = Report()
     files = collect(root, GENERATED_GLOBS)
     if not files:
-        print(f'점검할 문서가 없다: {root} — CLAUDE.md·docs/rules 를 만든 뒤 실행한다.')
+        print(f'no docs to check: {root}; run after creating CLAUDE.md and docs/rules.')
         return 2
     open_count = 0
     for path in files:
@@ -165,20 +165,20 @@ def main(argv):
         rel = path.relative_to(root)
         lines = text.count('\n') + 1
         if path.name == 'CLAUDE.md' and path.parent == root and lines > CLAUDE_MD_WARN:
-            rep.add('WARN', rel, f'{lines}줄 — 라우터는 표와 호출 기준만 남기고 규칙은 docs/rules 로 옮긴다')
+            rep.add('WARN', rel, f'{lines} lines; keep only tables and invocation cues in the router and move rules to docs/rules')
         if 'docs/rules' in str(rel) and lines > RULE_DOC_WARN:
-            rep.add('WARN', rel, f'{lines}줄 — 영역을 나누거나 예제를 별도 가이드로 옮긴다')
+            rep.add('WARN', rel, f'{lines} lines; split by area or move examples to a separate guide')
         check_links(root, path, text, rep)
         check_secrets(root, path, text, rep)
         if '.claude/agents' in str(rel):
             check_agent(root, path, text, rep)
         for m in SLOT.finditer(text):
             line = text.count('\n', 0, m.start()) + 1
-            rep.add('ERROR', f'{rel}:{line}', f'채우지 않은 빈칸 {m.group(0)[:80]}')
+            rep.add('ERROR', f'{rel}:{line}', f'unfilled slot {m.group(0)[:80]}')
         marks = OPEN_MARKS.findall(FENCE.sub('', text))
         if marks:
             open_count += len(marks)
-            rep.add('INFO', rel, f'남은 표시 {len(marks)}개: {sorted(set(marks))}')
+            rep.add('INFO', rel, f'{len(marks)} open markers: {sorted(set(marks))}')
     readme = root / 'README.md'
     if readme.is_file():
         check_links(root, readme, readme.read_text(encoding='utf-8', errors='replace'), rep,
@@ -190,7 +190,7 @@ def main(argv):
                 print(f'{lv:5} {where}: {msg}')
     errors = sum(1 for lv, _, _ in rep.items if lv == 'ERROR')
     warns = sum(1 for lv, _, _ in rep.items if lv == 'WARN')
-    print(f'\n문서 {len(files)}개 · ERROR {errors} · WARN {warns} · 남은 표시 {open_count}')
+    print(f'\n{len(files)} docs · ERROR {errors} · WARN {warns} · open markers {open_count}')
     return 1 if errors else 0
 
 
