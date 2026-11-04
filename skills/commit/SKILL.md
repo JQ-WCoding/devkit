@@ -1,6 +1,6 @@
 ---
 name: commit
-description: 요청받은 변경을 저장소 Git 규칙(docs/rules/git.md, 없으면 기존 커밋 관례)에 맞춰 파일을 지정해 스테이징하고 커밋한다. "커밋해줘", "이거 커밋", "나눠서 커밋해줘" 같은 요청에 사용한다. push는 devkit:push, PR/MR은 devkit:pr-publish를 쓴다.
+description: 변경을 저장소 커밋 규칙(없으면 기존 관례)에 맞춰 파일을 지정해 스테이징하고 커밋한다. "커밋해줘", "나눠서 커밋해줘"에 쓴다.
 argument-hint: "[커밋할 경로...]"
 ---
 
@@ -43,8 +43,7 @@ git status --porcelain
 ```
 
 - 메시지는 scratchpad 파일로 넘긴다.
-- `git add .`·`git add -A`·`--no-verify`·`--amend`(요청 없을 때)를 쓰지 않는다.
-- pre-commit 훅이 실패하면 우회하지 않고 원인을 보고한다. 훅이 파일을 고쳤으면 그 변경을 보여 주고 다시 스테이징할지 묻는다.
+- 일괄 스테이징·훅 우회·`--amend`는 devkit 가드 훅이 막거나 묻는다. pre-commit 훅이 실패하면 원인을 보고한다. 훅이 파일을 고쳤으면 그 변경을 보여 주고 다시 스테이징할지 묻는다.
 
 ## 4. 보고
 

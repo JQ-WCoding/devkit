@@ -1,11 +1,19 @@
 {
-  "description": "세션 시작·재개·압축 후 devkit 작업 원칙과 스킬 안내를 주입한다",
+  "description": "세션 시작 때 devkit 판단 원칙을 넣고, 셸 명령 실행 전 Git·서버 기동 규칙을 코드로 강제한다. Python 3(python3 명령)이 필요하다",
   "hooks": {
     "SessionStart": [
       {
         "matcher": "startup|resume|clear|compact",
         "hooks": [
-          { "type": "command", "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh\"" }
+          { "type": "command", "command": "python3", "args": ["-I", "${CLAUDE_PLUGIN_ROOT}/hooks/session_start.py"], "timeout": 10 }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          { "type": "command", "command": "python3", "args": ["-I", "${CLAUDE_PLUGIN_ROOT}/hooks/guard.py"], "timeout": 10, "onFailure": "continue" }
         ]
       }
     ]

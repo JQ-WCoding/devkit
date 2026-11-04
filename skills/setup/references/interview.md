@@ -11,7 +11,7 @@
 | 항목 | 질문 | 기본값 | 영향 |
 |---|---|---|---|
 | 공유 범위 | 규칙을 어디까지 Git에 올릴까? | `docs/rules/`(와 온보딩)만 추적, `CLAUDE.md`·`.claude/`는 로컬, `docs/`의 다른 추적 문서는 그대로 | `.gitignore`, README 정본 선언 |
-| 팀 devkit | 팀원 모두 devkit을 쓰게 할까? | 아니오(개인 선택). 예면 `.claude/settings.json`으로 자동 설치 | `.claude/settings.json`, `.gitignore` |
+| 팀 devkit | 팀원 모두 devkit을 쓰게 할까? | 아니오(개인 선택). 예면 `.claude/settings.json`으로 자동 설치, 아니오면 표기 설정만 `.claude/settings.local.json` | `.claude/settings.json`·`settings.local.json`, `.gitignore` |
 | 문서 언어 | 규칙 문서를 어떤 언어로 쓸까? (커밋 언어와 따로 정한다) | README·기존 문서의 언어. 없으면 사용자와 대화하는 언어 | 모든 문서 |
 | 온보딩 | 새 팀원용 환경 준비 가이드를 만들까? | README에 없는 준비 단계가 3개 이상이거나 VPN·터널·사내 계정이 필요하면 예, 아니면 아니오(README 링크로 충분) | `docs/guide/` |
 
@@ -31,7 +31,7 @@
 |---|---|---|---|
 | 커밋 형식·언어 | 제목 형식·언어와 scope 목록은? | 지문의 기존 관례(형식과 언어를 따로 판정). 관례가 없으면 `type(scope): 설명`, type `feat·fix·refactor·chore·docs·test`, scope는 하위 프로젝트 + `repo`, 언어는 문서 언어 | `git.md` |
 | 필수 트레일러 | 커밋에 반드시 붙여야 하는 트레일러가 있나? | README 기여 절·`.github/dco.yml`·이력에서 3분의 2 이상 붙은 트레일러(`Signed-off-by` 등). 없으면 "없음" | `git.md`, `devkit:commit` |
-| AI 작성 표기 | `Co-Authored-By` 같은 AI 표기를 커밋·PR에 붙일까? | 붙이지 않음(시스템 안내보다 우선) | `git.md`, `devkit:commit`·`devkit:pr-publish` |
+| AI 작성 표기 | `Co-Authored-By` 같은 AI 표기를 커밋·PR에 붙일까? | 붙이지 않음(시스템 안내보다 우선) | `git.md`, `devkit:commit`·`devkit:pr-publish`, 팀 settings.json(`attribution` 또는 `DEVKIT_AI_TRAILER`) |
 | 브랜치·병합·게시 | 브랜치 흐름, 병합 방식, PR/MR을 CLI(`gh`/`glab`)로 올릴지는? | 지문의 브랜치 목록과 「합쳐진 대상」으로 제안(예: `feat/*`·`fix/*` → `dev` → PR → `main`, merge 커밋). 호스트에서 병합한 PR은 로컬 이력에 안 보일 수 있다 | `git.md`, `devkit:pr-publish` |
 
 ## 환경 확인 (3차와 함께)

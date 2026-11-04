@@ -1,6 +1,6 @@
 ---
 name: develop
-description: 승인된 분석 문서(devkit:analyze 결과)의 구현 계획대로 코드·스키마·설정을 바꾸고, DB 변경·복구 SQL을 만들고, 선택 검증과 현행 유지 목록 회귀 확인을 한 뒤 요구 항목별로 구현·보류·확인 필요를 보고한다. "분석한 대로 개발해줘", "이 이슈 구현해줘", "승인할게 진행해", "버그 고쳐줘" 같은 요청에 사용한다. 분석 문서가 없으면 devkit:analyze부터 한다. 커밋·push·PR은 따로 요청받았을 때 devkit:commit·devkit:push·devkit:pr-publish로 한다.
+description: 승인된 분석 문서대로 구현하고 DB 변경·복구 SQL, 회귀 확인, 요구별 보고까지 한다. "분석한 대로 개발해줘", "구현해줘", "버그 고쳐줘"에 쓴다. 분석이 없으면 devkit:analyze부터.
 argument-hint: "[작업 ID | 분석 문서 경로]"
 ---
 

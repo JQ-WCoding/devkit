@@ -1,6 +1,6 @@
 ---
 name: push
-description: 현재 브랜치의 커밋을 원격에 안전하게 올린다 — 대상 원격·브랜치·올라갈 커밋을 확인하고, 원격이 앞서 있으면 합칠 방법을 묻고, 보호·배포 브랜치로의 직접 push와 force push를 막는다. "push해줘", "원격에 올려줘", "브랜치 올려줘" 같은 요청에 사용한다. 커밋은 devkit:commit, PR/MR 생성은 devkit:pr-publish를 쓴다.
+description: 올라갈 커밋·대상을 확인하고 원격이 앞서면 합칠 방법을 물은 뒤 push한다. "push해줘", "원격에 올려줘"에 쓴다.
 argument-hint: "[원격] [브랜치]"
 ---
 
@@ -30,7 +30,7 @@ git ls-remote --heads <원격> <브랜치>                   # 비어 있으면 
 
 - **force push**(`--force`, `--force-with-lease`)는 하지 않는다. 사용자가 명시적으로 요청해도, 덮어쓸 원격 커밋 목록을 보여 주고 다시 확인받은 뒤 `--force-with-lease`만 쓴다. 보호·배포 브랜치에는 하지 않는다.
 - **보호·배포 브랜치**(`git.md`에 적힌 것, 없으면 `main`·`master`·`release/*`·`prod*`)로의 직접 push 요청이면 멈추고 알린다. 저장소 흐름상 PR/MR로 합치는 브랜치면 `devkit:pr-publish`를 제안한다.
-- `--no-verify`로 훅을 우회하지 않는다. pre-push 훅이 실패하면 원인을 보고한다.
+- pre-push 훅이 실패하면 원인을 보고한다(`--no-verify`·force는 devkit 가드 훅이 막는다).
 
 ## 3. 원격이 앞서 있을 때
 

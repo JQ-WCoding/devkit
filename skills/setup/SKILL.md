@@ -1,6 +1,6 @@
 ---
 name: setup
-description: 저장소에 devkit 기본 세팅을 깐다 — 팀 공유 규칙 골격 docs/rules(README·공통·Git·환경, 필요하면 계층 문서와 온보딩 가이드), 로컬 라우터 CLAUDE.md, .gitignore, 원하면 팀 자동 설치용 .claude/settings.json. 지문 수집과 짧은 인터뷰로 커밋 관례·실행 환경·작업 정책을 정하고, 구성안을 승인받은 뒤 쓴다. "이 저장소 devkit 세팅해줘", "개발 규칙 기본 틀 만들어줘", "CLAUDE.md랑 docs/rules 깔아줘" 같은 요청에 사용한다. 이 저장소에 맞는 규칙 행·스킬·에이전트를 근거로 더하는 일은 devkit:suggest-skills가 한다.
+description: 지문 수집과 짧은 인터뷰로 팀 공유 규칙 골격(docs/rules)·로컬 CLAUDE.md·.gitignore를 만들거나 보강한다. "devkit 세팅해줘", "개발 규칙 틀 만들어줘", "CLAUDE.md 깔아줘"에 쓴다.
 argument-hint: "[저장소 경로]"
 ---
 
@@ -44,12 +44,12 @@ python3 -I "${CLAUDE_PLUGIN_ROOT}/skills/setup/scripts/scan_repo.py" <저장소 
 - 온보딩 가이드(`docs/guide/`)를 만들지와 단계 목록
 - `.gitignore`에 더할 줄(이미 다 있으면 "변경 없음"과 이유)과 지문의 `docs/` 추적 파일 수. 만들 파일 경로마다 `git check-ignore -v <경로>`로 무시되는지 확인한다 — 공유할 파일이 무시되면 허용 목록에 더하거나 이름을 기존 허용 이름에 맞춘다
 - 저장소 전체 파일을 검사하는 도구(nohttp·라이선스 헤더·markdownlint·맞춤법 검사 등 — CI·빌드 설정에서 찾는다)가 새 문서에도 적용되는지, 그렇다면 그 규칙을 지켜 쓰겠다는 것
-- 팀 자동 설치를 고르면 `.claude/settings.json` 내용([README](../../README.md)의 팀 설치 절 형식)
+- 설정 파일: [templates.md](references/templates.md)의 「.claude/settings.json」 — AI 작성 표기 답에 따라 `attribution` 또는 `DEVKIT_AI_TRAILER`. 팀 devkit 답이 예면 `.claude/settings.json`(자동 설치 키 포함), 아니오면 `.claude/settings.local.json`
 - 보강이면 기존 파일별로 더할 내용
 
 ## 2. 작성
 
-순서: `docs/rules/`(README → common → git → environments → 계층 문서) → `docs/guide/`(만들 때) → `CLAUDE.md` → `.gitignore` → `.claude/settings.json`(고른 경우).
+순서: `docs/rules/`(README → common → git → environments → 계층 문서) → `docs/guide/`(만들 때) → `CLAUDE.md` → `.gitignore` → `.claude/settings.json` 또는 `.claude/settings.local.json`.
 
 - 골격은 [templates.md](references/templates.md)를 쓴다. `{{…}}` 빈칸은 지문·답으로 채우고, 근거가 없으면 행째 지운다.
 - 환경 값은 출처(설정 파일 링크)와 함께 쓰고 `기준일`·`확인 범위`를 붙인다. 사용자가 확인한 값은 "사용자 확인", 아니면 "설정 파일 기준 · 실제 실행·접속 미확인". 근거가 아예 없는 값은 `미확인`. 인증값은 전달 방식만 쓴다.

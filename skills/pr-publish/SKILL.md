@@ -1,6 +1,6 @@
 ---
 name: pr-publish
-description: 브랜치의 변경을 리뷰해 PR(GitHub)·MR(GitLab) 제목·본문 초안을 만들고, 사용자 확인 후 gh 또는 glab으로 생성하거나 열린 PR/MR을 갱신한다. "PR 올려줘", "MR 만들어줘", "PR 리뷰하고 올려", "MR 본문 갱신해줘" 같은 요청에 사용한다. 커밋은 devkit:commit, 남의 PR 코드 리뷰만 원할 때는 일반 코드 리뷰를 쓴다.
+description: 브랜치 변경을 리뷰해 PR/MR 제목·본문 초안을 만들고 확인 후 gh·glab으로 생성·갱신한다. "PR 올려줘", "MR 만들어줘", "MR 본문 갱신해줘"에 쓴다.
 argument-hint: "[source 브랜치] [target 브랜치]"
 ---
 

@@ -1,6 +1,6 @@
 # 템플릿
 
-목차: 쓰는 법 · English fixed sentences · .gitignore · CLAUDE.md · docs/rules/README.md · common.md · git.md · environments.md · 계층 문서 · 온보딩 가이드
+목차: 쓰는 법 · English fixed sentences · .gitignore · .claude/settings.json · CLAUDE.md · docs/rules/README.md · common.md · git.md · environments.md · 계층 문서 · 온보딩 가이드
 
 ## 쓰는 법
 
@@ -61,6 +61,18 @@ CLAUDE.local.md
 ```
 
 `docs/`를 통째로 무시(`/docs/*` + 허용 목록)하는 것은 원래 프로젝트의 선택이었다. 공유 범위 인터뷰에서 그렇게 답했을 때만 쓰고, 지문의 「docs/ 추적 파일」 수가 0이 아니면 그 파일을 모두 허용 목록에 먼저 넣는다(`git ls-files docs`). 추적 중인 파일을 무시 목록으로 숨기지 않는다.
+
+## .claude/settings.json
+
+AI 작성 표기가 커밋·PR에 아예 만들어지지 않게 Claude Code 설정으로 끈다(가드 훅은 만들어진 표기를 막는 쪽). 팀 devkit 답이 예면 `.claude/settings.json`(추적, README 「팀 저장소에 기본으로 켜기」의 자동 설치 키와 합친다), 아니오면 `.claude/settings.local.json`(개인)에 쓴다. 기존 파일이 있으면 키를 합치고 기존 값을 지우지 않는다.
+
+```json
+{
+  "attribution": { "commit": "", "pr": "" }
+}
+```
+
+AI 작성 표기 답이 "붙임"이면 `attribution` 대신 `"env": { "DEVKIT_AI_TRAILER": "allow" }`를 쓴다.
 
 ## CLAUDE.md
 

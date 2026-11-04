@@ -1,6 +1,6 @@
 ---
 name: check
-description: 저장소의 lint·타입 검사·빌드·테스트 명령을 찾아 변경과 관련된 것만 골라 실행하고 실제 결과만 보고한다. 사용자가 "/devkit:check", "검사 돌려줘", "빌드 되는지 봐줘"처럼 직접 부를 때만 쓴다. 일반 수정·작업 완료·커밋·PR만으로 자동 실행하지 않는다.
+description: 변경과 관련된 lint·타입·빌드·테스트만 골라 실행하고 실제 결과만 보고한다. 사용자가 직접 부를 때만 쓴다.
 disable-model-invocation: true
 argument-hint: "[lint | type | build | test] [경로...]"
 ---
