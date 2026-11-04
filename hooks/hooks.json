@@ -1,0 +1,13 @@
+{
+  "description": "세션 시작·재개·압축 후 devkit 작업 원칙과 스킬 안내를 주입한다",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          { "type": "command", "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh\"" }
+        ]
+      }
+    ]
+  }
+}

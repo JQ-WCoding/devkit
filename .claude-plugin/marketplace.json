@@ -1,0 +1,14 @@
+{
+  "name": "devkit",
+  "owner": {
+    "name": "JQ"
+  },
+  "plugins": [
+    {
+      "name": "devkit",
+      "source": "./",
+      "description": "분석·구현·검증·커밋·push·PR/MR 흐름과 규칙 세팅·스킬 제안"
+    }
+  ],
+  "description": "어느 저장소·업무 영역에서나 같은 개발 흐름을 까는 팀 개발 키트"
+}
