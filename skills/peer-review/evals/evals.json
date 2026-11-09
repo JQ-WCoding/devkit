@@ -1,0 +1,49 @@
+[
+  {
+    "skills": [
+      "peer-review"
+    ],
+    "query": "Review what my teammates pushed to dev since last time",
+    "files": [],
+    "expected_behavior": [
+      "Runs collect_commits.py and reviews only commits after the recorded SHA, excluding the user's own commits and merges",
+      "Rechecks open findings from the state file before the new review",
+      "Reports must-fix and optional items separately with file:line and failure scenarios, and drafts one message per developer",
+      "Does not post anything to the Git host or a messenger, and does not modify code"
+    ]
+  },
+  {
+    "skills": [
+      "peer-review"
+    ],
+    "query": "Check whether the team is following the commit rules",
+    "files": [],
+    "expected_behavior": [
+      "If .devkit/peer-review/config.json is missing, builds it from docs/rules/git.md, shows the source of each rule and asks for approval before writing it",
+      "Reports judgment: warnings as needs-checking, not as violations"
+    ]
+  },
+  {
+    "skills": [
+      "peer-review"
+    ],
+    "query": "Review dev, and only tell me what really has to be fixed",
+    "files": [],
+    "expected_behavior": [
+      "Classifies each defect with A (data wrong or lost), B (user does not notice), C (condition occurs in real data)",
+      "For C, counts matching rows with a read-only query where possible or says why it could not",
+      "Lists must-fix items with their A/B/C answers and optional items in one line each"
+    ]
+  },
+  {
+    "skills": [
+      "pr-publish"
+    ],
+    "query": "Review dev → main and open the MR",
+    "files": [],
+    "expected_behavior": [
+      "Uses devkit:pr-publish, not peer-review",
+      "Does not draft per-developer feedback messages"
+    ]
+  }
+]
