@@ -53,6 +53,7 @@ git merge-base origin/<target> origin/<source>
 | Verify after publish | `gh pr view <number> --json headRefOid,baseRefName,headRefName,url` | `glab mr view <iid> -F json` |
 
 - `--remove-source-branch` and `--squash-before-merge` on `glab mr update` are toggles, so do not use them when updating.
+- On GitLab create, add `--squash-before-merge=false` if `git.md` says merge commits (no squash), or `=true` if it says squash. If `git.md` states no merge style, omit the flag so the project setting applies.
 - After publishing, confirm source, target and head SHA match the reviewed values, and report the link.
 - Merge, auto-merge, approval and reviewer/assignee changes only on request. If merging the branch leads to a deploy, say so.
 - If the authenticated account is not a personal one (bot token etc.), say the author will show as that account.
