@@ -31,7 +31,8 @@ git merge-base origin/<target> origin/<source>
 
 ## 3. Draft and 🛑 confirmation
 
-- Show the review result (defects with file, trigger condition and impact) and the title and body draft. Title and body language and format follow `git.md` and the PR template (`.github/pull_request_template.md`, `.gitlab/merge_request_templates/`); without them, use `devkit:commit`'s format and language decision as is.
+- Show the review result (defects with file, trigger condition and impact) and the title and body draft. Title and body language and format follow `git.md` and the PR template; without them, use `devkit:commit`'s format and language decision as is.
+- PR template locations. GitHub: `pull_request_template.md` (any case) in `.github/`, the repo root or `docs/`, or several in a `PULL_REQUEST_TEMPLATE/` folder there. GitLab: `.gitlab/merge_request_templates/*.md` (`Default.md` is the default). Other hosts: the same file name under their folder (`.gitea/`, `.bitbucket/` etc.). If several fit and none is the default, ask which one.
 - If there is an issue key, follow the linking style in `git.md` (title prefix, `Closes #45` or `Refs ABC-123` in the body, etc.); without a rule, put only the source link in the body. Do not change tracker status.
 - If there is an analysis doc (an `.devkit/work/*/analysis.md` matching the branch name or issue key; otherwise the most recent one, after confirming), summarize the requirement items, impact, verification results and DB apply steps in the body. Analysis docs and work SQL are not committed to the repo, so write the SQL steps reviewers need in the body and state "not included in this PR".
 - Do not write checks that were not run as passed. AI attribution follows the trailer rule in `git.md`; without a rule, leave it out.

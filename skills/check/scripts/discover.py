@@ -125,7 +125,7 @@ def make(root, rel, rows, excluded):
 
 
 def ci_commands(path):
-    """Extract command lines from a CI file (GitHub `run:`, GitLab `script:` lists)."""
+    """Extract command lines from a CI file (GitHub `run:`, GitLab and Bitbucket `script:` lists)."""
     try:
         lines = path.read_text(encoding='utf-8', errors='replace').splitlines()
     except OSError:
@@ -176,7 +176,8 @@ def main(argv):
     tools = {r[2].split()[0] for r in rows}
     if {'./mvnw', 'mvn'} & tools and {'./gradlew', 'gradle'} & tools:
         print('Two build tools (Maven and Gradle). Prefer the one the CI commands below use.\n')
-    ci = [p for p in ('.gitlab-ci.yml', 'Jenkinsfile', 'azure-pipelines.yml') if (root / p).exists()]
+    ci = [p for p in ('.gitlab-ci.yml', 'bitbucket-pipelines.yml', 'Jenkinsfile', 'azure-pipelines.yml')
+          if (root / p).exists()]
     ci += [str(p.relative_to(root)) for p in sorted((root / '.github' / 'workflows').glob('*.y*ml'))] \
         if (root / '.github' / 'workflows').is_dir() else []
     if not rows:

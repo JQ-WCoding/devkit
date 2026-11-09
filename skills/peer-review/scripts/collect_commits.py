@@ -275,13 +275,22 @@ def print_open_findings(R, st):
     print()
 
 
+# Default merge-commit subjects per host. Bitbucket Server must precede GitHub (both start "Merge pull request #N").
+MERGE_KINDS = [
+    (re.compile(r"^Merge pull request #\d+ in \S+ from "), "Bitbucket Server PR merge"),
+    (re.compile(r"^Merge pull request #\d+ from "), "GitHub PR merge"),
+    (re.compile(r"^Merge pull request '.*' \(#\d+\) from "), "Gitea/Forgejo PR merge"),
+    (re.compile(r"^Merged in \S+ \(pull request #\d+\)"), "Bitbucket PR merge"),
+    (re.compile(r"^Merged PR \d+: "), "Azure DevOps PR merge"),
+    (re.compile(r"^Merge branch '[^']+' into '[^']+'"), "GitLab MR merge"),
+    (re.compile(r"remote-tracking branch"), "pull merge"),
+]
+
+
 def merge_kind(subject):
-    if re.search(r"into '[^']+'", subject):
-        return "GitLab MR merge"
-    if subject.startswith("Merge pull request #"):
-        return "GitHub PR merge"
-    if "remote-tracking" in subject:
-        return "pull merge"
+    for pattern, kind in MERGE_KINDS:
+        if pattern.search(subject):
+            return kind
     return "direct merge"
 
 
