@@ -48,14 +48,23 @@ The legacy python.org installer for Windows does not provide a `python3` command
 
 Needs: Claude Code, Python 3.8+, Git. `gh` or `glab` for publishing PRs/MRs.
 
-From a local folder:
+From GitHub ([JQ-WCoding/devkit](https://github.com/JQ-WCoding/devkit)):
+
+```bash
+claude plugin marketplace add JQ-WCoding/devkit
+claude plugin install devkit@devkit
+```
+
+Inside a session: `/plugin marketplace add JQ-WCoding/devkit`, then `/plugin install devkit@devkit`. Restart Claude Code after installing.
+
+The repository is private: you need read access, and Git must be able to authenticate to GitHub (for example `gh auth login`, then `gh auth setup-git`). If the marketplace add fails with an authentication error, check that `git clone https://github.com/JQ-WCoding/devkit.git` works in a terminal.
+
+From a local clone (for developing devkit itself; edits apply without pushing):
 
 ```bash
 claude plugin marketplace add ~/work/devkit
 claude plugin install devkit@devkit
 ```
-
-Once pushed to a Git host, use the repository URL instead of the path (`claude plugin marketplace add https://<host>/<group>/devkit.git`). Inside a session: `/plugin marketplace add …`, `/plugin install devkit@devkit`.
 
 Update: `claude plugin marketplace update devkit`, then `claude plugin update devkit@devkit`, then restart Claude Code.
 
@@ -66,13 +75,13 @@ Add this to the team repo's `.claude/settings.json` (tracked in Git). When a tea
 ```json
 {
   "extraKnownMarketplaces": {
-    "devkit": { "source": { "source": "git", "url": "https://<host>/<group>/devkit.git" } }
+    "devkit": { "source": { "source": "github", "repo": "JQ-WCoding/devkit" } }
   },
   "enabledPlugins": { "devkit@devkit": true }
 }
 ```
 
-- For GitHub: `{ "source": "github", "repo": "<owner>/devkit" }`.
+- For a mirror on another Git host: `{ "source": "git", "url": "https://<host>/<group>/devkit.git" }`.
 - Each teammate may need to download it once with `claude plugin install devkit@devkit --scope project`.
 - In that case set `.gitignore` to `.claude/*` plus `!.claude/settings.json` rather than ignoring all of `.claude/` (`devkit:setup` asks about this in its interview).
 
