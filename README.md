@@ -199,4 +199,4 @@ Rules that must hold every time, without exception, are enforced in code (determ
 
 ## Status
 
-0.4.0 · 2026-11-04. Still in local trial, so no license has been chosen yet. Add a `LICENSE` before publishing.
+0.5.1 · 2026-11-09. Still in local trial, so no license has been chosen yet. Add a `LICENSE` before publishing.
