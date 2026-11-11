@@ -13,21 +13,43 @@
 | 상시 | 세션 훅 `using-devkit` | 세션 시작·재개·clear·압축 시점에 판단 원칙(6줄)을 주입한다. 저장소의 `CLAUDE.md`와 `docs/rules/`가 우선한다 |
 | 상시 | 가드 훅 `hooks/guard.py` | 셸 명령 실행 직전에 Git·서버 기동 규칙을 코드로 강제한다 ("가드 훅" 참고) |
 | 분석 | `/devkit:analyze` | 어떤 출처의 요구사항·이슈·버그든 읽고, 현재 코드 추적 → 차이 → 영향 → 공통 위험 점검 → 구현 계획을 분석 문서로 정리한 뒤 승인을 받는다 |
-| 구현 | `/devkit:develop` | 승인된 계획 구현, DB 변경과 롤백 SQL, 검증과 회귀 점검, 요구사항별 보고 |
+| 구현 | `/devkit:develop` | 승인된 계획 구현, DB 변경과 롤백 SQL(`00_check` → `01_change` → `99_rollback`, 실행은 사람이), 검증과 회귀 점검, 요구사항별 보고 |
 | 검증 | `/devkit:check` | lint·타입·빌드·테스트 명령을 찾아 관련된 것만 실행한다 (사용자 호출 전용) |
 | 커밋 | `/devkit:commit` | 지정한 파일을 저장소 Git 규칙에 맞춰 커밋한다 |
 | 푸시 | `/devkit:push` | 나갈 커밋과 원격이 앞서 있는지 확인하고, 보호 브랜치·강제 푸시를 막은 뒤 푸시한다 |
-| PR/MR | `/devkit:pr-publish` | 리뷰 → 제목·본문 초안 → 확인 → `gh`/`glab`으로 PR/MR 생성 또는 갱신 |
+| PR/MR | `/devkit:pr-publish` | 리뷰 → 제목·본문 초안 → 확인 → `gh`/`glab`으로 PR/MR 생성 또는 갱신. 원격 SHA를 고정해 리뷰한 코드만 게시하고, 그사이 원격이 바뀌면 멈춘다 |
 | 리뷰 | `/devkit:peer-review` | 공유 브랜치에 팀원이 올린 커밋을 지난 리뷰 이후분만 검토하고(`docs/rules/` 기준 커밋 형식, 필수 수정과 선택 결함 구분), 개발자별 피드백 초안을 쓰고 수정될 때까지 지적 사항을 추적한다 |
 | 설정 | `/devkit:setup` | 공유 규칙 골격 `docs/rules/`(공통, Git, 환경; 필요하면 레이어 문서와 온보딩), 로컬 라우터 `CLAUDE.md`, `.gitignore`를 깐다 |
 | 설정 | `/devkit:suggest-skills` | 코드 지점, 반복 작업, 사용자 교정을 근거로 규칙 행·프로젝트 스킬·에이전트를 제안하고, 고른 것만 만든다 |
 | 탐색 | 에이전트 `devkit:code-reader` | 여러 파일에 걸친 탐색을 맡아 결론만 돌려준다 (Sonnet, 읽기 전용) |
 
-`analyze`의 공통 위험 체크리스트는 어느 도메인에서나 되풀이되는 실패 지점을 다룬다: 정합성, 동시성, 멱등성, 상태 전이, 금액, 시간대, 데이터 범위, 개인정보, 외부 연동, 대량 처리, 배포 호환성.
+`analyze`의 공통 위험 체크리스트는 어느 도메인에서나 되풀이되는 실패 지점을 다룬다. 이번 변경에 해당하는 질문만 골라 `file:line` 근거나 "확인 필요"로 답한다.
+
+| 영역 | 질문 예 |
+|---|---|
+| 데이터 · 트랜잭션 | 중간에 실패하면 무엇이 남는가? |
+| 동시성 · 중복 | 둘이 동시에 바꾸면? 같은 요청이 두 번 오면? |
+| 상태 | 취소하면 원래 처리의 흔적이 모두 되돌아가는가? |
+| 숫자 · 시간 | 반올림은 어디서 하나? "오늘"은 어느 시간대인가? |
+| 권한 · 보안 | ID만 바꾸면 남의 데이터가 보이지 않는가? |
+| 외부 연동 | 상대가 응답하지 않으면 결과를 어떻게 확인하나? |
+| 대량 · 성능 | 목록 한 줄마다 DB를 부르지 않는가? |
+| 이력 · 운영 | 누가 바꿨는지 남는가? 실패하면 다시 돌릴 수 있나? |
+| 배포 · 호환 | 옛 코드가 새 스키마에서도 도는가? 되돌릴 수 있나? |
+| 표시 · 오류 | 실패를 성공처럼 숨기지 않는가? |
 
 조건이 맞을 때 `suggest-skills`가 제안하는 청사진: 프로젝트 전용 흐름 스킬(`analyze`·`develop` 위에 이 저장소만의 단계를 더함), `db-analyst`·`knowledge-reader`·`spec-analyst` 에이전트, `workspace-cleanup`, `visual-docs`, 외부 도구 스킬.
 
 ## 작업 흐름
+
+어느 저장소에서나 같은 순서로 진행한다. 색칠된 곳에서 사람이 결정한다.
+
+```mermaid
+flowchart LR
+  A["analyze"] --> H1(["계획 승인"]) --> D["develop"] --> C["check (선택)"] --> CM["commit"] --> P["push"] --> R["pr-publish: 리뷰"] --> H2(["게시 확인"]) --> PR["PR/MR 게시"]
+  classDef human fill:#e8eefb,stroke:#2f5bd3,color:#1e3a8a
+  class H1,H2 human
+```
 
 1. 저장소에서 처음: `/devkit:setup` → 인터뷰 질문 몇 개에 답하고 설정 계획을 승인하면 규칙 골격이 생긴다.
 2. 작업마다: `/devkit:analyze <이슈 링크, 파일 또는 요구사항>` → 승인 → `/devkit:develop` → 필요하면 `/devkit:check` → `/devkit:commit` → `/devkit:push` → `/devkit:pr-publish`.
@@ -35,6 +57,56 @@
 4. 가끔: `/devkit:suggest-skills` → 이 저장소의 규칙 행·스킬·에이전트 후보를 근거와 함께 받고, 고른 것만 만든다. 같은 작업이 반복되거나 같은 교정을 두 번 받으면 Claude가 한 번 제안한다.
 
 분석 문서와 작업 SQL은 `<repo>/.devkit/work/<작업 ID>/`에 둔다 (Git 제외).
+
+## 저장소 설정
+
+`/devkit:setup`은 저장소를 먼저 읽고, 알아낼 수 없는 것만 묻는다.
+
+| 단계 | 하는 일 |
+|---|---|
+| 1. 스캔 | 스크립트가 하위 프로젝트, 런타임과 포트, CI, DB 종류, 기존 커밋 관례를 모은다 |
+| 2. 인터뷰 | 스캔으로 정할 수 없는 것만 두세 번에 나눠 묻는다. 질문마다 추천안이 붙는다 |
+| 3. 계획 승인 | 만들 파일 목록을 먼저 보여 준다. 승인 전에는 아무것도 쓰지 않는다 |
+| 4. 작성 | 근거가 있는 내용만 쓴다. 이미 있는 문서는 덮어쓰지 않고 빠진 부분만 더한다 |
+| 5. 점검 | 깨진 링크, 비밀값처럼 생긴 값, 채우지 않은 빈칸을 검사한다 |
+
+인터뷰에서 묻는 질문 예:
+
+- Claude가 서버를 띄우고 내려도 되나요?
+- DB 쓰기 SQL은 누가 실행하나요?
+- 커밋·푸시·PR은 어디까지 맡길까요?
+- 커밋과 PR에 AI 표기를 넣을까요?
+- 팀원 모두 devkit을 쓰나요?
+- 스캔에서 찾은 로컬 포트·프로필이 맞나요?
+
+끝나면 저장소에 생기는 것:
+
+```text
+my-repo/
+├─ docs/rules/              # Git: 팀 규칙의 단일 출처
+│  ├─ README.md             #   목차
+│  ├─ common.md             #   작업 원칙, 먼저 물을 것, 실행, 검증
+│  ├─ git.md                #   커밋 형식, 브랜치, PR/MR, 금지 사항
+│  ├─ environments.md       #   로컬·배포 환경 값과 출처
+│  └─ backend.md …          #   계층별 문서 (필요할 때)
+├─ docs/guide/              # Git: 신규 팀원 온보딩 (선택)
+├─ .gitignore               # 로컬 파일 제외 줄 추가
+├─ CLAUDE.md                # 기본은 로컬: docs/rules로 가는 링크만
+└─ .claude/settings*.json   # AI 표기 설정: 팀 전체가 쓰면 settings.json, 아니면 settings.local.json
+```
+
+`CLAUDE.md`는 규칙을 복사하지 않고 `docs/rules/`로 링크만 건다. 그래서 규칙을 고칠 곳은 한 군데뿐이다.
+
+### 팀에 적용하기
+
+설치는 사람마다, setup은 저장소마다 한 번이다.
+
+| 누가 | 순서 |
+|---|---|
+| 처음 한 사람 | devkit 설치 → 저장소에서 `/devkit:setup` → 생긴 파일 커밋·푸시 |
+| 나머지 팀원 | devkit 설치 → `git pull` → 바로 `/devkit:analyze`로 시작. setup은 하지 않는다 |
+
+devkit 스킬은 `docs/rules/`를 직접 읽는다. 규칙을 바꿀 때도 이 폴더만 고쳐 커밋하면 모두에게 반영된다.
 
 ## 요구 사항
 
@@ -69,6 +141,20 @@ claude plugin install devkit@devkit
 claude plugin marketplace add ~/work/devkit
 claude plugin install devkit@devkit
 ```
+
+zip 파일로 (GitHub 저장소에 접근할 수 없는 팀원):
+
+1. `devkit.zip`을 지우지 않을 고정된 곳에 푼다. 정리하다 지울 수 있는 다운로드 폴더는 피한다. 업데이트 때 이 폴더를 다시 쓴다. 그 폴더 바로 아래에 `.claude-plugin` 폴더가 보여야 한다 (`devkit/devkit/`처럼 한 번 더 생겼으면 안쪽 폴더를 쓴다).
+2. 등록과 설치:
+
+   ```bash
+   claude plugin marketplace add <압축을 푼 폴더>
+   claude plugin install devkit@devkit
+   ```
+
+3. Claude Code를 다시 열고 `/devkit:`을 입력한다. setup, analyze, commit 같은 스킬이 뜨면 설치된 것이다.
+
+새 버전 zip을 받으면 기존 폴더를 지우고 같은 자리에 새로 푼 뒤, 아래 업데이트 명령을 실행한다.
 
 업데이트: `claude plugin marketplace update devkit` → `claude plugin update devkit@devkit` → Claude Code 재시작.
 

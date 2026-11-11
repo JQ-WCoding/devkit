@@ -13,21 +13,43 @@ Skills and docs are written in English; Claude answers in the user's language, a
 | Always | Session hook `using-devkit` | Injects the judgment principles (6 lines) at session start, resume, clear and compaction. A repo's `CLAUDE.md` and `docs/rules/` take precedence |
 | Always | Guard hook `hooks/guard.py` | Enforces Git and server-start rules in code right before shell commands run (see "Guard hook") |
 | Analyze | `/devkit:analyze` | Reads a requirement, issue or bug from any source; traces current code → gap → impact → common risk check → implementation plan in an analysis doc; asks for approval |
-| Implement | `/devkit:develop` | Implements the approved plan, DB change and rollback SQL, verification and regression check, per-requirement report |
+| Implement | `/devkit:develop` | Implements the approved plan, DB change and rollback SQL (`00_check` → `01_change` → `99_rollback`, run by a person), verification and regression check, per-requirement report |
 | Verify | `/devkit:check` | Finds lint, type, build and test commands and runs only the related ones (user-invoked only) |
 | Commit | `/devkit:commit` | Commits named files following the repo's Git rules |
 | Push | `/devkit:push` | Checks outgoing commits and whether the remote is ahead, blocks protected-branch and force pushes, then pushes |
-| PR/MR | `/devkit:pr-publish` | Review → title and body draft → confirmation → create or update the PR/MR with `gh`/`glab` |
+| PR/MR | `/devkit:pr-publish` | Review → title and body draft → confirmation → create or update the PR/MR with `gh`/`glab`. Pins the remote SHA, publishes only what it reviewed and stops if the remote moved |
 | Review | `/devkit:peer-review` | Reviews teammates' commits on a shared branch since the last review (commit format per `docs/rules/`, must-fix vs optional defects), drafts per-developer feedback and tracks findings until fixed |
 | Setup | `/devkit:setup` | Lays down the shared rules skeleton `docs/rules/` (common, Git, environments; layer docs and onboarding when needed), the local router `CLAUDE.md` and `.gitignore` |
 | Setup | `/devkit:suggest-skills` | Proposes rule rows, project skills and agents from code pinpoints, repeated tasks and user corrections; builds only the chosen ones |
 | Explore | Agent `devkit:code-reader` | Handles multi-file exploration and returns only conclusions (Sonnet, read-only) |
 
-The common risk checklist in `analyze` covers failure points that recur in every domain: consistency, concurrency, idempotency, state transitions, money, time zones, data scope, personal data, external integrations, bulk processing and deployment compatibility.
+The common risk checklist in `analyze` covers failure points that recur in every domain. It answers only the questions this change touches, with `file:line` evidence or `needs confirmation`:
+
+| Area | Sample question |
+|---|---|
+| Data and transactions | What is left behind if it fails half-way? |
+| Concurrency and duplicates | What if two people change it at once, or the same request arrives twice? |
+| State | Does a cancel reverse every trace of the original? |
+| Numbers and time | Where does rounding happen? Which time zone is "today"? |
+| Permissions and security | Can changing an ID expose someone else's data? |
+| External integrations | If the other side does not answer, how is the result confirmed? |
+| Volume and performance | Is the DB called once per list row? |
+| History and operations | Is who changed what recorded? Can a failure be rerun? |
+| Deployment and compatibility | Does old code run on the new schema? Can it be rolled back? |
+| Display and errors | Is a failure hidden as success? |
 
 Blueprints `suggest-skills` proposes when the conditions fit: a project-specific flow skill (adds this repo's own steps on top of `analyze` and `develop`), `db-analyst`, `knowledge-reader` and `spec-analyst` agents, `workspace-cleanup`, `visual-docs`, and external-tool skills.
 
 ## Workflow
+
+Every repository follows the same order. A person decides at the highlighted points.
+
+```mermaid
+flowchart LR
+  A["analyze"] --> H1(["approve the plan"]) --> D["develop"] --> C["check (optional)"] --> CM["commit"] --> P["push"] --> R["pr-publish: review"] --> H2(["confirm"]) --> PR["PR/MR published"]
+  classDef human fill:#e8eefb,stroke:#2f5bd3,color:#1e3a8a
+  class H1,H2 human
+```
 
 1. First time in a repo: `/devkit:setup` → answer a few interview questions and approve the setup plan to get the rules skeleton.
 2. Per task: `/devkit:analyze <issue link, file or requirement>` → approve → `/devkit:develop` → `/devkit:check` if needed → `/devkit:commit` → `/devkit:push` → `/devkit:pr-publish`.
@@ -35,6 +57,56 @@ Blueprints `suggest-skills` proposes when the conditions fit: a project-specific
 4. Occasionally: `/devkit:suggest-skills` → get evidence-backed candidates for this repo's rule rows, skills and agents, and build only the chosen ones. Claude suggests it once when the same task repeats or the same correction is given twice.
 
 Analysis docs and work SQL live in `<repo>/.devkit/work/<task ID>/` (excluded from Git).
+
+## Setting up a repository
+
+`/devkit:setup` reads the repository first and asks only what it cannot find out.
+
+| Step | What happens |
+|---|---|
+| 1. Scan | A script collects sub-projects, runtimes and ports, CI, DB type and the existing commit convention |
+| 2. Interview | Asks only what the scan cannot settle, in two or three rounds, each question with a recommended answer |
+| 3. Plan approval | Shows the list of files to create. Nothing is written before approval |
+| 4. Write | Writes only what has evidence. Existing docs are extended, not overwritten |
+| 5. Check | Looks for broken links, secret-shaped values and unfilled placeholders |
+
+Questions the interview asks, for example:
+
+- May Claude start and stop the servers?
+- Who runs DB write SQL?
+- How far may Claude go with commit, push and PR?
+- Add AI attribution to commits and PRs?
+- Will every teammate use devkit?
+- Are the local ports and profiles found in the scan right?
+
+What the repository gets:
+
+```text
+my-repo/
+├─ docs/rules/              # in Git: the single source of team rules
+│  ├─ README.md             #   index
+│  ├─ common.md             #   working principles, what to ask first, running, verification
+│  ├─ git.md                #   commit format, branches, PR/MR, never-do list
+│  ├─ environments.md       #   local and deploy values with their sources
+│  └─ backend.md …          #   layer docs, when needed
+├─ docs/guide/              # in Git: onboarding for new teammates (optional)
+├─ .gitignore               # lines added for local files
+├─ CLAUDE.md                # local by default: links to docs/rules only
+└─ .claude/settings*.json   # AI attribution setting: settings.json if the whole team uses devkit, else settings.local.json
+```
+
+`CLAUDE.md` copies no rules and only links to `docs/rules/`, so there is one place to change a rule.
+
+### Rolling out to a team
+
+Each person installs devkit; setup runs once per repository.
+
+| Who | Steps |
+|---|---|
+| First person | Install devkit → `/devkit:setup` in the repo → commit and push the created files |
+| Everyone else | Install devkit → `git pull` → start with `/devkit:analyze`. No setup needed |
+
+devkit skills read `docs/rules/` directly. To change a rule for everyone, edit that folder and commit.
 
 ## Requirements
 
@@ -69,6 +141,20 @@ From a local clone (for developing devkit itself; edits apply without pushing):
 claude plugin marketplace add ~/work/devkit
 claude plugin install devkit@devkit
 ```
+
+From a zip file (for teammates without access to the GitHub repo):
+
+1. Unzip `devkit.zip` somewhere permanent, not a downloads folder you clean up; updates reuse this folder. The `.claude-plugin` folder must sit directly inside it (if unzipping created `devkit/devkit/`, use the inner one).
+2. Register and install:
+
+   ```bash
+   claude plugin marketplace add <unzipped folder>
+   claude plugin install devkit@devkit
+   ```
+
+3. Restart Claude Code and type `/devkit:`. If skills such as setup, analyze and commit appear, it is installed.
+
+To update from a new zip, delete the old folder, unzip the new one in the same place, then run the update commands below.
 
 Update: `claude plugin marketplace update devkit`, then `claude plugin update devkit@devkit`, then restart Claude Code.
 
