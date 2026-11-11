@@ -1,5 +1,7 @@
 # devkit
 
+English | [한국어](README.ko.md)
+
 A Claude Code team dev kit that sets up the same development workflow in any repository and any business domain. It ships no project rules up front and depends on no task tracker (Jira, Notion, Obsidian, GitHub Issues …). It contains the **workflow** (analyze → implement → verify → commit → push → PR/MR), **working principles** (minimal scope, claim only what was checked, optional verification, human approval points), and **tools that grow evidence-based rules and skills for each repository**.
 
 Skills and docs are written in English; Claude answers in the user's language, and `devkit:setup` writes repository docs in the language chosen in its interview.
