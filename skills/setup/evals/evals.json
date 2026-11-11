@@ -30,7 +30,8 @@
     "query": "Configure the repo so every teammate uses devkit",
     "files": [],
     "expected_behavior": [
-      "Shows a plan that puts extraKnownMarketplaces and enabledPlugins in .claude/settings.json",
+      "Shows a plan that tracks CLAUDE.md and .claude/settings.json with only the attribution setting",
+      "Does not add extraKnownMarketplaces or enabledPlugins to .claude/settings.json",
       "Changes .gitignore to .claude/* and !.claude/settings.json only after approval"
     ]
   },

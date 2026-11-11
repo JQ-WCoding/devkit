@@ -72,7 +72,7 @@ Update: `claude plugin marketplace update devkit`, then `claude plugin update de
 
 ## Enable by default in a team repo
 
-Add this to the team repo's `.claude/settings.json` (tracked in Git). When a teammate trusts the repo, the marketplace is registered and the plugin is enabled.
+Optional, by hand: `devkit:setup` does not write these keys, because teammates who got devkit as a zip may not reach the GitHub repo. If every teammate can reach it, add this to the team repo's `.claude/settings.json` (tracked in Git). When a teammate trusts the repo, the marketplace is registered and the plugin is enabled.
 
 ```json
 {

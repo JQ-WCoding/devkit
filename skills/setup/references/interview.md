@@ -11,7 +11,7 @@ Ask about work policies code cannot decide and environment facts that need confi
 | Item | Question | Default | Affects |
 |---|---|---|---|
 | Sharing scope | How much of the rules goes into Git? | Track only `docs/rules/` (and onboarding); `CLAUDE.md` and `.claude/` stay local; other tracked docs in `docs/` stay as they are | `.gitignore`, README source-of-truth statement |
-| Team devkit | Should every teammate use devkit? | No (personal choice). If yes, auto-install via `.claude/settings.json`; if no, only the attribution setting in `.claude/settings.local.json` | `.claude/settings.json` / `settings.local.json`, `.gitignore` |
+| Team devkit | Should every teammate use devkit? | No (personal choice). If yes, track `CLAUDE.md` and the attribution setting in `.claude/settings.json` (each teammate still installs devkit); if no, only the attribution setting in `.claude/settings.local.json` | `.claude/settings.json` / `settings.local.json`, `.gitignore` |
 | Document language | Which language for the rules docs? (decided separately from the commit language) | The language of README and existing docs. If none, the language used in the conversation | All docs |
 | Onboarding | Create an environment setup guide for new teammates? | Yes if there are 3+ setup steps not in README or VPN, tunnels or company accounts are needed; otherwise no (a README link is enough) | `docs/guide/` |
 

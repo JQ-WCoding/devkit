@@ -44,7 +44,7 @@ Show everything at once and get approval. Create no files in the repo before app
 - Whether to create an onboarding guide (`docs/guide/`) and its step list
 - Lines to add to `.gitignore` (or "no change" and why if all are present) and the fingerprint's Tracked docs/ files count. Run `git check-ignore -v <path>` for every planned path — if a file meant to be shared is ignored, add it to the allow list or rename it to match an existing allowed name
 - Whether repo-wide file checkers (nohttp, license headers, markdownlint, spell check, etc. — find them in CI and build config) also apply to the new docs, and if so, that the docs will follow those rules
-- Settings file: the ".claude/settings.json" section of [templates.md](references/templates.md) — `attribution` or `DEVKIT_AI_TRAILER` depending on the AI attribution answer. If the team-devkit answer is yes, `.claude/settings.json` (with auto-install keys); if no, `.claude/settings.local.json`
+- Settings file: the ".claude/settings.json" section of [templates.md](references/templates.md) — `attribution` or `DEVKIT_AI_TRAILER` depending on the AI attribution answer. If the team-devkit answer is yes, `.claude/settings.json` (no install keys; each teammate installs devkit); if no, `.claude/settings.local.json`
 - In extend mode, what will be added to each existing file
 
 ## 2. Write

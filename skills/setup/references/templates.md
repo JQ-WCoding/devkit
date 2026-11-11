@@ -136,7 +136,7 @@ Ignoring all of `docs/` (`/docs/*` + allow list) was the original project's choi
 
 ## .claude/settings.json
 
-Turn AI attribution off in Claude Code settings so it is never created in commits and PRs (the guard hook blocks attribution that was already written). If the team-devkit answer is yes, write it to `.claude/settings.json` (tracked, merged with the auto-install keys from the README section "Enable by default in a team repo"); if no, to `.claude/settings.local.json` (personal). If the file exists, merge the keys and do not remove existing values.
+Turn AI attribution off in Claude Code settings so it is never created in commits and PRs (the guard hook blocks attribution that was already written). If the team-devkit answer is yes, write it to `.claude/settings.json` (tracked); if no, to `.claude/settings.local.json` (personal). If the file exists, merge the keys and do not remove existing values.
 
 ```json
 {
@@ -145,6 +145,8 @@ Turn AI attribution off in Claude Code settings so it is never created in commit
 ```
 
 If the AI attribution answer is "add it", write `"env": { "DEVKIT_AI_TRAILER": "allow" }` instead of `attribution`.
+
+Never write plugin install keys (`extraKnownMarketplaces`, `enabledPlugins`). devkit may be handed out as a zip or a private repo that not every teammate can reach, so each teammate installs it themselves. Keep such keys if the file already has them.
 
 ## CLAUDE.md
 

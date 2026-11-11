@@ -16,7 +16,7 @@ This layout generalises a rules setup refined on a real project. Only the **stru
 - Put `.claude/` (only `.claude/settings.local.json` when a team-shared `settings.json` is kept), `CLAUDE.md`, `CLAUDE.local.md` and other AI tools' personal config in `.gitignore`.
 - `docs/` is usually tracked broadly, so ignore only the local work folders. Ignoring all of it and reopening with an allow list is used only when the user answered that way.
 - Put "This folder is the source of truth for shared rules. Personal AI tool config is not part of the repo" in `docs/rules/README.md`.
-- If the whole team decided to use Claude Code and devkit (interview), `CLAUDE.md` and `.claude/settings.json` (devkit auto-install) may be tracked. Rule bodies still live in `docs/rules/`.
+- If the whole team decided to use Claude Code and devkit (interview), `CLAUDE.md` and `.claude/settings.json` (attribution setting only, no install keys) may be tracked. Rule bodies still live in `docs/rules/`.
 
 ## File roles
 
