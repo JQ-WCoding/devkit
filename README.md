@@ -133,8 +133,6 @@ claude plugin install devkit@devkit
 
 Inside a session: `/plugin marketplace add JQ-WCoding/devkit`, then `/plugin install devkit@devkit`. Restart Claude Code after installing.
 
-The repository is private: you need read access, and Git must be able to authenticate to GitHub (for example `gh auth login`, then `gh auth setup-git`). If the marketplace add fails with an authentication error, check that `git clone https://github.com/JQ-WCoding/devkit.git` works in a terminal.
-
 From a local clone (for developing devkit itself; edits apply without pushing):
 
 ```bash
@@ -199,4 +197,4 @@ Rules that must hold every time, without exception, are enforced in code (determ
 
 ## Status
 
-0.5.1 · 2026-11-09. Still in local trial, so no license has been chosen yet. Add a `LICENSE` before publishing.
+0.5.1 · 2026-11-09. Released under the MIT License (see `LICENSE`).

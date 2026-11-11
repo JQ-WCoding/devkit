@@ -133,8 +133,6 @@ claude plugin install devkit@devkit
 
 세션 안에서: `/plugin marketplace add JQ-WCoding/devkit` 후 `/plugin install devkit@devkit`. 설치 후 Claude Code를 재시작한다.
 
-저장소는 비공개다: 읽기 권한이 있어야 하고, Git이 GitHub에 인증할 수 있어야 한다 (예: `gh auth login` 후 `gh auth setup-git`). marketplace add가 인증 오류로 실패하면 터미널에서 `git clone https://github.com/JQ-WCoding/devkit.git`이 되는지 확인한다.
-
 로컬 클론에서 (devkit 자체를 개발할 때; 푸시하지 않아도 수정이 반영된다):
 
 ```bash
@@ -199,4 +197,4 @@ zip 파일로 (GitHub 저장소에 접근할 수 없는 팀원):
 
 ## 상태
 
-0.5.1 · 2026-11-09. 아직 로컬 시험 중이라 라이선스를 정하지 않았다. 공개 전에 `LICENSE`를 추가한다.
+0.5.1 · 2026-11-09. MIT 라이선스로 배포한다 (`LICENSE` 참고).
