@@ -42,6 +42,7 @@ Contents: Principles · Location and names · Evals first · SKILL.md · Pattern
 - `description`: what it does, when to use it (the request phrases users actually type) and when not to. Use specific key terms, third person, at most 1,024 chars and no XML tags. Claude picks a skill from this sentence alone.
 - Skills that should run only when the user invokes them (delete, deploy, backup, DB writes, checks) get `disable-model-invocation: true`. If the skill takes arguments, add `argument-hint`.
 - Body: only this project's paths, rules, judgment criteria and prohibitions. Don't copy rules from `docs/rules/`; link them.
+- Scope: a skill acts on the project root where Claude was started (the git top-level of the working directory), even when installed globally as a plugin or user skill. It does not search or edit outside that root (`~/.claude`, installed plugin copies, other repos); when a target lies outside, it says so and stops.
 - Keep the body under 500 lines and move details to reference files. Link every reference file directly from SKILL.md (one level deep). A file over 100 lines gets a `Contents:` line under its title.
 - Multi-step work gets numbered steps with 🛑 user approval points and a verify → fix → re-verify loop ("continue only once the check passes"). For long workflows, add a progress checklist that Claude copies into its reply and ticks off:
   ```
@@ -126,6 +127,7 @@ python3 -I "${CLAUDE_PLUGIN_ROOT}/skills/suggest-skills/scripts/check_skill.py" 
 - [ ] Scripts: errors handled, constants justified, run-vs-read stated, packages listed, python3 -I, forward slashes
 - [ ] MCP tools by full name
 - [ ] No customer names, personal data, secrets or raw transcript quotes
+- [ ] Acts only on the project root (git top-level of the working directory), even when installed globally
 - [ ] ≥3 evals (+1 must-not-handle if auto-selected), compared to the no-skill baseline in a new session on the target model(s)
 - [ ] check_skill.py: no ERROR; WARNs reviewed
 ```
