@@ -37,7 +37,7 @@
     "files": [],
     "expected_behavior": [
       "Treats the prefixed name as a plugin skill, says it is outside this project's scope and stops; a bare name with no skills/<name>/SKILL.md under the root stops the same way",
-      "Does not look up or edit anything under ~/.claude and drafts no change",
+      "Does not search ~/.claude for the target, edits nothing and drafts no change",
       "If the only match under the root is a symlink that resolves outside the root, refuses it the same way"
     ]
   },
