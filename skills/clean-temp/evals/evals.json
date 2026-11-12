@@ -1,0 +1,33 @@
+[
+  {
+    "skills": ["clean-temp"],
+    "query": "/devkit:clean-temp",
+    "files": [],
+    "expected_behavior": [
+      "Runs clean_temp.py scan with the repo root and this session's scratchpad path, and deletes nothing during the scan",
+      "Shows removal candidates and needs-review items with path, size and reason, and asks which to clean up",
+      "Removes only the chosen paths with clean_temp.py trash, never rm, then checks git status --porcelain",
+      "Mentions the files can be restored from the trash and does not call the tree clean while needs-review items remain"
+    ]
+  },
+  {
+    "skills": ["clean-temp"],
+    "query": "/devkit:clean-temp all",
+    "files": [],
+    "expected_behavior": [
+      "Takes 'all' as all removal candidates only, not needs-review items or other sessions' scratchpads",
+      "Does not touch tracked files, .worktrees/, .devkit/ or paths matching the repo's protect globs",
+      "If the trash command refuses a path, reports it instead of deleting it another way"
+    ]
+  },
+  {
+    "skills": ["clean-temp"],
+    "query": "/devkit:clean-temp also clear the old scratchpads",
+    "files": [],
+    "expected_behavior": [
+      "Passes --scratchpad so the scan lists other sessions' scratchpads with their last change time",
+      "Warns that a recently changed scratchpad may belong to a live session before proposing it",
+      "Never lists or removes this session's own scratchpad"
+    ]
+  }
+]

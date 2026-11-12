@@ -13,7 +13,7 @@ argument-hint: "[rules | skills | all] [--since YYYY-MM-DD]"
 | [catalog.md](references/catalog.md) | What to suggest under which conditions |
 | [pinpoint-checklist.md](references/pinpoint-checklist.md) | Finding rule row candidates — also pass its path to subagents |
 | [skill-authoring.md](references/skill-authoring.md) | When building a chosen skill or agent |
-| Blueprints: [project-flow](references/blueprints/project-flow.md) · [db-analyst](references/blueprints/db-analyst.md) · [knowledge-reader](references/blueprints/knowledge-reader.md) · [spec-analyst](references/blueprints/spec-analyst.md) · [workspace-cleanup](references/blueprints/workspace-cleanup.md) · [visual-docs](references/blueprints/visual-docs.md) · [tool-skill](references/blueprints/tool-skill.md) | Read only the ones you decide to build |
+| Blueprints: [project-flow](references/blueprints/project-flow.md) · [db-analyst](references/blueprints/db-analyst.md) · [knowledge-reader](references/blueprints/knowledge-reader.md) · [spec-analyst](references/blueprints/spec-analyst.md) · [visual-docs](references/blueprints/visual-docs.md) · [tool-skill](references/blueprints/tool-skill.md) | Read only the ones you decide to build |
 
 Argument: `rules` for rule rows only, `skills` for skills and agents only, none for both.
 

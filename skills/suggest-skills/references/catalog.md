@@ -6,7 +6,7 @@ Contents: Principles · Agents · Skills · Rule rows · Not suggested
 
 - Suggest only when a condition is met **by evidence**: fingerprint numbers, files and commits, tasks repeated in this conversation, repeated tasks the user described.
 - Do not suggest many at once. At most 3 recommended; the rest go on one line each as "next candidates".
-- Do not build anything with the same role as what devkit already provides (`analyze`, `develop`, `check`, `commit`, `push`, `pr-publish`, `peer-review`, `code-reader`). User-invoked-only skills such as `check` do not appear in the session skill list. If this repo has its own check or publish procedure, first suggest adding it as rows in `docs/rules/`.
+- Do not build anything with the same role as what devkit already provides (`analyze`, `develop`, `check`, `commit`, `push`, `pr-publish`, `peer-review`, `parallel-work`, `clean-temp`, `code-reader`). User-invoked-only skills such as `check` do not appear in the session skill list. If this repo has its own check or publish procedure, first suggest adding it as rows in `docs/rules/`.
 - State the cost: number of files to create, external tools or MCP needed, what must be maintained.
 
 ## Agents
@@ -24,7 +24,7 @@ All use `model: sonnet`, read-only tools, no file edits, `file:line`-centered re
 | Skill | Condition (evidence) | Blueprint |
 |---|---|---|
 | Project work flow | On top of the common `devkit:analyze`/`develop` flow, repo-specific steps (reading a specific spec format, status verdicts, menu and permission registration, mockup comparison, etc.) have repeated 3+ times | `blueprints/project-flow.md` |
-| `workspace-cleanup` | Temp files made during work (dry-run folders, `.bak`, captures, root temp scripts) remain as untracked files, or cleanup was requested before | `blueprints/workspace-cleanup.md` |
+| `clean-temp` protect globs (no new skill) | Temp-file cleanup was requested and this repo keeps local work folders (specs, mockups, work SQL, decks) that `devkit:clean-temp` would not know to protect | Write `.devkit/clean-temp/config.json` as `{"protect": ["<glob>", ...]}`: globs match repo-relative paths, `*` also matches `/`, a trailing `/` means everything under it (e.g. `"docs/design/[!_]*"`) |
 | `visual-docs` | Requests to document flowcharts, sequences or ERDs recur, or `docs/` has several Mermaid docs | `blueprints/visual-docs.md` |
 | Recurring maintenance procedure | Dozens of commits with the same verb (dependency bumps, release prep, data correction, certificate rotation, etc.) with the same checks every time | Follow the structure of `blueprints/tool-skill.md` (procedure, commands, checks, prohibitions) |
 | Tool skill | An external tool that is hard to install or configure (report designer, physical device, in-house CLI, etc.) is used repeatedly and needs the same explanation each time | `blueprints/tool-skill.md` |
