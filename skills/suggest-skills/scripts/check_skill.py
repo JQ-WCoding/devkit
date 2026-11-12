@@ -33,6 +33,27 @@ QUOTED = re.compile(r'"[^"]*"|“[^”]*”|「[^」]*」')
 FIRST_PERSON = re.compile(r'\b(I can|I will|You can)\b|저는 |제가 ')
 LINK = re.compile(r'\]\(([^)\s]+)\)')
 XML_TAG = re.compile(r'<[A-Za-z/][^>]*>')
+# Official naming guidance lists these as vague or overly generic. Flag only when EVERY hyphen
+# segment is one of them (`utils`, `data-files`), never a single segment (`data-migration` is fine).
+VAGUE_NAME_WORDS = {
+    'helper', 'helpers', 'util', 'utils', 'utility', 'utilities', 'tool', 'tools',
+    'document', 'documents', 'doc', 'docs', 'data', 'file', 'files',
+    'misc', 'common', 'general', 'stuff', 'my',
+}
+# Official guidance: name files by content (`form_validation_rules.md`, not `doc2.md` or `file1.md`).
+# First group: vague even alone. Second group: vague only with a number (`doc2`, `reference2`); alone
+# they can name a domain (`docs.md` beside `sheets.md` for Google Docs) or a kind of content
+# (`reference.md`, `examples.md`). Pure numbers (`01.md`) are vague too.
+VAGUE_FILE_STEM = re.compile(
+    r'(file|notes?|misc|untitled|temp|tmp|stuff|new|draft|other)\d*'
+    r'|(docs?|document|part|page|section|reference|example|template|guide)\d+|\d+', re.I)
+# Claude Code calls MCP tools `mcp__<server>__<tool>`; a bare name can resolve to nothing. Only the
+# unambiguous shapes are flagged, because a server name in the same spot is not a mistake:
+# - "MCP tool `x`" (singular, name after): `x` is the tool.
+# - "`x_y` MCP tool" (singular, snake_case before): server names are rarely snake_case.
+# Skipped: "`x` MCP", "`x` MCP server", "`x` MCP tools" and kebab/one-word names before "MCP tool",
+# where `x` is usually the server (e.g. a `github` MCP tool).
+MCP_BARE_TOOL = re.compile(r'\bMCP\s+tool\s+`([a-z][a-z0-9_-]*)`|`([a-z][a-z0-9-]*_[a-z0-9_-]*)`\s+MCP\s+tool\b(?!s)')
 
 
 class Report:
@@ -76,15 +97,15 @@ def parse_frontmatter(text):
     return meta, '\n'.join(lines[end + 1:])
 
 
-def prose_lines(text):
-    """Yield (line number, text) for lines outside code fences, with inline code removed."""
+def prose_lines(text, keep_code=False):
+    """Yield (line number, text) for lines outside code fences, with inline code removed unless keep_code."""
     inside = False
     for no, line in enumerate(text.split('\n'), 1):
         if line.lstrip().startswith('```'):
             inside = not inside
             continue
         if not inside:
-            yield no, re.sub(r'`[^`]*`', '', line)
+            yield no, line if keep_code else re.sub(r'`[^`]*`', '', line)
 
 
 def check_frontmatter(rep, skill_md, meta):
@@ -101,6 +122,8 @@ def check_frontmatter(rep, skill_md, meta):
             rep.add('ERROR', skill_md, f'name "{name}" contains a reserved word (claude, anthropic)')
         if name != rep.root.name:
             rep.add('WARN', skill_md, f'name "{name}" differs from folder name "{rep.root.name}"')
+        if all(part in VAGUE_NAME_WORDS for part in name.lower().split('-') if part):
+            rep.add('WARN', skill_md, f'name "{name}" is vague; name the action and its object (e.g. process-pdfs)')
     desc = meta.get('description', '')
     if not desc:
         rep.add('ERROR', skill_md, 'description is empty')
@@ -152,6 +175,8 @@ def check_skill(root):
             rep.add('WARN', rel, f'large or archive file ({size // 1024}KB); move run outputs or backups out of the skill folder')
         if path.suffix != '.md' or path == skill_md:
             continue
+        if VAGUE_FILE_STEM.fullmatch(path.stem):
+            rep.add('WARN', rel, 'file name does not say what it holds; name it by content (e.g. form_validation_rules.md)')
         md = path.read_text(encoding='utf-8')
         check_links(rep, path, md)
         covered = path.resolve() in direct or any(t.is_dir() and t in path.resolve().parents for t in direct)
@@ -173,6 +198,12 @@ def check_skill(root):
             unquoted = QUOTED.sub('', line)
             if not dated_doc and not DATE.search(line) and STALE_WORDS.search(unquoted):
                 rep.add('WARN', f'{path.relative_to(root)}:{no}', f'phrase that may go stale: {line.strip()[:60]}')
+        for no, line in prose_lines(content, keep_code=True):
+            for m in MCP_BARE_TOOL.finditer(line):
+                tool = m.group(1) or m.group(2)
+                if tool.startswith('mcp__'):
+                    continue
+                rep.add('WARN', f'{path.relative_to(root)}:{no}', f'MCP tool `{tool}` without server; write the full name mcp__<server>__{tool}')
 
     evals = root / 'evals' / 'evals.json'
     auto = meta.get('disable-model-invocation') != 'true'
