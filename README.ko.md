@@ -4,13 +4,13 @@
 
 어떤 저장소, 어떤 업무 도메인에서도 같은 개발 흐름을 갖추게 해 주는 Claude Code 팀 개발 키트다. 프로젝트 규칙을 미리 싣지 않고, 특정 작업 트래커(Jira, Notion, Obsidian, GitHub Issues …)에도 의존하지 않는다. 담긴 것은 **작업 흐름**(분석 → 구현 → 검증 → 커밋 → 푸시 → PR/MR), **작업 원칙**(최소 범위, 확인한 것만 주장, 선택적 검증, 사람 승인 지점), 그리고 **저장소마다 근거 기반으로 규칙과 스킬을 키워 가는 도구**다.
 
-스킬과 문서는 영어로 쓰여 있다. Claude는 사용자의 언어로 답하고, `devkit:setup`은 인터뷰에서 고른 언어로 저장소 문서를 쓴다.
+스킬과 문서는 영어로 쓰여 있다. Claude는 요청마다 그 요청의 언어로 답하고(한국어로 물으면 한국어, 영어로 물으면 영어 — 세션 훅이 주입하는 원칙), `devkit:setup`은 인터뷰에서 고른 언어로 저장소 문서를 쓴다.
 
 ## 구성
 
 | 단계 | 이름 | 하는 일 |
 |---|---|---|
-| 상시 | 세션 훅 `using-devkit` | 세션 시작·재개·clear·압축 시점에 판단 원칙(6줄)을 주입한다. 저장소의 `CLAUDE.md`와 `docs/rules/`가 우선한다 |
+| 상시 | 세션 훅 `using-devkit` | 세션 시작·재개·clear·압축 시점에 판단 원칙(7줄)을 주입한다. 저장소의 `CLAUDE.md`와 `docs/rules/`가 우선한다 |
 | 상시 | 가드 훅 `hooks/guard.py` | 셸 명령 실행 직전에 Git·서버 기동 규칙을 코드로 강제한다 ("가드 훅" 참고) |
 | 분석 | `/devkit:analyze` | 어떤 출처의 요구사항·이슈·버그든 읽고, 현재 코드 추적 → 차이 → 영향 → 공통 위험 점검 → 구현 계획을 분석 문서로 정리한 뒤 승인을 받는다 |
 | 구현 | `/devkit:develop` | 승인된 계획 구현, DB 변경과 롤백 SQL(`00_check` → `01_change` → `99_rollback`, 실행은 사람이), 검증과 회귀 점검, 요구사항별 보고 |
@@ -18,6 +18,8 @@
 | 커밋 | `/devkit:commit` | 지정한 파일을 저장소 Git 규칙에 맞춰 커밋한다 |
 | 푸시 | `/devkit:push` | 나갈 커밋과 원격이 앞서 있는지 확인하고, 보호 브랜치·강제 푸시를 막은 뒤 푸시한다 |
 | PR/MR | `/devkit:pr-publish` | 리뷰 → 제목·본문 초안 → 확인 → `gh`/`glab`으로 PR/MR 생성 또는 갱신. 원격 SHA를 고정해 리뷰한 코드만 게시하고, 그사이 원격이 바뀌면 멈춘다 |
+| 병렬 | `/devkit:parallel-work` | 요청을 서로 독립된 작업으로 나눠 병렬 작업자(서브에이전트, Orca·Herdr 터미널 안에서는 그 세션)에게 맡기고, 수정 작업은 작업마다 git worktree를 따로 둔다. 확인을 받은 뒤 커밋·병합·통합 점검·정리까지 한다 |
+| 정리 | `/devkit:clean-temp` | 작업 중 남은 임시 파일(드라이런 폴더, `.bak`·`.tmp`, 루트 임시 스크립트, 캡처)과 다른 세션의 scratchpad를 나열하고, 고른 것만 OS 휴지통으로 옮긴다. 추적 파일과 보호 경로는 건드리지 않으며, 저장소별 보호 경로는 `.devkit/clean-temp/config.json`에 둔다 (사용자 호출 전용) |
 | 리뷰 | `/devkit:peer-review` | 공유 브랜치에 팀원이 올린 커밋을 지난 리뷰 이후분만 검토하고(`docs/rules/` 기준 커밋 형식, 필수 수정과 선택 결함 구분), 개발자별 피드백 초안을 쓰고 수정될 때까지 지적 사항을 추적한다 |
 | 설정 | `/devkit:setup` | 공유 규칙 골격 `docs/rules/`(공통, Git, 환경; 필요하면 레이어 문서와 온보딩), 로컬 라우터 `CLAUDE.md`, `.gitignore`를 깐다 |
 | 설정 | `/devkit:suggest-skills` | 코드 지점, 반복 작업, 사용자 교정을 근거로 규칙 행·프로젝트 스킬·에이전트를 제안하고, 고른 것만 만든다 |
@@ -38,7 +40,7 @@
 | 배포 · 호환 | 옛 코드가 새 스키마에서도 도는가? 되돌릴 수 있나? |
 | 표시 · 오류 | 실패를 성공처럼 숨기지 않는가? |
 
-조건이 맞을 때 `suggest-skills`가 제안하는 청사진: 프로젝트 전용 흐름 스킬(`analyze`·`develop` 위에 이 저장소만의 단계를 더함), `db-analyst`·`knowledge-reader`·`spec-analyst` 에이전트, `workspace-cleanup`, `visual-docs`, 외부 도구 스킬.
+조건이 맞을 때 `suggest-skills`가 제안하는 청사진: 프로젝트 전용 흐름 스킬(`analyze`·`develop` 위에 이 저장소만의 단계를 더함), `db-analyst`·`knowledge-reader`·`spec-analyst` 에이전트, `visual-docs`, 외부 도구 스킬.
 
 ## 작업 흐름
 
@@ -54,7 +56,8 @@ flowchart LR
 1. 저장소에서 처음: `/devkit:setup` → 인터뷰 질문 몇 개에 답하고 설정 계획을 승인하면 규칙 골격이 생긴다.
 2. 작업마다: `/devkit:analyze <이슈 링크, 파일 또는 요구사항>` → 승인 → `/devkit:develop` → 필요하면 `/devkit:check` → `/devkit:commit` → `/devkit:push` → `/devkit:pr-publish`.
 3. 리뷰어로서: `/devkit:peer-review` → 지난번 이후 팀원이 공유 브랜치에 올린 것을 리뷰한다. 첫 실행 때 `docs/rules/git.md`로부터 `.devkit/peer-review/config.json`을 만든다.
-4. 가끔: `/devkit:suggest-skills` → 이 저장소의 규칙 행·스킬·에이전트 후보를 근거와 함께 받고, 고른 것만 만든다. 같은 작업이 반복되거나 같은 교정을 두 번 받으면 Claude가 한 번 제안한다.
+4. 서로 독립된 요청 여러 개를 한 번에: `/devkit:parallel-work <번호 붙인 요청들>` → 작업 분할 승인 → 작업자 병렬 실행 → 커밋·병합·통합 점검 확인.
+5. 가끔: `/devkit:suggest-skills` → 이 저장소의 규칙 행·스킬·에이전트 후보를 근거와 함께 받고, 고른 것만 만든다. 같은 작업이 반복되거나 같은 교정을 두 번 받으면 Claude가 한 번 제안한다.
 
 분석 문서와 작업 SQL은 `<repo>/.devkit/work/<작업 ID>/`에 둔다 (Git 제외).
 
@@ -197,4 +200,4 @@ zip 파일로 (GitHub 저장소에 접근할 수 없는 팀원):
 
 ## 상태
 
-0.5.1 · 2026-11-09. MIT 라이선스로 배포한다 (`LICENSE` 참고).
+0.6.0 · 2026-11-12. MIT 라이선스로 배포한다 (`LICENSE` 참고).

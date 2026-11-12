@@ -4,13 +4,13 @@ English | [한국어](README.ko.md)
 
 A Claude Code team dev kit that sets up the same development workflow in any repository and any business domain. It ships no project rules up front and depends on no task tracker (Jira, Notion, Obsidian, GitHub Issues …). It contains the **workflow** (analyze → implement → verify → commit → push → PR/MR), **working principles** (minimal scope, claim only what was checked, optional verification, human approval points), and **tools that grow evidence-based rules and skills for each repository**.
 
-Skills and docs are written in English; Claude answers in the user's language, and `devkit:setup` writes repository docs in the language chosen in its interview.
+Skills and docs are written in English; Claude answers in the language of each request (Korean in, Korean out; English in, English out), a rule the session hook injects, and `devkit:setup` writes repository docs in the language chosen in its interview.
 
 ## What's inside
 
 | Stage | Name | What it does |
 |---|---|---|
-| Always | Session hook `using-devkit` | Injects the judgment principles (6 lines) at session start, resume, clear and compaction. A repo's `CLAUDE.md` and `docs/rules/` take precedence |
+| Always | Session hook `using-devkit` | Injects the judgment principles (7 lines) at session start, resume, clear and compaction. A repo's `CLAUDE.md` and `docs/rules/` take precedence |
 | Always | Guard hook `hooks/guard.py` | Enforces Git and server-start rules in code right before shell commands run (see "Guard hook") |
 | Analyze | `/devkit:analyze` | Reads a requirement, issue or bug from any source; traces current code → gap → impact → common risk check → implementation plan in an analysis doc; asks for approval |
 | Implement | `/devkit:develop` | Implements the approved plan, DB change and rollback SQL (`00_check` → `01_change` → `99_rollback`, run by a person), verification and regression check, per-requirement report |
@@ -18,6 +18,8 @@ Skills and docs are written in English; Claude answers in the user's language, a
 | Commit | `/devkit:commit` | Commits named files following the repo's Git rules |
 | Push | `/devkit:push` | Checks outgoing commits and whether the remote is ahead, blocks protected-branch and force pushes, then pushes |
 | PR/MR | `/devkit:pr-publish` | Review → title and body draft → confirmation → create or update the PR/MR with `gh`/`glab`. Pins the remote SHA, publishes only what it reviewed and stops if the remote moved |
+| Parallel | `/devkit:parallel-work` | Splits a request into independent tasks and runs them in parallel workers (subagents; Orca or Herdr sessions when started inside those terminals), each edit task in its own git worktree. After confirmation it commits, merges, runs the integrated check and cleans up |
+| Cleanup | `/devkit:clean-temp` | Lists temp files left during work (dry-run folders, `.bak`/`.tmp`, root temp scripts, captures) and other sessions' scratchpads, and moves only the chosen ones to the OS trash. Never touches tracked files or protected paths; repo-specific protections go in `.devkit/clean-temp/config.json` (user-invoked only) |
 | Review | `/devkit:peer-review` | Reviews teammates' commits on a shared branch since the last review (commit format per `docs/rules/`, must-fix vs optional defects), drafts per-developer feedback and tracks findings until fixed |
 | Setup | `/devkit:setup` | Lays down the shared rules skeleton `docs/rules/` (common, Git, environments; layer docs and onboarding when needed), the local router `CLAUDE.md` and `.gitignore` |
 | Setup | `/devkit:suggest-skills` | Proposes rule rows, project skills and agents from code pinpoints, repeated tasks and user corrections; builds only the chosen ones |
@@ -38,7 +40,7 @@ The common risk checklist in `analyze` covers failure points that recur in every
 | Deployment and compatibility | Does old code run on the new schema? Can it be rolled back? |
 | Display and errors | Is a failure hidden as success? |
 
-Blueprints `suggest-skills` proposes when the conditions fit: a project-specific flow skill (adds this repo's own steps on top of `analyze` and `develop`), `db-analyst`, `knowledge-reader` and `spec-analyst` agents, `workspace-cleanup`, `visual-docs`, and external-tool skills.
+Blueprints `suggest-skills` proposes when the conditions fit: a project-specific flow skill (adds this repo's own steps on top of `analyze` and `develop`), `db-analyst`, `knowledge-reader` and `spec-analyst` agents, `visual-docs`, and external-tool skills.
 
 ## Workflow
 
@@ -54,7 +56,8 @@ flowchart LR
 1. First time in a repo: `/devkit:setup` → answer a few interview questions and approve the setup plan to get the rules skeleton.
 2. Per task: `/devkit:analyze <issue link, file or requirement>` → approve → `/devkit:develop` → `/devkit:check` if needed → `/devkit:commit` → `/devkit:push` → `/devkit:pr-publish`.
 3. As a reviewer: `/devkit:peer-review` → review what teammates pushed to the shared branch since last time. The first run builds `.devkit/peer-review/config.json` from `docs/rules/git.md`.
-4. Occasionally: `/devkit:suggest-skills` → get evidence-backed candidates for this repo's rule rows, skills and agents, and build only the chosen ones. Claude suggests it once when the same task repeats or the same correction is given twice.
+4. Several independent requests at once: `/devkit:parallel-work <numbered requests>` → approve the task split → workers run in parallel → confirm commit, merge and the integrated check.
+5. Occasionally: `/devkit:suggest-skills` → get evidence-backed candidates for this repo's rule rows, skills and agents, and build only the chosen ones. Claude suggests it once when the same task repeats or the same correction is given twice.
 
 Analysis docs and work SQL live in `<repo>/.devkit/work/<task ID>/` (excluded from Git).
 
@@ -197,4 +200,4 @@ Rules that must hold every time, without exception, are enforced in code (determ
 
 ## Status
 
-0.5.1 · 2026-11-09. Released under the MIT License (see `LICENSE`).
+0.6.0 · 2026-11-12. Released under the MIT License (see `LICENSE`).
