@@ -24,7 +24,7 @@
 | 리뷰 | `/devkit:peer-review` | 공유 브랜치에 팀원이 올린 커밋을 지난 리뷰 이후분만 검토하고(`docs/rules/` 기준 커밋 형식, 필수 수정과 선택 결함 구분), 개발자별 피드백 초안을 쓰고 수정될 때까지 지적 사항을 추적한다 |
 | 설정 | `/devkit:setup` | 공유 규칙 골격 `docs/rules/`(공통, Git, 환경; 필요하면 레이어 문서와 온보딩), 로컬 라우터 `CLAUDE.md`, `.gitignore`를 깐다 |
 | 설정 | `/devkit:suggest-skills` | 코드 지점, 반복 작업, 사용자 교정을 근거로 규칙 행·프로젝트 스킬·에이전트를 제안하고, 고른 것만 만든다 |
-| 설정 | `/devkit:improve-skill` | 실행 후 반복된 교정을 근거로 이 프로젝트 안의 기존 스킬 하나를 고친다. 교정마다 작성 규칙으로 원인을 진단하고, 승인 뒤 그 스킬만 수정하고 점검한다 (사용자 호출 전용) |
+| 설정 | `/devkit:improve-skill` | 프로젝트에서 작업하다 자꾸 교정하게 되는 그 프로젝트의 스킬(`.claude/skills` 등) 하나를 고친다. 이미 쓰고 있는 스킬과 중복되는지 먼저 검사하고, 교정마다 작성 규칙으로 원인을 진단한 뒤, 승인을 받아 그 스킬만 수정하고 점검한다. 플러그인·사용자 레벨 스킬은 대상이 아니다 (사용자 호출 전용) |
 | 탐색 | 에이전트 `devkit:code-reader` | 여러 파일에 걸친 탐색을 맡아 결론만 돌려준다 (Sonnet, 읽기 전용) |
 
 `analyze`의 공통 위험 체크리스트는 어느 도메인에서나 되풀이되는 실패 지점을 다룬다. 이번 변경에 해당하는 질문만 골라 `file:line` 근거나 "확인 필요"로 답한다.
@@ -189,8 +189,7 @@ zip 파일로 (GitHub 저장소에 접근할 수 없는 팀원):
 ## 원칙 변경과 스킬 추가
 
 - 작업 원칙: `skills/using-devkit/SKILL.md`. 모든 세션에 들어가므로 짧은 판단 규칙만 둔다. 코드로 판정할 수 있는 규칙은 `hooks/guard.py`에, 케이스는 `guard_test.py`에 넣는다.
-- 새 스킬: `skills/suggest-skills/references/skill-authoring.md`를 따르고 `python3 -I skills/suggest-skills/scripts/check_skill.py skills/<name>`으로 점검한다.
-- 매니페스트 점검: `claude plugin validate .`
+- 새 스킬: `skills/suggest-skills/references/skill-authoring.md`를 따르고 `python3 -I skills/suggest-skills/scripts/check_skill.py skills/<name>`으로 점검한다.- 매니페스트 점검: `claude plugin validate .`
 - 설치본은 버전 단위다. 팀에 변경을 배포하려면 `.claude-plugin/plugin.json`의 `version`을 올린다 (같은 버전에서는 `plugin update`가 변경을 무시한다).
 - 프로젝트마다 다른 것(모듈명, 경로, 명명 규칙)은 devkit에 넣지 않는다. 각 저장소의 `docs/rules/`와 `.claude/`에 둔다.
 
