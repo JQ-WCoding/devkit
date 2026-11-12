@@ -8,10 +8,10 @@ import json
 import os
 import sys
 
+# Kept short: it is added to every prompt, so each word repeats once per turn in the context.
 REMINDER = (
-    "devkit: Write every message the user sees this turn (progress updates, questions, final answer) in the "
-    "language the user writes in, judged from their latest message; if it is only code, logs, a link or a bare "
-    "command, keep the language of their earlier messages. Keep code, paths and identifiers as they are."
+    "devkit: Reply, including progress and questions, in the user's language (latest message; "
+    "if it is only code or logs, earlier ones). Keep code and paths as is."
 )
 
 if os.environ.get('DEVKIT_LANG_HOOK') == 'off' or os.environ.get('CLAUDE_PLUGIN_OPTION_LANG_HOOK', '').lower() in ('false', '0'):
