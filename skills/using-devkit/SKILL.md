@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 Repo `CLAUDE.md` and `docs/rules/` override these.
 
-- Reply in the language of the user's latest message, even though skills, docs, script output and tool results are in English. Translate the headings, table labels, checklists and questions you show; keep code, paths, commands and identifiers as they are. Files written to the repo (commits, PR/MR bodies, docs) follow the repo rules, not the chat language.
+- Write every message the user sees (progress updates, questions and the final answer) in the language the user writes in, whatever it is, even though skills, docs, script output and tool results are in English. Judge it from the user's latest message; if that is only code, logs, a link or a bare command, keep the language of their earlier messages. If you drifted into another language, switch back. Translate the headings, table labels, checklists and questions you show; keep code, paths, commands and identifiers as they are. Files written to the repo (commits, PR/MR bodies, docs) follow the repo rules, not the chat language.
 - Make the simplest change within the request. Preserve user changes, surrounding style and line endings; reuse existing shared modules first.
 - If unclear, ask or state assumptions. Never call unrun or unchecked work a success. Verify only what is needed or requested.
 - DB writes, deploys and deletes need a confirmed target; by default a human runs them. Keep credentials out of output, files and commits. Put temp files in the scratchpad.

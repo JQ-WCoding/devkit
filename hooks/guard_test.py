@@ -75,6 +75,16 @@ p = subprocess.run([sys.executable, '-I', os.path.join(HERE, 'session_start.py')
 ctx = json.loads(p.stdout.decode('ascii'))['hookSpecificOutput']['additionalContext']
 if p.returncode or not ctx.startswith('# devkit'):
     fails.append(('session_start.py', '', '# devkit…', ctx[:20]))
+for raw, want in ((json.dumps({'prompt': '한국어 요청'}, ensure_ascii=False).encode('utf-8'), True),
+                  (json.dumps({'prompt': 'これを直して'}, ensure_ascii=False).encode('utf-8'), True),
+                  (b'{"prompt": "fix this"}', True),
+                  (b'{"prompt": "   "}', False), (b'{"prompt": 123}', False), (b'{}', False),
+                  (b'[]', False), (b'null', False), (b'not json', False)):
+    total += 1
+    p = subprocess.run([sys.executable, '-I', os.path.join(HERE, 'user_prompt.py')], input=raw, capture_output=True)
+    got = bool(p.stdout.strip()) and 'additionalContext' in json.loads(p.stdout)['hookSpecificOutput']
+    if p.returncode or got != want:
+        fails.append(('user_prompt.py', raw.decode('utf-8'), want, f'{got} rc={p.returncode}'))
 for label, c, want, got in fails:
     print(f'FAIL [{label}] want={want} got={got}: {c!r}')
 print(f'{total - len(fails)}/{total} passed')

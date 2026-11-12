@@ -4,13 +4,14 @@ English | [한국어](README.ko.md)
 
 A Claude Code team dev kit that sets up the same development workflow in any repository and any business domain. It ships no project rules up front and depends on no task tracker (Jira, Notion, Obsidian, GitHub Issues …). It contains the **workflow** (analyze → implement → verify → commit → push → PR/MR), **working principles** (minimal scope, claim only what was checked, optional verification, human approval points), and **tools that grow evidence-based rules and skills for each repository**.
 
-Skills and docs are written in English; Claude answers in the language of each request (Korean in, Korean out; English in, English out), a rule the session hook injects, and `devkit:setup` writes repository docs in the language chosen in its interview.
+Skills and docs are written in English; Claude answers in the language of each request (Korean in, Korean out; English in, English out), a rule the session hook injects and the language hook repeats on every prompt, and `devkit:setup` writes repository docs in the language chosen in its interview.
 
 ## What's inside
 
 | Stage | Name | What it does |
 |---|---|---|
 | Always | Session hook `using-devkit` | Injects the judgment principles (7 lines) at session start, resume, clear and compaction. A repo's `CLAUDE.md` and `docs/rules/` take precedence |
+| Always | Language hook `hooks/user_prompt.py` | Adds one line to every prompt: write progress updates, questions and the final answer in that prompt's language, whatever it is |
 | Always | Guard hook `hooks/guard.py` | Enforces Git and server-start rules in code right before shell commands run (see "Guard hook") |
 | Analyze | `/devkit:analyze` | Reads a requirement, issue or bug from any source; traces current code → gap → impact → common risk check → implementation plan in an analysis doc; asks for approval |
 | Implement | `/devkit:develop` | Implements the approved plan, DB change and rollback SQL (`00_check` → `01_change` → `99_rollback`, run by a person), verification and regression check, per-requirement report |
@@ -193,4 +194,4 @@ Rules that must hold every time, without exception, are enforced in code (determ
 
 ## Status
 
-0.6.0 · 2026-11-12. Released under the MIT License (see `LICENSE`).
+0.6.1 · 2026-11-12. Released under the MIT License (see `LICENSE`).

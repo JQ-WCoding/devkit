@@ -1,11 +1,18 @@
 {
-  "description": "Injects the devkit judgment principles at session start and enforces Git and server-start rules in code before shell commands. Requires Python 3 (the python3 command)",
+  "description": "Injects the devkit judgment principles at session start, reminds Claude on each prompt to answer in the prompt's language, and enforces Git and server-start rules in code before shell commands. Requires Python 3 (the python3 command)",
   "hooks": {
     "SessionStart": [
       {
         "matcher": "startup|resume|clear|compact",
         "hooks": [
           { "type": "command", "command": "python3", "args": ["-I", "${CLAUDE_PLUGIN_ROOT}/hooks/session_start.py"], "timeout": 10 }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          { "type": "command", "command": "python3", "args": ["-I", "${CLAUDE_PLUGIN_ROOT}/hooks/user_prompt.py"], "timeout": 10, "onFailure": "continue" }
         ]
       }
     ],
