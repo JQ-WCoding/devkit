@@ -1,0 +1,42 @@
+[
+  {
+    "skills": ["improve-skill"],
+    "query": "/devkit:improve-skill deploy-check",
+    "files": [],
+    "expected_behavior": [
+      "Finds the skill under the project root (git top-level), resolves it with realpath and shows its absolute path",
+      "Uses the corrections the user gave in this conversation after deploy-check ran, counted by gap, cited by its own summary without raw quotes",
+      "Shows the plan table (evidence summary, cause, change, file) and a diff plan, and edits nothing before approval",
+      "After approval edits only that skill folder, adds one eval per fixed gap, runs check_skill.py with an absolute plugin path and does not commit",
+      "Tells the user to retry in a new session and that a versioned plugin install needs a version bump first"
+    ]
+  },
+  {
+    "skills": ["improve-skill"],
+    "query": "/devkit:improve-skill db-migration",
+    "files": [],
+    "expected_behavior": [
+      "When only one occurrence of a given correction is found, reports 'not enough evidence' with its summaries and stops",
+      "Does not edit the skill and does not propose speculative changes"
+    ]
+  },
+  {
+    "skills": ["improve-skill"],
+    "query": "/devkit:improve-skill commit",
+    "files": [],
+    "expected_behavior": [
+      "When no skills/commit/SKILL.md exists under the project root (it only exists in ~/.claude or an installed plugin), says the skill is outside this project's scope and stops",
+      "Does not look up or edit anything under ~/.claude and drafts no change",
+      "If the only match under the root is a symlink that resolves outside the root, refuses it the same way"
+    ]
+  },
+  {
+    "skills": ["suggest-skills"],
+    "query": "Make a new skill for generating release notes",
+    "files": [],
+    "expected_behavior": [
+      "Uses devkit:suggest-skills, not improve-skill",
+      "Does not edit any existing skill"
+    ]
+  }
+]
