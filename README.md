@@ -136,13 +136,6 @@ claude plugin install devkit@devkit
 
 Inside a session: `/plugin marketplace add JQ-WCoding/devkit`, then `/plugin install devkit@devkit`. Restart Claude Code after installing.
 
-From a local clone (for developing devkit itself; edits apply without pushing):
-
-```bash
-claude plugin marketplace add ~/work/devkit
-claude plugin install devkit@devkit
-```
-
 From a zip file (for teammates without access to the GitHub repo):
 
 1. Unzip `devkit.zip` somewhere permanent, not a downloads folder you clean up; updates reuse this folder. The `.claude-plugin` folder must sit directly inside it (if unzipping created `devkit/devkit/`, use the inner one).

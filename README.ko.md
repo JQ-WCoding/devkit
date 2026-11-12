@@ -136,13 +136,6 @@ claude plugin install devkit@devkit
 
 세션 안에서: `/plugin marketplace add JQ-WCoding/devkit` 후 `/plugin install devkit@devkit`. 설치 후 Claude Code를 재시작한다.
 
-로컬 클론에서 (devkit 자체를 개발할 때; 푸시하지 않아도 수정이 반영된다):
-
-```bash
-claude plugin marketplace add ~/work/devkit
-claude plugin install devkit@devkit
-```
-
 zip 파일로 (GitHub 저장소에 접근할 수 없는 팀원):
 
 1. `devkit.zip`을 지우지 않을 고정된 곳에 푼다. 정리하다 지울 수 있는 다운로드 폴더는 피한다. 업데이트 때 이 폴더를 다시 쓴다. 그 폴더 바로 아래에 `.claude-plugin` 폴더가 보여야 한다 (`devkit/devkit/`처럼 한 번 더 생겼으면 안쪽 폴더를 쓴다).
