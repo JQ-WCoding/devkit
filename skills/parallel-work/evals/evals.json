@@ -1,0 +1,78 @@
+[
+  {
+    "skills": ["parallel-work"],
+    "query": "/devkit:parallel-work 1. Add an Excel download button to the order list screen 2. Add a withdrawal-date field to the member API 3. Show the withdrawal date on the member detail screen",
+    "files": [],
+    "expected_behavior": [
+      "Checks ORCA_TERMINAL_HANDLE, HC_TERMINAL_ID and git rev-parse first to choose the launcher and workspace modes, and reads the two matching reference files",
+      "Combines 2 and 3 into one worker, or orders 3 after 2 is merged, because 3 uses 2's API result; runs 1 in parallel",
+      "Proposes the main repo's current branch as the base branch (or the branch docs/rules/git.md names)",
+      "Shows a table with modes, base branch, kind, slug, task branch, scope, parallel/ordered and open points, and creates no worktree before approval",
+      "After approval, creates worktrees with python3 -I .../make_worktree.py and launches workers in the format the launcher file gives"
+    ]
+  },
+  {
+    "skills": ["parallel-work"],
+    "query": "Fix the 500 error on login failure, investigate which external APIs the payment module calls, and update the README install steps. Run them in parallel",
+    "files": [],
+    "expected_behavior": [
+      "Classifies the investigation as a read task and runs it in the repo root without a worktree",
+      "Uses fix/<slug> for the bug fix and feat/<slug> for the README update (and mentions it if the repo's git rules differ)",
+      "The brief forbids commit, push, server start, DB writes and external writes, and states how to report for the chosen launcher"
+    ]
+  },
+  {
+    "skills": ["parallel-work"],
+    "query": "If the worker sessions are all done, merge their work and clean up",
+    "files": [],
+    "expected_behavior": [
+      "Checks each worker's report and the actual git status/diff, shows them in a table, and asks for confirmation before committing",
+      "Commits following devkit:commit's rule sources, stages files by name and adds no AI attribution unless the repo rules require it",
+      "Records HEAD as the pre-merge point, merges with git merge --no-ff --no-edit, and on conflict runs git merge --abort and reports",
+      "Runs the integrated check over git diff --name-only <pre-merge point>..HEAD, with commands from docs/rules or discover.py listed in the confirmation",
+      "Cleans up workers, worktrees and branches only after the integrated check and confirmation, and never deletes an unmerged branch"
+    ]
+  },
+  {
+    "skills": ["parallel-work"],
+    "query": "(in a plain terminal, neither Orca nor Herdr) Strengthen the payment module unit tests and fix the typos on the admin screen, in parallel",
+    "files": [],
+    "expected_behavior": [
+      "Finds ORCA_TERMINAL_HANDLE and HC_TERMINAL_ID empty, tells the user subagents will be used, and reads launcher-subagent.md",
+      "After approval, creates worktrees with make_worktree.py and launches both subagents with the Agent tool in one response",
+      "The brief includes the line to start every command with 'cd <work folder> &&' and the final-reply report format",
+      "Uses no hc or orca commands, and sends fixes with SendMessage"
+    ]
+  },
+  {
+    "skills": ["parallel-work"],
+    "query": "(inside an Orca terminal, ORCA_TERMINAL_HANDLE set) Split the search API pagination and the settings page dark-mode fix and run them at once",
+    "files": [],
+    "expected_behavior": [
+      "Chooses the orca launcher, reads launcher-orca.md and loads the version-matched guide with `orca skills get orchestration` before any Orca command",
+      "After approval, creates one Run and starts each worker with worker-start --spec <brief> --worktree current --agent claude, after making the worktrees with make_worktree.py",
+      "Waits with orchestration check --wait and reads each full report with worker-read --source transcript",
+      "Does not use the Agent tool or hc for the workers"
+    ]
+  },
+  {
+    "skills": ["parallel-work"],
+    "query": "(in ~/scripts, not a git repository) Change the backup script's log path and add a dry-run option to the cleanup script. In parallel",
+    "files": [],
+    "expected_behavior": [
+      "Finds this is not a git repository and asks whether to run git init before anything else",
+      "If declined, uses in-place mode and puts 'no rollback history' and the backup question in the approval table",
+      "Runs inplace_snapshot.py snapshot before launching and compares inplace_snapshot.py changed with the reports afterwards",
+      "Skips 4-1 to 4-3 and does only the integrated check and cleanup"
+    ]
+  },
+  {
+    "skills": [],
+    "query": "Change the timeout in the config file to 30 seconds",
+    "files": [],
+    "expected_behavior": [
+      "Does not use parallel-work because this is a single task; edits it directly in this session",
+      "Creates no worktree and starts no worker"
+    ]
+  }
+]
