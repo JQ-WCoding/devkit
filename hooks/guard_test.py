@@ -81,10 +81,16 @@ for raw, want in ((json.dumps({'prompt': '한국어 요청'}, ensure_ascii=False
                   (b'{"prompt": "   "}', False), (b'{"prompt": 123}', False), (b'{}', False),
                   (b'[]', False), (b'null', False), (b'not json', False)):
     total += 1
-    p = subprocess.run([sys.executable, '-I', os.path.join(HERE, 'user_prompt.py')], input=raw, capture_output=True)
+    p = subprocess.run([sys.executable, '-I', os.path.join(HERE, 'user_prompt.py')], input=raw, capture_output=True,
+                       env={k: v for k, v in os.environ.items() if k != 'DEVKIT_LANG_HOOK'})
     got = bool(p.stdout.strip()) and 'additionalContext' in json.loads(p.stdout)['hookSpecificOutput']
     if p.returncode or got != want:
         fails.append(('user_prompt.py', raw.decode('utf-8'), want, f'{got} rc={p.returncode}'))
+total += 1
+p = subprocess.run([sys.executable, '-I', os.path.join(HERE, 'user_prompt.py')], input=b'{"prompt": "fix this"}',
+                   capture_output=True, env={**os.environ, 'DEVKIT_LANG_HOOK': 'off'})
+if p.returncode or p.stdout.strip():
+    fails.append(('DEVKIT_LANG_HOOK=off', 'fix this', 'no output', p.stdout[:40]))
 for label, c, want, got in fails:
     print(f'FAIL [{label}] want={want} got={got}: {c!r}')
 print(f'{total - len(fails)}/{total} passed')
