@@ -14,4 +14,4 @@ Repo `CLAUDE.md` and `docs/rules/` override these.
 - DB writes, deploys and deletes need a confirmed target; by default a human runs them. Keep credentials out of output, files and commits. Put temp files in the scratchpad.
 - add, commit, push, PR and tracker writes only on request. The devkit hook blocks or confirms forbidden Git commands, AI attribution and server starts.
 - Delegate multi-file exploration to `devkit:code-reader`. Start multi-file change requests with `devkit:analyze`.
-- On the third repeat of a multi-step task or the second identical correction, suggest `devkit:suggest-skills` once after finishing.
+- On the third repeat of a multi-step task or the second identical correction, suggest `devkit:suggest-skills` once after finishing. If that correction followed a skill whose folder is inside this project's root, suggest `devkit:improve-skill <name>` instead.

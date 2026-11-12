@@ -24,6 +24,7 @@
 | 리뷰 | `/devkit:peer-review` | 공유 브랜치에 팀원이 올린 커밋을 지난 리뷰 이후분만 검토하고(`docs/rules/` 기준 커밋 형식, 필수 수정과 선택 결함 구분), 개발자별 피드백 초안을 쓰고 수정될 때까지 지적 사항을 추적한다 |
 | 설정 | `/devkit:setup` | 공유 규칙 골격 `docs/rules/`(공통, Git, 환경; 필요하면 레이어 문서와 온보딩), 로컬 라우터 `CLAUDE.md`, `.gitignore`를 깐다 |
 | 설정 | `/devkit:suggest-skills` | 코드 지점, 반복 작업, 사용자 교정을 근거로 규칙 행·프로젝트 스킬·에이전트를 제안하고, 고른 것만 만든다 |
+| 설정 | `/devkit:improve-skill` | 실행 후 반복된 교정을 근거로 이 프로젝트 안의 기존 스킬 하나를 고친다. 교정마다 작성 규칙으로 원인을 진단하고, 승인 뒤 그 스킬만 수정하고 점검한다 (사용자 호출 전용) |
 | 탐색 | 에이전트 `devkit:code-reader` | 여러 파일에 걸친 탐색을 맡아 결론만 돌려준다 (Sonnet, 읽기 전용) |
 
 `analyze`의 공통 위험 체크리스트는 어느 도메인에서나 되풀이되는 실패 지점을 다룬다. 이번 변경에 해당하는 질문만 골라 `file:line` 근거나 "확인 필요"로 답한다.
@@ -58,7 +59,7 @@ flowchart LR
 2. 작업마다: `/devkit:analyze <이슈 링크, 파일 또는 요구사항>` → 승인 → `/devkit:develop` → 필요하면 `/devkit:check` → `/devkit:commit` → `/devkit:push` → `/devkit:pr-publish`.
 3. 리뷰어로서: `/devkit:peer-review` → 지난번 이후 팀원이 공유 브랜치에 올린 것을 리뷰한다. 첫 실행 때 `docs/rules/git.md`로부터 `.devkit/peer-review/config.json`을 만든다.
 4. 서로 독립된 요청 여러 개를 한 번에: `/devkit:parallel-work <번호 붙인 요청들>` → 작업 분할 승인 → 작업자 병렬 실행 → 커밋·병합·통합 점검 확인.
-5. 가끔: `/devkit:suggest-skills` → 이 저장소의 규칙 행·스킬·에이전트 후보를 근거와 함께 받고, 고른 것만 만든다. 같은 작업이 반복되거나 같은 교정을 두 번 받으면 Claude가 한 번 제안한다.
+5. 가끔: `/devkit:suggest-skills` → 이 저장소의 규칙 행·스킬·에이전트 후보를 근거와 함께 받고, 고른 것만 만든다. 같은 작업이 반복되거나 같은 교정을 두 번 받으면 Claude가 한 번 제안한다. 자꾸 교정하게 되는 프로젝트 스킬은 `/devkit:improve-skill <name>`으로 고친다.
 
 분석 문서와 작업 SQL은 `<repo>/.devkit/work/<작업 ID>/`에 둔다 (Git 제외).
 
@@ -195,4 +196,4 @@ zip 파일로 (GitHub 저장소에 접근할 수 없는 팀원):
 
 ## 상태
 
-0.6.2 · 2026-11-12. MIT 라이선스로 배포한다 (`LICENSE` 참고).
+0.7.0 · 2026-11-12. MIT 라이선스로 배포한다 (`LICENSE` 참고).

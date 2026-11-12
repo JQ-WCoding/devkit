@@ -24,6 +24,7 @@ Skills and docs are written in English; Claude answers in the language of each r
 | Review | `/devkit:peer-review` | Reviews teammates' commits on a shared branch since the last review (commit format per `docs/rules/`, must-fix vs optional defects), drafts per-developer feedback and tracks findings until fixed |
 | Setup | `/devkit:setup` | Lays down the shared rules skeleton `docs/rules/` (common, Git, environments; layer docs and onboarding when needed), the local router `CLAUDE.md` and `.gitignore` |
 | Setup | `/devkit:suggest-skills` | Proposes rule rows, project skills and agents from code pinpoints, repeated tasks and user corrections; builds only the chosen ones |
+| Setup | `/devkit:improve-skill` | Fixes one existing skill inside this project from corrections repeated after it ran: diagnoses each against the authoring rules, edits only that skill after approval and checks it (user-invoked only) |
 | Explore | Agent `devkit:code-reader` | Handles multi-file exploration and returns only conclusions (Sonnet, read-only) |
 
 The common risk checklist in `analyze` covers failure points that recur in every domain. It answers only the questions this change touches, with `file:line` evidence or `needs confirmation`:
@@ -58,7 +59,7 @@ flowchart LR
 2. Per task: `/devkit:analyze <issue link, file or requirement>` → approve → `/devkit:develop` → `/devkit:check` if needed → `/devkit:commit` → `/devkit:push` → `/devkit:pr-publish`.
 3. As a reviewer: `/devkit:peer-review` → review what teammates pushed to the shared branch since last time. The first run builds `.devkit/peer-review/config.json` from `docs/rules/git.md`.
 4. Several independent requests at once: `/devkit:parallel-work <numbered requests>` → approve the task split → workers run in parallel → confirm commit, merge and the integrated check.
-5. Occasionally: `/devkit:suggest-skills` → get evidence-backed candidates for this repo's rule rows, skills and agents, and build only the chosen ones. Claude suggests it once when the same task repeats or the same correction is given twice.
+5. Occasionally: `/devkit:suggest-skills` → get evidence-backed candidates for this repo's rule rows, skills and agents, and build only the chosen ones. Claude suggests it once when the same task repeats or the same correction is given twice. To fix a project skill you keep correcting, run `/devkit:improve-skill <name>`.
 
 Analysis docs and work SQL live in `<repo>/.devkit/work/<task ID>/` (excluded from Git).
 
@@ -195,4 +196,4 @@ Rules that must hold every time, without exception, are enforced in code (determ
 
 ## Status
 
-0.6.2 · 2026-11-12. Released under the MIT License (see `LICENSE`).
+0.7.0 · 2026-11-12. Released under the MIT License (see `LICENSE`).

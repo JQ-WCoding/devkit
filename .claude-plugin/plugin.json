@@ -1,6 +1,6 @@
 {
   "name": "devkit",
-  "version": "0.6.2",
+  "version": "0.7.0",
   "description": "Team dev kit that sets up the same workflow in any repo and business domain: analyze, implement, verify, commit, push, PR/MR, plus rule setup and project-specific skill suggestions",
   "author": {
     "name": "JunQ"

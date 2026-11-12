@@ -6,7 +6,7 @@ Contents: Principles · Agents · Skills · Rule rows · Not suggested
 
 - Suggest only when a condition is met **by evidence**: fingerprint numbers, files and commits, tasks repeated in this conversation, repeated tasks the user described.
 - Do not suggest many at once. At most 3 recommended; the rest go on one line each as "next candidates".
-- Do not build anything with the same role as what devkit already provides (`analyze`, `develop`, `check`, `commit`, `push`, `pr-publish`, `peer-review`, `parallel-work`, `clean-temp`, `code-reader`). User-invoked-only skills such as `check` do not appear in the session skill list. If this repo has its own check or publish procedure, first suggest adding it as rows in `docs/rules/`.
+- Do not build anything with the same role as what devkit already provides (`analyze`, `develop`, `check`, `commit`, `push`, `pr-publish`, `peer-review`, `parallel-work`, `clean-temp`, `improve-skill`, `code-reader`). User-invoked-only skills such as `check` do not appear in the session skill list. If this repo has its own check or publish procedure, first suggest adding it as rows in `docs/rules/`.
 - State the cost: number of files to create, external tools or MCP needed, what must be maintained.
 
 ## Agents

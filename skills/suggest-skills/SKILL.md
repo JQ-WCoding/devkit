@@ -1,6 +1,6 @@
 ---
 name: suggest-skills
-description: Propose repo-specific rule rows, skills and agents from code pinpoints, fix commits, repeated tasks and repeated corrections; build only the chosen ones. Use for "suggest skills", "find rules to add", "make this a skill".
+description: Propose repo-specific rule rows, skills and agents from code pinpoints, fix commits, repeated tasks and repeated corrections; build only the chosen ones. Use for "suggest skills", "find rules to add", "make this a skill". Not for fixing an existing skill (devkit:improve-skill).
 argument-hint: "[rules | skills | all] [--since YYYY-MM-DD]"
 ---
 
@@ -42,7 +42,7 @@ python3 -I "${CLAUDE_PLUGIN_ROOT}/skills/setup/scripts/scan_repo.py" <repo root>
 
 **Skill and agent candidates** (`skills` or both): match the conditions in [catalog.md](references/catalog.md) against the fingerprint and history. Reading a blueprint to judge fit is fine. Find repeated tasks in groups of same-type commits (same scope, same verb, same folder pattern), traces of repeating the same steps in this conversation, and repeated tasks the user mentioned.
 
-**Corrections**: if the user made the same correction twice or more in this conversation, raise it as a rule row or skill content candidate.
+**Corrections**: if the user made the same correction twice or more in this conversation, raise it as a rule row or skill content candidate. Corrections aimed at an existing skill inside this project go to `devkit:improve-skill` instead.
 
 Save the raw tables returned by subagents to `<scratchpad>/candidates.md`, and the main agent's merged verdicts to `<scratchpad>/suggestions.md` (adopted candidates, `needs confirmation`, discarded with reasons).
 
