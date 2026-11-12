@@ -11,7 +11,7 @@
 | 단계 | 이름 | 하는 일 |
 |---|---|---|
 | 상시 | 세션 훅 `using-devkit` | 세션 시작·재개·clear·압축 시점에 판단 원칙(7줄)을 주입한다. 저장소의 `CLAUDE.md`와 `docs/rules/`가 우선한다 |
-| 상시 | 언어 훅 `hooks/user_prompt.py` | 요청마다 한 줄을 붙여, 진행 메시지·질문·최종 답변을 그 요청의 언어(어떤 언어든)로 쓰게 한다. 끄기: settings `env`에 `DEVKIT_LANG_HOOK=off` |
+| 상시 | 언어 훅 `hooks/user_prompt.py` | 요청마다 한 줄을 붙여, 진행 메시지·질문·최종 답변을 그 요청의 언어(어떤 언어든)로 쓰게 한다. 끄기: `/plugin` > devkit > Configure options > Language reminder, 또는 settings `env`에 `DEVKIT_LANG_HOOK=off` |
 | 상시 | 가드 훅 `hooks/guard.py` | 셸 명령 실행 직전에 Git·서버 기동 규칙을 코드로 강제한다 ("가드 훅" 참고) |
 | 분석 | `/devkit:analyze` | 어떤 출처의 요구사항·이슈·버그든 읽고, 현재 코드 추적 → 차이 → 영향 → 공통 위험 점검 → 구현 계획을 분석 문서로 정리한 뒤 승인을 받는다 |
 | 구현 | `/devkit:develop` | 승인된 계획 구현, DB 변경과 롤백 SQL(`00_check` → `01_change` → `99_rollback`, 실행은 사람이), 검증과 회귀 점검, 요구사항별 보고 |
@@ -179,7 +179,8 @@ zip 파일로 (GitHub 저장소에 접근할 수 없는 팀원):
 | 거부 | `git add .`, `-A`, `-u`; `git commit -a`, `-n`, `--no-verify`; `git push -f`, `--force`, `+ref`, `--no-verify`; `-m`, heredoc, `-F` 파일로 AI 표기(`Co-Authored-By: Claude`, `Generated with Claude Code`)가 들어간 커밋 메시지 |
 | 확인 | `--force-with-lease`, `--amend`, 보호 브랜치(`main`, `master`, `release/*`, `prod*`)로의 푸시, 서버·컨테이너 기동(`bootRun`, `spring-boot:run`, `npm run dev`, `docker compose up` 등) |
 
-- 끄기: `DEVKIT_GUARD=off`. AI 표기를 허용하는 저장소: `DEVKIT_AI_TRAILER=allow`. 둘 다 settings의 `env`에 넣을 수 있다.
+- 끄기: `/plugin` > devkit > Configure options > Git guard (사용자별), 또는 settings `env`에 `DEVKIT_GUARD=off` (저장소 단위로 정할 때). 옵션을 바꾼 뒤에는 Claude Code를 재시작한다.
+- AI 표기를 허용하는 저장소: settings `env`에 `DEVKIT_AI_TRAILER=allow`.
 - 표기 자체를 쓰지 않게 하는 설정(`"attribution": {"commit": "", "pr": ""}`)은 `devkit:setup`이 인터뷰 답에 따라 쓴다.
 - 가드 오류는 작업을 막지 않는다 (`onFailure: continue`). 애매한 명령은 통과시킨다 (오탐보다 미탐).
 - 테스트: `python3 -I hooks/guard_test.py`
@@ -194,4 +195,4 @@ zip 파일로 (GitHub 저장소에 접근할 수 없는 팀원):
 
 ## 상태
 
-0.6.1 · 2026-11-12. MIT 라이선스로 배포한다 (`LICENSE` 참고).
+0.6.2 · 2026-11-12. MIT 라이선스로 배포한다 (`LICENSE` 참고).

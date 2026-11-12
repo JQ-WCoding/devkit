@@ -51,7 +51,7 @@ HERE = os.path.dirname(GUARD)
 def run(command, env=None, tool='Bash'):
     payload = json.dumps({'tool_name': tool, 'tool_input': {'command': command}, 'cwd': TMP})
     p = subprocess.run([sys.executable, '-I', GUARD], input=payload.encode('utf-8'), capture_output=True,
-                       env={**os.environ, **(env or {})})
+                       env={**{k: v for k, v in os.environ.items() if not k.startswith(('DEVKIT_', 'CLAUDE_PLUGIN_OPTION_'))}, **(env or {})})
     assert p.returncode == 0, p.stderr
     out = p.stdout.decode('ascii')  # output must always be ASCII (code-page independent)
     return json.loads(out)['hookSpecificOutput']['permissionDecision'] if out.strip() else None
@@ -66,6 +66,7 @@ for label, cases, kw in (('Bash tool', CASES, {}),
         if (got := run(c, **kw)) != want:
             fails.append((label, c, want, got))
 for label, c, env in (('DEVKIT_GUARD=off', 'git add .', {'DEVKIT_GUARD': 'off'}),
+                      ('option guard=false', 'git add .', {'CLAUDE_PLUGIN_OPTION_GUARD': 'false'}),
                       ('DEVKIT_AI_TRAILER=allow', HEREDOC_AI, {'DEVKIT_AI_TRAILER': 'allow'})):
     total += 1
     if got := run(c, env):
@@ -82,15 +83,16 @@ for raw, want in ((json.dumps({'prompt': '한국어 요청'}, ensure_ascii=False
                   (b'[]', False), (b'null', False), (b'not json', False)):
     total += 1
     p = subprocess.run([sys.executable, '-I', os.path.join(HERE, 'user_prompt.py')], input=raw, capture_output=True,
-                       env={k: v for k, v in os.environ.items() if k != 'DEVKIT_LANG_HOOK'})
+                       env={k: v for k, v in os.environ.items() if not k.startswith(('DEVKIT_', 'CLAUDE_PLUGIN_OPTION_'))})
     got = bool(p.stdout.strip()) and 'additionalContext' in json.loads(p.stdout)['hookSpecificOutput']
     if p.returncode or got != want:
         fails.append(('user_prompt.py', raw.decode('utf-8'), want, f'{got} rc={p.returncode}'))
-total += 1
-p = subprocess.run([sys.executable, '-I', os.path.join(HERE, 'user_prompt.py')], input=b'{"prompt": "fix this"}',
-                   capture_output=True, env={**os.environ, 'DEVKIT_LANG_HOOK': 'off'})
-if p.returncode or p.stdout.strip():
-    fails.append(('DEVKIT_LANG_HOOK=off', 'fix this', 'no output', p.stdout[:40]))
+for off in ({'DEVKIT_LANG_HOOK': 'off'}, {'CLAUDE_PLUGIN_OPTION_LANG_HOOK': 'false'}):
+    total += 1
+    p = subprocess.run([sys.executable, '-I', os.path.join(HERE, 'user_prompt.py')], input=b'{"prompt": "fix this"}',
+                       capture_output=True, env={**os.environ, **off})
+    if p.returncode or p.stdout.strip():
+        fails.append((f'user_prompt.py {off}', 'fix this', 'no output', p.stdout[:40]))
 for label, c, want, got in fails:
     print(f'FAIL [{label}] want={want} got={got}: {c!r}')
 print(f'{total - len(fails)}/{total} passed')

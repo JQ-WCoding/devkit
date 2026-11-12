@@ -3,7 +3,7 @@
 Input: the PreToolUse JSON Claude Code sends on stdin (tool_name Bash|PowerShell, tool_input.command, cwd).
 hooks.json runs it with python3 directly (exec form, no shell), so it behaves the same on macOS, Linux and Windows.
 Output: hookSpecificOutput (permissionDecision deny|ask) only when it intervenes; otherwise nothing (normal permission flow).
-Disable: DEVKIT_GUARD=off. Allow AI attribution: DEVKIT_AI_TRAILER=allow.
+Disable: the plugin option guard (/plugin > devkit > Configure options) or DEVKIT_GUARD=off. Allow AI attribution: DEVKIT_AI_TRAILER=allow.
 When unsure it lets the command through (a false positive must not block real work).
 """
 import json
@@ -141,7 +141,7 @@ def check(command, cwd):
 
 
 def main():
-    if os.environ.get('DEVKIT_GUARD') == 'off':
+    if os.environ.get('DEVKIT_GUARD') == 'off' or os.environ.get('CLAUDE_PLUGIN_OPTION_GUARD', '').lower() in ('false', '0'):
         return 0
     try:
         # read as UTF-8 regardless of the console code page (cp949 etc.)

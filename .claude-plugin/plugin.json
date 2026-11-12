@@ -1,9 +1,23 @@
 {
   "name": "devkit",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "Team dev kit that sets up the same workflow in any repo and business domain: analyze, implement, verify, commit, push, PR/MR, plus rule setup and project-specific skill suggestions",
   "author": {
     "name": "JunQ"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "userConfig": {
+    "guard": {
+      "type": "boolean",
+      "title": "Git guard",
+      "description": "Block or confirm forbidden Git commands, AI attribution and server starts before shell commands run",
+      "default": true
+    },
+    "lang_hook": {
+      "type": "boolean",
+      "title": "Language reminder",
+      "description": "Remind Claude on every prompt to write all messages in the language the user writes in",
+      "default": true
+    }
+  }
 }

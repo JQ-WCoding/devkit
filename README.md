@@ -11,7 +11,7 @@ Skills and docs are written in English; Claude answers in the language of each r
 | Stage | Name | What it does |
 |---|---|---|
 | Always | Session hook `using-devkit` | Injects the judgment principles (7 lines) at session start, resume, clear and compaction. A repo's `CLAUDE.md` and `docs/rules/` take precedence |
-| Always | Language hook `hooks/user_prompt.py` | Adds one line to every prompt: write progress updates, questions and the final answer in that prompt's language, whatever it is. Disable: `DEVKIT_LANG_HOOK=off` in the settings `env` |
+| Always | Language hook `hooks/user_prompt.py` | Adds one line to every prompt: write progress updates, questions and the final answer in that prompt's language, whatever it is. Turn off: `/plugin` > devkit > Configure options > Language reminder, or `DEVKIT_LANG_HOOK=off` in the settings `env` |
 | Always | Guard hook `hooks/guard.py` | Enforces Git and server-start rules in code right before shell commands run (see "Guard hook") |
 | Analyze | `/devkit:analyze` | Reads a requirement, issue or bug from any source; traces current code → gap → impact → common risk check → implementation plan in an analysis doc; asks for approval |
 | Implement | `/devkit:develop` | Implements the approved plan, DB change and rollback SQL (`00_check` → `01_change` → `99_rollback`, run by a person), verification and regression check, per-requirement report |
@@ -179,7 +179,8 @@ Rules that must hold every time, without exception, are enforced in code (determ
 | Deny | `git add .`, `-A`, `-u`; `git commit -a`, `-n`, `--no-verify`; `git push -f`, `--force`, `+ref`, `--no-verify`; commit messages containing AI attribution (`Co-Authored-By: Claude`, `Generated with Claude Code`) via `-m`, heredoc or a `-F` file |
 | Ask | `--force-with-lease`, `--amend`, pushes to protected branches (`main`, `master`, `release/*`, `prod*`), server and container starts (`bootRun`, `spring-boot:run`, `npm run dev`, `docker compose up` etc.) |
 
-- Disable: `DEVKIT_GUARD=off`. Repos that want AI attribution: `DEVKIT_AI_TRAILER=allow`. Both can go in the settings `env`.
+- Turn off: `/plugin` > devkit > Configure options > Git guard (per user), or `DEVKIT_GUARD=off` in the settings `env` (use this to set it for a whole repo). Restart Claude Code after changing an option.
+- Repos that want AI attribution: `DEVKIT_AI_TRAILER=allow` in the settings `env`.
 - The setting that stops attribution from being written at all (`"attribution": {"commit": "", "pr": ""}`) is written by `devkit:setup` according to the interview answer.
 - A guard error never blocks work (`onFailure: continue`). Ambiguous commands pass (missed detection over false positives).
 - Tests: `python3 -I hooks/guard_test.py`
@@ -194,4 +195,4 @@ Rules that must hold every time, without exception, are enforced in code (determ
 
 ## Status
 
-0.6.1 · 2026-11-12. Released under the MIT License (see `LICENSE`).
+0.6.2 · 2026-11-12. Released under the MIT License (see `LICENSE`).

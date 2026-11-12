@@ -2,7 +2,7 @@
 
 The SessionStart principle alone fades in long sessions full of English skills and tool output,
 so this short line is attached to each prompt. It names no language: Claude follows whatever
-language the user writes in. Disable: DEVKIT_LANG_HOOK=off. Keep the wording in step with the first line of skills/using-devkit/SKILL.md.
+language the user writes in. Disable: the plugin option lang_hook (/plugin > devkit > Configure options) or DEVKIT_LANG_HOOK=off. Keep the wording in step with the first line of skills/using-devkit/SKILL.md.
 """
 import json
 import os
@@ -14,7 +14,7 @@ REMINDER = (
     "command, keep the language of their earlier messages. Keep code, paths and identifiers as they are."
 )
 
-if os.environ.get('DEVKIT_LANG_HOOK') == 'off':
+if os.environ.get('DEVKIT_LANG_HOOK') == 'off' or os.environ.get('CLAUDE_PLUGIN_OPTION_LANG_HOOK', '').lower() in ('false', '0'):
     sys.exit(0)
 try:
     # Read bytes as UTF-8: -I ignores PYTHONUTF8, and Windows would otherwise decode stdin with the locale code page.
