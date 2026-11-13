@@ -193,7 +193,7 @@ Rules that must hold every time, without exception, are enforced in code (determ
 - Working principles: `skills/using-devkit/SKILL.md`. It goes into every session, so keep only short judgment rules there. Rules that code can decide go into `hooks/guard.py`, with cases in `guard_test.py`.
 - New skills: follow `skills/suggest-skills/references/skill-authoring.md` and check with `python3 -I skills/suggest-skills/scripts/check_skill.py skills/<name>`.
 - Manifest check: `claude plugin validate .`
-- The installed copy is per version. To ship changes to the team, bump `version` in `.claude-plugin/plugin.json` (`plugin update` ignores changes at the same version).
+- The installed copy is per version. To ship changes to the team, bump `version` in `.claude-plugin/plugin.json` (`plugin update` ignores changes at the same version). Pushing that bump to `main` creates the `vX.Y.Z` tag and GitHub release (`.github/workflows/release.yml`); edit the generated notes on GitHub if needed.
 - Anything that differs per project (module names, paths, naming) does not belong in devkit. Put it in each repo's `docs/rules/` and `.claude/`.
 
 ## Status

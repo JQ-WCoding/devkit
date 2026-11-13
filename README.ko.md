@@ -193,7 +193,7 @@ zip 파일로 (GitHub 저장소에 접근할 수 없는 팀원):
 - 작업 원칙: `skills/using-devkit/SKILL.md`. 모든 세션에 들어가므로 짧은 판단 규칙만 둔다. 코드로 판정할 수 있는 규칙은 `hooks/guard.py`에, 케이스는 `guard_test.py`에 넣는다.
 - 새 스킬: `skills/suggest-skills/references/skill-authoring.md`를 따르고 `python3 -I skills/suggest-skills/scripts/check_skill.py skills/<name>`으로 점검한다.
 - 매니페스트 점검: `claude plugin validate .`
-- 설치본은 버전 단위다. 팀에 변경을 배포하려면 `.claude-plugin/plugin.json`의 `version`을 올린다 (같은 버전에서는 `plugin update`가 변경을 무시한다).
+- 설치본은 버전 단위다. 팀에 변경을 배포하려면 `.claude-plugin/plugin.json`의 `version`을 올린다 (같은 버전에서는 `plugin update`가 변경을 무시한다). 버전을 올린 커밋이 `main`에 푸시되면 `vX.Y.Z` 태그와 GitHub 릴리스가 자동으로 만들어진다(`.github/workflows/release.yml`). 자동 작성된 릴리스 본문은 필요하면 GitHub에서 고친다.
 - 프로젝트마다 다른 것(모듈명, 경로, 명명 규칙)은 devkit에 넣지 않는다. 각 저장소의 `docs/rules/`와 `.claude/`에 둔다.
 
 ## 상태
