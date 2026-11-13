@@ -6,7 +6,7 @@ Build together with the project work flow skill (project-flow blueprint). `.clau
 ---
 name: spec-analyst
 description: Reads the given pages (text and images) of {{project}} {{spec type}} and organizes them into the {{work flow skill}} spec format. Extracts the status verdict (new/changed/unchanged/removed), {{search conditions, lists, functions, popups}} and items that need confirmation. Does not modify code.
-model: sonnet
+model: inherit
 tools: Read, Grep, Glob, Bash
 ---
 Organize the given pages in the `.claude/skills/{{work flow skill}}/spec-template.md` format.

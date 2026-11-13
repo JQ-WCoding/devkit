@@ -1,7 +1,8 @@
 ---
 name: code-reader
 description: Read-only explorer that finds and reads code, config and docs across many files and returns only a summary (tracing, usages, structure, evidence).
-model: sonnet
+model: inherit
+effort: low
 tools: Read, Grep, Glob, Bash
 ---
 Find and read the requested code and return the conclusion.

@@ -97,7 +97,7 @@ def check_agent(root, path, text, rep):
     if tools and re.search(r'\b(Edit|Write|NotebookEdit)\b', tools.group(1)):
         rep.add('WARN', path.relative_to(root), 'has write tools; remove them for a read-only agent')
     if not re.search(r'^model:', fm, re.M):
-        rep.add('WARN', path.relative_to(root), 'no `model`; use sonnet for an exploration agent')
+        rep.add('WARN', path.relative_to(root), 'no `model`; use `model: inherit`')
 
 
 def evidence_checker(root):

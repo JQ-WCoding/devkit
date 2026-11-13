@@ -25,7 +25,9 @@
 | 설정 | `/devkit:setup` | 공유 규칙 골격 `docs/rules/`(공통, Git, 환경; 필요하면 레이어 문서와 온보딩), 로컬 라우터 `CLAUDE.md`, `.gitignore`를 깐다 |
 | 설정 | `/devkit:suggest-skills` | 코드 지점, 반복 작업, 사용자 교정을 근거로 규칙 행·프로젝트 스킬·에이전트를 제안하고, 고른 것만 만든다 |
 | 설정 | `/devkit:improve-skill` | 프로젝트에서 작업하다 자꾸 교정하게 되는 그 프로젝트의 스킬(`.claude/skills` 등) 하나를 고친다. 이미 쓰고 있는 스킬과 중복되는지 먼저 검사하고, 교정마다 작성 규칙으로 원인을 진단한 뒤, 승인을 받아 그 스킬만 수정하고 점검한다. 플러그인·사용자 레벨 스킬은 대상이 아니다 (사용자 호출 전용) |
-| 탐색 | 에이전트 `devkit:code-reader` | 여러 파일에 걸친 탐색을 맡아 결론만 돌려준다 (Sonnet, 읽기 전용) |
+| 탐색 | 에이전트 `devkit:code-reader` | 여러 파일에 걸친 탐색을 맡아 결론만 돌려준다 (세션 모델, low effort, 읽기 전용) |
+| 검증 | 에이전트 `devkit:check-runner` | 변경에 해당하는 lint·타입·빌드·테스트 명령을 실행해 종료 코드와 관련 오류만 돌려주고, 마지막 줄은 `CHECKS: PASS`, `CHECKS: PASS (<k> not run)`, `CHECKS: FAIL` 중 하나. 의존성 설치·DB가 필요한 테스트·서버 기동은 하지 않고 `needs install` / `not run`으로 남긴다 (세션 모델, low effort, 소스 수정 없음) |
+| 검증 | 에이전트 `devkit:verifier` | 분석 문서의 요구사항·유지 항목별로 diff를 대조해 met / not met / cannot tell 을 `file:line` 근거와 함께 판정하고, 마지막 줄은 `VERDICT: PASS` / `VERDICT: FAIL` (세션 모델·effort, 읽기 전용) |
 
 `analyze`의 공통 위험 체크리스트는 어느 도메인에서나 되풀이되는 실패 지점을 다룬다. 이번 변경에 해당하는 질문만 골라 `file:line` 근거나 "확인 필요"로 답한다.
 
@@ -56,7 +58,7 @@ flowchart LR
 ```
 
 1. 저장소에서 처음: `/devkit:setup` → 인터뷰 질문 몇 개에 답하고 설정 계획을 승인하면 규칙 골격이 생긴다.
-2. 작업마다: `/devkit:analyze <이슈 링크, 파일 또는 요구사항>` → 승인 → `/devkit:develop` → 필요하면 `/devkit:check` → `/devkit:commit` → `/devkit:push` → `/devkit:pr-publish`.
+2. 작업마다: `/devkit:analyze <이슈 링크, 파일 또는 요구사항>` → 승인 → `/devkit:develop` (점검은 `check-runner`가 돌리고, 완료 보고 전에 `verifier`가 분석 문서 기준으로 판정한다) → 필요하면 `/devkit:check` → `/devkit:commit` → `/devkit:push` → `/devkit:pr-publish`.
 3. 리뷰어로서: `/devkit:peer-review` → 지난번 이후 팀원이 공유 브랜치에 올린 것을 리뷰한다. 첫 실행 때 `docs/rules/git.md`로부터 `.devkit/peer-review/config.json`을 만든다.
 4. 서로 독립된 요청 여러 개를 한 번에: `/devkit:parallel-work <번호 붙인 요청들>` → 작업 분할 승인 → 작업자 병렬 실행 → 커밋·병합·통합 점검 확인.
 5. 가끔: `/devkit:suggest-skills` → 이 저장소의 규칙 행·스킬·에이전트 후보를 근거와 함께 받고, 고른 것만 만든다. 같은 작업이 반복되거나 같은 교정을 두 번 받으면 Claude가 한 번 제안한다. 자꾸 교정하게 되는 프로젝트 스킬은 `/devkit:improve-skill <name>`으로 고친다.
@@ -189,10 +191,11 @@ zip 파일로 (GitHub 저장소에 접근할 수 없는 팀원):
 ## 원칙 변경과 스킬 추가
 
 - 작업 원칙: `skills/using-devkit/SKILL.md`. 모든 세션에 들어가므로 짧은 판단 규칙만 둔다. 코드로 판정할 수 있는 규칙은 `hooks/guard.py`에, 케이스는 `guard_test.py`에 넣는다.
-- 새 스킬: `skills/suggest-skills/references/skill-authoring.md`를 따르고 `python3 -I skills/suggest-skills/scripts/check_skill.py skills/<name>`으로 점검한다.- 매니페스트 점검: `claude plugin validate .`
+- 새 스킬: `skills/suggest-skills/references/skill-authoring.md`를 따르고 `python3 -I skills/suggest-skills/scripts/check_skill.py skills/<name>`으로 점검한다.
+- 매니페스트 점검: `claude plugin validate .`
 - 설치본은 버전 단위다. 팀에 변경을 배포하려면 `.claude-plugin/plugin.json`의 `version`을 올린다 (같은 버전에서는 `plugin update`가 변경을 무시한다).
 - 프로젝트마다 다른 것(모듈명, 경로, 명명 규칙)은 devkit에 넣지 않는다. 각 저장소의 `docs/rules/`와 `.claude/`에 둔다.
 
 ## 상태
 
-0.7.0 · 2026-11-12. MIT 라이선스로 배포한다 (`LICENSE` 참고).
+0.8.0 · 2026-11-13. MIT 라이선스로 배포한다 (`LICENSE` 참고).

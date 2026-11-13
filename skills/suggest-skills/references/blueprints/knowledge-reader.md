@@ -6,7 +6,8 @@
 ---
 name: knowledge-reader
 description: Finds business meaning, terms, process flows, design decisions and their reasons in {{project}} business knowledge docs ({{doc location and source}}) and returns only a summary. Use when you need to know what {{business area}} means, why it is processed that way, or what was decided before. Does not modify files.
-model: sonnet
+model: inherit
+effort: low
 tools: Read, Grep, Glob
 ---
 Business knowledge lives in {{location}}. Do not edit it.

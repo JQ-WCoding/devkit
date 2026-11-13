@@ -12,7 +12,7 @@ Contents: Principles · Location and names · Evals first · SKILL.md · Pattern
   - Medium (a template or a script with parameters): a preferred pattern exists and some variation is fine.
   - Low (an exact command, "run exactly this, add no flags"): the task is fragile or destructive, consistency is critical, or the order is fixed, e.g. migrations, deletes or DB writes.
 - One term per concept. Give one default plus one exception instead of a menu of options.
-- Test with the models the skill will run on. A smaller model (Haiku, or an agent set to `model: sonnet`) needs explicit steps; Opus needs less explanation.
+- Test with the models the skill will run on. A smaller model (Haiku, or an agent set to `model: sonnet`) or a low `effort` needs explicit steps; Opus needs less explanation.
 
 ## Location and names
 
@@ -73,7 +73,8 @@ Use these when they fit.
 
 ## Agents
 
-- Frontmatter: `name`, `description` (what + when), `model: sonnet`, and `tools`. Tools are read-only: `Read, Grep, Glob`, plus `Bash` and full names of read-only MCP tools if needed.
+- Frontmatter: `name`, `description` (what + when), `model: inherit`, and `tools`. Tools are read-only: `Read, Grep, Glob`, plus `Bash` and full names of read-only MCP tools if needed.
+- `effort`: an agent that reads or runs and then summarizes pins `effort: low`. An agent whose output is a judgment omits `effort`, so it follows the session.
 - Body: the assigned scope, "does not modify files", the report format, confirmed findings kept apart from guesses, and a plain statement when something was not found.
 
 ## Improving an existing skill

@@ -25,7 +25,9 @@ Skills and docs are written in English; Claude answers in the language of each r
 | Setup | `/devkit:setup` | Lays down the shared rules skeleton `docs/rules/` (common, Git, environments; layer docs and onboarding when needed), the local router `CLAUDE.md` and `.gitignore` |
 | Setup | `/devkit:suggest-skills` | Proposes rule rows, project skills and agents from code pinpoints, repeated tasks and user corrections; builds only the chosen ones |
 | Setup | `/devkit:improve-skill` | While you work in a project, fixes one of that project's own skills (e.g. `.claude/skills`) that you keep correcting: checks it for overlap with the skills you already use, diagnoses each correction against the authoring rules, edits only that skill after approval and checks it. Not for plugin or user-level skills (user-invoked only) |
-| Explore | Agent `devkit:code-reader` | Handles multi-file exploration and returns only conclusions (Sonnet, read-only) |
+| Explore | Agent `devkit:code-reader` | Handles multi-file exploration and returns only conclusions (session model, low effort, read-only) |
+| Verify | Agent `devkit:check-runner` | Runs the lint, type, build and test commands for a change and returns exit codes and only the related errors, ending in `CHECKS: PASS`, `CHECKS: PASS (<k> not run)` or `CHECKS: FAIL`. Skips installs, DB-backed tests and servers and lists them as `needs install` / `not run` (session model, low effort, no source edits) |
+| Verify | Agent `devkit:verifier` | Judges the diff against an analysis doc's requirement and keep-as-is items as met / not met / cannot tell with `file:line` evidence, ending in `VERDICT: PASS` / `VERDICT: FAIL` (session model and effort, read-only) |
 
 The common risk checklist in `analyze` covers failure points that recur in every domain. It answers only the questions this change touches, with `file:line` evidence or `needs confirmation`:
 
@@ -56,7 +58,7 @@ flowchart LR
 ```
 
 1. First time in a repo: `/devkit:setup` → answer a few interview questions and approve the setup plan to get the rules skeleton.
-2. Per task: `/devkit:analyze <issue link, file or requirement>` → approve → `/devkit:develop` → `/devkit:check` if needed → `/devkit:commit` → `/devkit:push` → `/devkit:pr-publish`.
+2. Per task: `/devkit:analyze <issue link, file or requirement>` → approve → `/devkit:develop` (checks run through `check-runner`, and `verifier` judges the result against the analysis doc before it is reported done) → `/devkit:check` if needed → `/devkit:commit` → `/devkit:push` → `/devkit:pr-publish`.
 3. As a reviewer: `/devkit:peer-review` → review what teammates pushed to the shared branch since last time. The first run builds `.devkit/peer-review/config.json` from `docs/rules/git.md`.
 4. Several independent requests at once: `/devkit:parallel-work <numbered requests>` → approve the task split → workers run in parallel → confirm commit, merge and the integrated check.
 5. Occasionally: `/devkit:suggest-skills` → get evidence-backed candidates for this repo's rule rows, skills and agents, and build only the chosen ones. Claude suggests it once when the same task repeats or the same correction is given twice. To fix a project skill you keep correcting, run `/devkit:improve-skill <name>`.
@@ -189,10 +191,11 @@ Rules that must hold every time, without exception, are enforced in code (determ
 ## Changing principles or adding skills
 
 - Working principles: `skills/using-devkit/SKILL.md`. It goes into every session, so keep only short judgment rules there. Rules that code can decide go into `hooks/guard.py`, with cases in `guard_test.py`.
-- New skills: follow `skills/suggest-skills/references/skill-authoring.md` and check with `python3 -I skills/suggest-skills/scripts/check_skill.py skills/<name>`.- Manifest check: `claude plugin validate .`
+- New skills: follow `skills/suggest-skills/references/skill-authoring.md` and check with `python3 -I skills/suggest-skills/scripts/check_skill.py skills/<name>`.
+- Manifest check: `claude plugin validate .`
 - The installed copy is per version. To ship changes to the team, bump `version` in `.claude-plugin/plugin.json` (`plugin update` ignores changes at the same version).
 - Anything that differs per project (module names, paths, naming) does not belong in devkit. Put it in each repo's `docs/rules/` and `.claude/`.
 
 ## Status
 
-0.7.0 · 2026-11-12. Released under the MIT License (see `LICENSE`).
+0.8.0 · 2026-11-13. Released under the MIT License (see `LICENSE`).
