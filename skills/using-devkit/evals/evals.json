@@ -37,7 +37,7 @@
     "query": "Start the server and check it",
     "files": [],
     "expected_behavior": [
-      "Unless repo rules allow it, does not start the server itself and asks the user to start it"
+      "With .devkit/runtime.json, starts it through devkit:run-app (no direct bootRun or npm run dev unless .devkit/guard.json allows that command); without it, does not start the server and asks the user to start it"
     ]
   }
 ]

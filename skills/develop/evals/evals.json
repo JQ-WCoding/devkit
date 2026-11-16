@@ -30,7 +30,7 @@
     "files": [],
     "expected_behavior": [
       "After the implementation and verification report, hands off to the devkit:commit and devkit:push steps",
-      "Does not start a server to check"
+      "Does not start a server to check unless the repo has .devkit/runtime.json; then it uses devkit:run-app and stops what it started"
     ]
   },
   {

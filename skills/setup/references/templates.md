@@ -67,7 +67,8 @@ Use these verbatim when the document language is Korean (same order as the Engli
 ## 실행
 
 - 실제 실행·DB 작업 전에 [환경 안내](environments.md)와 실행 프로필을 확인한다. 접속정보·인증값은 노출하지 않는다.
-- 서버는 담당 개발자가 실행한다. 자동화 도구가 서버·터널을 임의로 기동하거나 종료하지 않는다.
+{{if: the interview does not allow Claude to start servers}}- 서버는 담당 개발자가 실행한다. 자동화 도구가 서버·터널을 임의로 기동하거나 종료하지 않는다.
+{{if: the interview allows Claude to start servers}}- 서버는 담당 개발자가 실행하거나, 자동화 도구가 devkit 런타임 하네스(`devkit:run-app`)로 로컬에서 기동·종료한다. 터널·VPN은 기동·종료하지 않는다.
 
 ## 검증과 보고
 
@@ -223,7 +224,7 @@ Changes below are made only within the requested scope; outside it, ask first.
 ## Running
 
 - Check [Environments](environments.md) and the run profile before running anything or touching a database. Never expose access details or credentials.
-- {{interview answer: who starts servers. Default — the responsible developer runs the servers. Automation tools never start or stop servers or tunnels on their own.}}
+- {{interview answer: who starts servers. Default — the responsible developer runs the servers. Automation tools never start or stop servers or tunnels on their own. If allowed — automation tools start and stop local servers only through the devkit runtime harness (`devkit:run-app`), never tunnels or VPNs.}}
 
 ## Verification and reporting
 

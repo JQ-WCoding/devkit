@@ -18,7 +18,7 @@ Input from the caller: repo root, the changed paths or a base commit, optionally
 ## Rules
 
 - Do not edit, create or delete source, config or doc files. Output that builds and tests write (`dist/`, `build/`, caches) is fine. No stash, staging or branch changes.
-- Do not start servers, DBs or containers (`dev`, `start`, `serve`, `bootRun`, `docker compose up` and so on).
+- Do not start or stop servers, DBs or containers (`dev`, `start`, `serve`, `bootRun`, `docker compose up` and so on). When the caller needs a running app it starts one with `devkit:run-app` and says so in the brief.
 - Do not install dependencies. If a command needs it, report the row as `needs install`.
 - Do not run autofix or formatters (`--fix`, `prettier --write` and so on).
 - Do not run tests that need a DB or an external service. Report them as `not run` with the reason.

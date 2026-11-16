@@ -59,7 +59,7 @@ Two independent choices. Each mode has its own reference file: read the two that
    - Any extra fields the workspace file adds.
 5. Run at most 3 workers at once unless the user sets another limit. Launch the rest as earlier ones finish.
 6. Decide once — **screen check**: whether to start a server and check the merged result in the browser, and where. "n/a" if there is no UI.
-   - The user starts the server with their usual setup, at the location the workspace file gives. Get approval for any branch switch now.
+   - If the repo has `.devkit/runtime.json`, the central session starts it with `devkit:run-app` (`--repo <merge point>`). Otherwise the user starts the server with their usual setup, at the location the workspace file gives. Get approval for any branch switch now. Workers never start servers.
    - Decide whether checks that write data (save, delete) are allowed. If so, list the targets and how to revert them. If not decided, screen checks only read and observe requests.
 7. 🛑 Show a table and get approval: launcher · workspace (plus the items its file adds) · screen check (yes/no, location, write checks and how to revert) · per task: kind · slug · scope · parallel/ordered/combined/central-direct · open points. Get the user's answers to open points now. Unanswered ones go into the brief as "don't implement; report the options".
 
@@ -89,9 +89,9 @@ Each step happens only after 🛑 user confirmation. Push only when asked separa
    - Run at the merge point (in-place: `<repo>`). Do central-direct tasks first. When the merge point is the main repo, `.worktrees/` still holds the task copies until 4-7: if a test runner or linter would walk into it, pass its ignore option (or run at a merge worktree) and say so in the results.
    - Long checks run in the background as the launcher file describes. Chain commands with `&&` so failures show in the exit code, write output to a log file, and read the log's tail to confirm the check really ran. If it finished in seconds, first suspect a missing tool (`command not found` in the log, exit code 127).
    - Trace each "integration check needed" flow through the code once more (e.g. where both tasks meet on one request path).
-   - Results table: merged tasks (branches) · checks run · result · checks not run and why.
+   - Results table: merged tasks (branches) · checks run · result · checks not run and why. Record the result with `python3 -I "${CLAUDE_PLUGIN_ROOT}/skills/check/scripts/record_run.py" --repo <merge point> --line "<CHECKS: line>"` (same absolute-path rule).
    - On failure, stop and report the files and tasks involved. Fix as in 4-6. Roll back only on user request, as the workspace file describes.
-5. **Screen check** — only if chosen in step 1. The user starts the server.
+5. **Screen check** — only if chosen in step 1. With `.devkit/runtime.json`, run `devkit:run-app up --repo <merge point>`; a merge worktree gets its own ports, and a port held by another process is reported, not taken over. Stop it with `down` after 4-6's fixes are in, before 4-7. Without the config, the user starts the server:
    - Tell the user where to start it and to stop any server already on the same port first. Don't check against a server started from another path: find the listener's folder (orca: `orca ports --json`; macOS/Linux: `lsof -nP -iTCP:<port> -sTCP:LISTEN -t`, then `lsof -a -p <pid> -d cwd -Fn`; Windows: `Get-NetTCPConnection -LocalPort <port> -State Listen` → `Get-Process -Id <OwningProcess>`); ask the user if it is still unclear. Confirm the browser actually receives the new code.
    - For each task, decide in a table what to look at (screen behavior, requests, DB rows, logs), check it, and fill in the results in the same table.
    - Run write checks only on the targets approved in step 1. Revert afterwards, confirm the original state with a read, and note it in the table.
