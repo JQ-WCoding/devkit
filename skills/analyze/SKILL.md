@@ -53,7 +53,7 @@ From [risk-checklist.md](references/risk-checklist.md), pick **only items whose 
 - Order: schema and data migration → data access (queries, mappers, repositories) → domain and services → API → UI → config and docs. Follow the repo rules if they set an order.
 - Per step: files to change, one-line description, how to verify. Write the existing implementation to follow (a recent commit or file of the same kind) as `Precedent:`.
 - If there is a DB change, decide where the change SQL and rollback SQL go (a human runs them).
-- Verification plan: automated checks (to pick from `devkit:check`), screen and API checks, test data, regression check of the keep-as-is list.
+- Verification plan: automated checks (run through `devkit:check-runner`), screen and API checks, test data, regression check of the keep-as-is list.
 
 ## 🛑 Approval
 

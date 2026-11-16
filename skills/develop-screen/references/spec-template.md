@@ -3,6 +3,7 @@
 <!-- Write the spec in the profile's document language, translating these headings. Lines in English below are guidance: replace them with content and do not copy them. -->
 
 - Source: <file name> p<N>[, p<M> (popup/tab)] · date read
+- Branch: <current> · base commit: <short SHA>
 - Status: <new|modify|keep|delete> — evidence: page mark "<original text>"[, symbol]
 - Screen path: <path in the document> → placement: `<folder>/<screen file>`
 - Layout / copy source: <master–detail etc.> / `<template or existing screen>`

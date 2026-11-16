@@ -6,18 +6,18 @@ Contents: Principles · Agents · Skills · Rule rows · Not suggested
 
 - Suggest only when a condition is met **by evidence**: fingerprint numbers, files and commits, tasks repeated in this conversation, repeated tasks the user described.
 - Do not suggest many at once. At most 3 recommended; the rest go on one line each as "next candidates".
-- Do not build anything with the same role as what devkit already provides (`analyze`, `develop`, `check`, `commit`, `push`, `pr-publish`, `peer-review`, `parallel-work`, `clean-temp`, `improve-skill`, `code-reader`, `check-runner`, `verifier`). User-invoked-only skills such as `check` do not appear in the session skill list. If this repo has its own check or publish procedure, first suggest adding it as rows in `docs/rules/`.
+- Do not build anything with the same role as what devkit already provides (`analyze`, `develop`, `develop-screen`, `run-app`, `check`, `commit`, `push`, `pr-publish`, `peer-review`, `parallel-work`, `clean-temp`, `improve-skill`, `code-reader`, `check-runner`, `verifier`, `spec-analyst`). User-invoked-only skills such as `check` do not appear in the session skill list. If this repo has its own check or publish procedure, first suggest adding it as rows in `docs/rules/`.
 - State the cost: number of files to create, external tools or MCP needed, what must be maintained.
 
 ## Agents
 
-All use `model: inherit`, read-only tools, no file edits, `file:line`-centered reports, and separate confirmed from guessed. Blueprints are in `blueprints/`. Agents that read and summarize (`knowledge-reader`) pin `effort: low`; agents whose output is a judgment or a design (`spec-analyst`, `db-analyst`) omit `effort`.
+All use `model: inherit`, read-only tools, no file edits, `file:line`-centered reports, and separate confirmed from guessed. Blueprints are in `blueprints/`. Agents that read and summarize (`knowledge-reader`) pin `effort: low`; agents whose output is a judgment or a design (`<format>-analyst`, `db-analyst`) omit `effort`.
 
 | Agent | Condition (evidence) | Blueprint |
 |---|---|---|
 | `db-analyst` | The fingerprint's "DB traces" shows dozens or more schema definitions (migrations, init scripts, DDL baselines, ORM entities, SQL mappers, procedures), and history often has tasks changing DB objects | `blueprints/db-analyst.md` |
 | `knowledge-reader` | Business terminology or decision docs exist (wiki, notes folder, docs site, business docs under `docs/` — any tool), and tasks ask about business meaning | `blueprints/knowledge-reader.md` |
-| `spec-analyst` | Developing from fixed-format plans, design specs or screen definitions recurs, and the format does not fit `analysis-template` alone | `blueprints/spec-analyst.md` |
+| `<format>-analyst` (not `spec-analyst`: devkit has one for screen design documents) | Developing from another fixed-format input (plans, API or batch specs, report definitions) recurs, and the format fits neither `analysis-template` nor `devkit:develop-screen` | `blueprints/spec-analyst.md` |
 
 ## Skills
 

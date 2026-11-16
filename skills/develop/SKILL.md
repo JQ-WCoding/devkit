@@ -31,7 +31,7 @@ Make no changes outside the approved plan. If something in the plan cannot be do
 
 ## 3. Verify
 
-- Automated checks: suggest the checks for the changed subprojects via `devkit:check` (a user-invoked skill, so ask whether to run it, or follow its steps if the user asked for checks).
+- Automated checks: when the analysis doc's verification plan or the user calls for them, run the checks for the changed subprojects through `devkit:check-runner`; otherwise name them and ask.
 - Behavior check: if the repo has `.devkit/runtime.json`, start the app with `devkit:run-app` (`up --task <task ID>`) and stop what you started afterwards; otherwise do not start servers yourself and check only in an environment the user started. Confirm saved values by querying again. Insert recognizable dummy test data and report what was left behind.
 - Record each verdict: pass the `CHECKS:` line from `devkit:check-runner` and the `VERDICT:` line from `devkit:verifier` to `python3 -I "${CLAUDE_PLUGIN_ROOT}/skills/check/scripts/record_run.py" --repo <repo> --task <task ID> --line "<line>"` (`run-app up` records itself). For a DB or API check, record `--kind db|runtime --verdict PASS|FAIL|PARTIAL --summary <text>` with `--items` (`[{"name","result","detail"}]`, no credentials).
 - Regression: go through the analysis doc's **keep-as-is list** one by one.

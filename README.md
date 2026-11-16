@@ -10,14 +10,14 @@ Skills and docs are written in English; Claude answers in the language of each r
 
 | Stage | Name | What it does |
 |---|---|---|
-| Always | Session hook `using-devkit` | Injects the judgment principles (7 lines) at session start, resume, clear and compaction. A repo's `CLAUDE.md` and `docs/rules/` take precedence |
+| Always | Session hook `using-devkit` | Injects the judgment principles (8 lines) at session start, resume, clear and compaction. A repo's `CLAUDE.md` and `docs/rules/` take precedence |
 | Always | Language hook `hooks/user_prompt.py` | Adds one line to every prompt: write progress updates, questions and the final answer in that prompt's language, whatever it is. Turn off: `/plugin` > devkit > Configure options > Language reminder, or `DEVKIT_LANG_HOOK=off` in the settings `env` |
 | Always | Guard hook `hooks/guard.py` | Enforces Git and server-start rules in code right before shell commands run (see "Guard hook") |
 | Analyze | `/devkit:analyze` | Reads a requirement, issue or bug from any source; traces current code → gap → impact → common risk check → implementation plan in an analysis doc; asks for approval |
 | Implement | `/devkit:develop` | Implements the approved plan, DB change and rollback SQL (`00_check` → `01_change` → `99_rollback`, run by a person), verification and regression check, per-requirement report |
 | Screens | `/devkit:develop-screen` | Builds screens from a screen design document (attached or local pptx, pdf, slide images, or a link a connected tool reads): splits pages, writes a per-screen spec with status, traces impact, designs DB changes, approval gate, implements, writes SQL, compares the result with the mockup and reports per feature number. Repo specifics (folders, layers, status symbols, glossary, checks) come from the local `.devkit/develop-screen/profile.md` |
 | Verify | `/devkit:check` | Finds lint, type, build and test commands and runs only the related ones, then writes a run record (user-invoked only) |
-| Run | `/devkit:run-app` | Starts, checks and stops the app servers without an IDE from the repo's local `.devkit/runtime.json`: TCP preflight (DB tunnel), start in dependency order, health wait, logs and PID state per checkout, separate ports per worktree, a runtime run record. Never opens tunnels, never takes over a port in use |
+| Run | `/devkit:run-app` | Starts, checks and stops the app servers without an IDE from the repo's local `.devkit/runtime.json`: TCP preflight (DB tunnel), start in dependency order, health wait, logs and PID state per checkout, separate ports per worktree, a runtime run record. Without the config it offers to write one. Never opens tunnels, never takes over a port in use |
 | Commit | `/devkit:commit` | Commits named files following the repo's Git rules |
 | Push | `/devkit:push` | Checks outgoing commits and whether the remote is ahead, blocks protected-branch and force pushes, then pushes |
 | PR/MR | `/devkit:pr-publish` | Review → title and body draft → confirmation → create or update the PR/MR with `gh`/`glab`. Pins the remote SHA, publishes only what it reviewed and stops if the remote moved |
@@ -29,8 +29,8 @@ Skills and docs are written in English; Claude answers in the language of each r
 | Setup | `/devkit:improve-skill` | While you work in a project, fixes one of that project's own skills (e.g. `.claude/skills`) that you keep correcting: checks it for overlap with the skills you already use, diagnoses each correction against the authoring rules, edits only that skill after approval and checks it. Not for plugin or user-level skills (user-invoked only) |
 | Explore | Agent `devkit:code-reader` | Handles multi-file exploration and returns only conclusions (session model, low effort, read-only) |
 | Verify | Agent `devkit:check-runner` | Runs the lint, type, build and test commands for a change and returns exit codes and only the related errors, ending in `CHECKS: PASS`, `CHECKS: PASS (<k> not run)` or `CHECKS: FAIL`. Skips installs, DB-backed tests and servers and lists them as `needs install` / `not run` (session model, low effort, no source edits) |
-| Screens | Agent `devkit:spec-analyst` | Reads design document pages (text, notes, mockups) into the develop-screen spec template; marks guesses `Estimate:` and unclear status as needs confirmation (session model, read-only) |
-| Verify | Agent `devkit:verifier` | Judges the diff against an analysis doc's requirement and keep-as-is items as met / not met / cannot tell with `file:line` evidence, ending in `VERDICT: PASS` / `VERDICT: FAIL` (session model and effort, read-only) |
+| Screens | Agent `devkit:spec-analyst` | Reads design document pages (text, notes, mockups) into the develop-screen spec template; marks guesses `Estimate:` and unclear status as needs confirmation (session model; writes only the spec file) |
+| Verify | Agent `devkit:verifier` | Judges the diff against an analysis doc's or screen spec's requirement and keep-as-is items as met / not met / cannot tell with `file:line` evidence, ending in `VERDICT: PASS` / `VERDICT: FAIL` (session model and effort, read-only) |
 
 The common risk checklist in `analyze` covers failure points that recur in every domain. It answers only the questions this change touches, with `file:line` evidence or `needs confirmation`:
 
@@ -47,7 +47,7 @@ The common risk checklist in `analyze` covers failure points that recur in every
 | Deployment and compatibility | Does old code run on the new schema? Can it be rolled back? |
 | Display and errors | Is a failure hidden as success? |
 
-Blueprints `suggest-skills` proposes when the conditions fit: a project-specific flow skill (adds this repo's own steps on top of `analyze` and `develop`), `db-analyst`, `knowledge-reader` and `spec-analyst` agents, `visual-docs`, and external-tool skills.
+Blueprints `suggest-skills` proposes when the conditions fit: a project-specific flow skill (adds this repo's own steps on top of `analyze` and `develop`), `db-analyst`, `knowledge-reader` and format-analyst agents, `visual-docs`, and external-tool skills.
 
 ## Workflow
 
@@ -77,7 +77,7 @@ Analysis docs and work SQL live in `<repo>/.devkit/work/<task ID>/` (excluded fr
 | 1. Scan | A script collects sub-projects, runtimes and ports, CI, DB type and the existing commit convention |
 | 2. Interview | Asks only what the scan cannot settle, in two or three rounds, each question with a recommended answer |
 | 3. Plan approval | Shows the list of files to create. Nothing is written before approval |
-| 4. Write | Writes only what has evidence. Existing docs are extended, not overwritten |
+| 4. Write | Writes only what has evidence. Existing docs are extended, not overwritten. If you allowed Claude to start servers, it also writes the local `.devkit/runtime.json` for `/devkit:run-app` |
 | 5. Check | Looks for broken links, secret-shaped values and unfilled placeholders |
 
 Questions the interview asks, for example:

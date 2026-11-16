@@ -25,7 +25,7 @@
 |---|---|
 | `java_home` | Sets `JAVA_HOME` and puts its `bin` first on `PATH` (top level or per service) |
 | `env`, `path_prepend` | Added to every service's environment; service-level keys of the same names add more and win. Put no secrets in `env` |
-| `env_file` | `KEY=VALUE` file (relative to the checkout; `#` comments, `export`, quotes allowed) loaded before `env`, top level or per service. Use it for secrets: its values go only to the process, never to output, state or records |
+| `env_file` | `KEY=VALUE` file (relative to the checkout, or to the main repo when a worktree has no such file; `#` comments, `export`, quotes allowed) loaded before `env`, top level or per service. Use it for secrets: its values go only to the process, never to output, state or records |
 | `preflight[]` | TCP endpoints that must already accept connections. `hint` is shown on failure |
 | `services[].cmd` | Argument list, run without a shell from `cwd` (relative to the checkout) |
 | `services[].port` | Port in the main checkout. Pass it to the server through `{port}` so worktree instances get theirs |

@@ -1,6 +1,6 @@
 ---
 name: run-app
-description: Starts, checks and stops a repo's app servers (API, web) without an IDE through the devkit runtime harness, using the repo's .devkit/runtime.json — preflight (DB tunnel and other TCP prerequisites), start in dependency order, wait for health, logs and PID state per checkout or worktree, then a runtime run record. Use for "서버 띄워줘", "start the API and web", "check it on a running server", "stop the servers", and before screen or API checks in devkit:develop and devkit:parallel-work. Not for repos without .devkit/runtime.json (the user starts servers there), and never for opening tunnels or VPNs.
+description: Starts, checks and stops a repo's app servers (API, web) without an IDE from the repo's .devkit/runtime.json — preflight, start in dependency order, health wait, logs, a run record. Use for "서버 띄워줘", "start the API and web", "check it on a running server", "stop the servers", and before screen or API checks. Without the config it offers to write one; never opens tunnels or VPNs.
 argument-hint: "[preflight | up | status | down | logs] [service...]"
 ---
 
@@ -24,8 +24,8 @@ The config format and the per-instance state are in [config.md](references/confi
 
 ## Rules
 
-- Only when `<main repo>/.devkit/runtime.json` exists. Without it the script refuses; tell the user the repo has not opted in and that they start servers themselves (or offer to write the config from the repo's run docs after approval).
-- Only the central session or `devkit:develop` starts servers. Parallel workers never do (their brief forbids it); the central session starts one for a worktree with `--repo <worktree>` when a screen check needs it.
+- Only when `<main repo>/.devkit/runtime.json` exists. Without it the script refuses: say the repo has not opted in and, unless the repo rules say the developer starts servers, offer to write the config ([config.md](references/config.md)) from the repo's run docs and build files — no service without evidence for its command and port, secrets only through `env_file`. Show it, write it after approval, then run `status` (it reads the config and starts nothing). If the user declines, they start servers themselves.
+- Only the central session or `devkit:develop` starts servers. Parallel workers never do (their brief forbids it); the central session starts one for a worktree with `--repo <worktree>` when a screen check needs it (an `env_file` missing from the worktree is read from the main checkout).
 - Never open, close or restart tunnels, VPNs or IDE runs. A failed preflight is reported with its hint; the user fixes it.
 - A port already in use is never taken over. Report the listener the script names (often the user's IDE run) and ask whether they will stop it or whether to check against that server instead.
 - Pass `--task <ID>` when working from an analysis doc, so the record lands in that work folder.

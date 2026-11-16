@@ -39,7 +39,7 @@ If there is a CI config, compare against the checks it actually runs. If there a
 
 Report the commands run, exit codes, and only the errors and warnings related to the change. For existing violations, judge only the ones related to this change and give a count for the rest. Write checks that were not run as `not run`; if a tool is missing, say so.
 
-End with a `CHECKS:` line in the `devkit:check-runner` format and record it (add `--task <ID>` when working from an analysis doc):
+End with one `CHECKS:` line — `CHECKS: PASS`, `CHECKS: PASS (<k> not run)`, `CHECKS: FAIL (<n> commands)` or `CHECKS: FAIL (none run)` — and record it (add `--task <ID>` when working from an analysis doc):
 
 ```bash
 python3 -I "${CLAUDE_PLUGIN_ROOT}/skills/check/scripts/record_run.py" --repo <repo root> --line "<CHECKS: line>"

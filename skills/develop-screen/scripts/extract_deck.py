@@ -2,7 +2,7 @@
 
 Usage: python3 -I extract_deck.py <input> <out dir> [--pages N ...] [--id-label REGEX] [--status WORD=STATUS,...]
 Input (detected by extension):
-  .pptx           slides in presentation order (sldIdLst, not the slideN file name), text, speaker notes, slide images
+  .pptx           slides in presentation order (sldIdLst, not the slideN file name), text, speaker notes, embedded pictures
   .pdf            text per page with pdftotext and PNG per requested page with pdftoppm when installed;
                   otherwise only the page count is recorded and pages are read with the Read tool (pages="N")
   .png .jpg ...   one page per image; a folder of images works too (sorted by name)

@@ -316,7 +316,12 @@ def child_env(cfg, svc, values):
         env['JAVA_HOME'] = expand(java_home, values)
     for scope in (cfg, svc):  # service-level keys override top-level ones
         if scope.get('env_file'):
-            env.update(read_env_file(os.path.join(values['root'], expand(scope['env_file'], values))))
+            rel = expand(scope['env_file'], values)
+            path = os.path.join(values['root'], rel)
+            if not os.path.exists(path):  # untracked env files exist only in the main checkout, not in a worktree
+                fallback = os.path.join(record_run.main_root(values['root']), rel)
+                path = fallback if os.path.exists(fallback) else path
+            env.update(read_env_file(path))
         for k, v in (scope.get('env') or {}).items():
             env[k] = expand(str(v), values)
     prepend = [expand(p, values) for p in (cfg.get('path_prepend') or []) + (svc.get('path_prepend') or [])]
@@ -515,16 +520,18 @@ def cmd_logs(args, cfg, main, root, instance):
 def main(argv=None):
     p = argparse.ArgumentParser(description='devkit runtime harness')
     p.add_argument('--repo', default=os.getcwd())
+    after = argparse.ArgumentParser(add_help=False)  # lets --repo come after the command as well
+    after.add_argument('--repo', default=argparse.SUPPRESS)
     sub = p.add_subparsers(dest='command', required=True)
-    sub.add_parser('preflight')
-    up = sub.add_parser('up')
+    sub.add_parser('preflight', parents=[after])
+    up = sub.add_parser('up', parents=[after])
     up.add_argument('services', nargs='*')
     up.add_argument('--task')
-    st = sub.add_parser('status')
+    st = sub.add_parser('status', parents=[after])
     st.add_argument('--json', action='store_true')
-    dn = sub.add_parser('down')
+    dn = sub.add_parser('down', parents=[after])
     dn.add_argument('services', nargs='*')
-    lg = sub.add_parser('logs')
+    lg = sub.add_parser('logs', parents=[after])
     lg.add_argument('service')
     lg.add_argument('-n', type=int, default=TAIL * 2)
     args = p.parse_args(argv)

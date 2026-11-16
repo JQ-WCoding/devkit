@@ -235,6 +235,11 @@ def test_record_run():
         check('non-contract line is refused', False)
     except ValueError:
         check('non-contract line is refused', True)
+    try:
+        record_run.parse_line('CHECKS: PASS (1 skipped)')
+        check('CHECKS: PASS with a detail other than "<k> not run" is refused', False)
+    except ValueError:
+        check('CHECKS: PASS with a detail other than "<k> not run" is refused', True)
     repo = new_repo(None)
     r = sh(PY, '-I', os.path.join(HERE, '..', '..', 'check', 'scripts', 'record_run.py'), '--repo', repo,
            '--line', 'CHECKS: PASS (1 not run)')
@@ -251,6 +256,33 @@ def test_record_run():
     r = sh(PY, '-I', os.path.join(HERE, '..', '..', 'check', 'scripts', 'record_run.py'), '--repo', repo,
            '--task', '../x', '--kind', 'db', '--verdict', 'PASS')
     check('task id with a path separator is refused', r.returncode == 2, r.stderr)
+
+
+def test_worktree_env_file_and_repo_after_command():
+    port = free_port()
+    while port + 10 > 65535 or record_run_port_open(port + 10):
+        port = free_port()
+    probe = os.path.join(tempfile.mkdtemp(), 'env.txt')
+    svc = {'name': 'api', 'port': port, 'timeout': 20, 'env_file': 'local.env',
+           'cmd': [PY, '-c', 'import os,sys,http.server as h;open(sys.argv[1],"w").write(os.environ["WHERE"]);'
+                   'h.test(h.SimpleHTTPRequestHandler, port=int(sys.argv[2]), bind="127.0.0.1")', probe, '{port}'],
+           'health': 'http://127.0.0.1:{port}/'}
+    repo = new_repo({'services': [svc]})
+    with open(os.path.join(repo, 'local.env'), 'w') as f:  # untracked, so the worktree does not have it
+        f.write('WHERE=main\n')
+    wt = os.path.join(repo, '.worktrees', 'task-b')
+    sh('git', '-C', repo, 'worktree', 'add', '-q', '-b', 'feat/task-b', wt)
+    r = sh(PY, '-I', RUNTIME, 'up', '--repo', wt)
+    seen = open(probe).read() if os.path.exists(probe) else ''
+    check('worktree without the env_file uses the main checkout file; --repo works after the command',
+          r.returncode == 0 and seen == 'main' and f'port {port + 10}' in r.stdout, r.stdout + r.stderr + seen)
+    harness(wt, 'down')
+    with open(os.path.join(wt, 'local.env'), 'w') as f:
+        f.write('WHERE=worktree\n')
+    code, out = harness(wt, 'up')
+    seen = open(probe).read() if os.path.exists(probe) else ''
+    check('worktree env_file wins over the main checkout file', code == 0 and seen == 'worktree', out + seen)
+    harness(wt, 'down')
 
 
 if __name__ == '__main__':

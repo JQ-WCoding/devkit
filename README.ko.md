@@ -10,14 +10,14 @@
 
 | 단계 | 이름 | 하는 일 |
 |---|---|---|
-| 상시 | 세션 훅 `using-devkit` | 세션 시작·재개·clear·압축 시점에 판단 원칙(7줄)을 주입한다. 저장소의 `CLAUDE.md`와 `docs/rules/`가 우선한다 |
+| 상시 | 세션 훅 `using-devkit` | 세션 시작·재개·clear·압축 시점에 판단 원칙(8줄)을 주입한다. 저장소의 `CLAUDE.md`와 `docs/rules/`가 우선한다 |
 | 상시 | 언어 훅 `hooks/user_prompt.py` | 요청마다 한 줄을 붙여, 진행 메시지·질문·최종 답변을 그 요청의 언어(어떤 언어든)로 쓰게 한다. 끄기: `/plugin` > devkit > Configure options > Language reminder, 또는 settings `env`에 `DEVKIT_LANG_HOOK=off` |
 | 상시 | 가드 훅 `hooks/guard.py` | 셸 명령 실행 직전에 Git·서버 기동 규칙을 코드로 강제한다 ("가드 훅" 참고) |
 | 분석 | `/devkit:analyze` | 어떤 출처의 요구사항·이슈·버그든 읽고, 현재 코드 추적 → 차이 → 영향 → 공통 위험 점검 → 구현 계획을 분석 문서로 정리한 뒤 승인을 받는다 |
 | 구현 | `/devkit:develop` | 승인된 계획 구현, DB 변경과 롤백 SQL(`00_check` → `01_change` → `99_rollback`, 실행은 사람이), 검증과 회귀 점검, 요구사항별 보고 |
 | 화면 | `/devkit:develop-screen` | 화면설계서(첨부·로컬 pptx, pdf, 슬라이드 이미지, 연결된 도구가 읽는 링크)로 화면을 만든다: 페이지 분리, 화면별 상태와 spec 작성, 영향 추적, DB 설계, 승인, 구현, SQL, 목업 대조, 기능 번호별 보고. 저장소별 폴더·계층·상태 기호·용어·검사는 로컬 `.devkit/develop-screen/profile.md`에서 읽는다 |
 | 검증 | `/devkit:check` | lint·타입·빌드·테스트 명령을 찾아 관련된 것만 실행하고 실행 기록을 남긴다 (사용자 호출 전용) |
-| 실행 | `/devkit:run-app` | 저장소의 로컬 `.devkit/runtime.json`으로 IDE 없이 앱 서버를 띄우고 확인하고 내린다: TCP 사전 점검(DB 터널), 의존 순서대로 기동, 헬스 대기, 체크아웃별 로그·PID 상태, 워크트리별 별도 포트, 런타임 실행 기록. 터널은 열지 않고, 이미 쓰이는 포트는 가로채지 않는다 |
+| 실행 | `/devkit:run-app` | 저장소의 로컬 `.devkit/runtime.json`으로 IDE 없이 앱 서버를 띄우고 확인하고 내린다: TCP 사전 점검(DB 터널), 의존 순서대로 기동, 헬스 대기, 체크아웃별 로그·PID 상태, 워크트리별 별도 포트, 런타임 실행 기록. 설정 파일이 없으면 작성을 제안한다. 터널은 열지 않고, 이미 쓰이는 포트는 가로채지 않는다 |
 | 커밋 | `/devkit:commit` | 지정한 파일을 저장소 Git 규칙에 맞춰 커밋한다 |
 | 푸시 | `/devkit:push` | 나갈 커밋과 원격이 앞서 있는지 확인하고, 보호 브랜치·강제 푸시를 막은 뒤 푸시한다 |
 | PR/MR | `/devkit:pr-publish` | 리뷰 → 제목·본문 초안 → 확인 → `gh`/`glab`으로 PR/MR 생성 또는 갱신. 원격 SHA를 고정해 리뷰한 코드만 게시하고, 그사이 원격이 바뀌면 멈춘다 |
@@ -29,8 +29,8 @@
 | 설정 | `/devkit:improve-skill` | 프로젝트에서 작업하다 자꾸 교정하게 되는 그 프로젝트의 스킬(`.claude/skills` 등) 하나를 고친다. 이미 쓰고 있는 스킬과 중복되는지 먼저 검사하고, 교정마다 작성 규칙으로 원인을 진단한 뒤, 승인을 받아 그 스킬만 수정하고 점검한다. 플러그인·사용자 레벨 스킬은 대상이 아니다 (사용자 호출 전용) |
 | 탐색 | 에이전트 `devkit:code-reader` | 여러 파일에 걸친 탐색을 맡아 결론만 돌려준다 (세션 모델, low effort, 읽기 전용) |
 | 검증 | 에이전트 `devkit:check-runner` | 변경에 해당하는 lint·타입·빌드·테스트 명령을 실행해 종료 코드와 관련 오류만 돌려주고, 마지막 줄은 `CHECKS: PASS`, `CHECKS: PASS (<k> not run)`, `CHECKS: FAIL` 중 하나. 의존성 설치·DB가 필요한 테스트·서버 기동은 하지 않고 `needs install` / `not run`으로 남긴다 (세션 모델, low effort, 소스 수정 없음) |
-| 화면 | 에이전트 `devkit:spec-analyst` | 설계서 페이지(텍스트, 노트, 목업)를 develop-screen spec 양식으로 정리한다. 추정은 `Estimate:`, 애매한 상태는 확인 필요로 남긴다 (세션 모델, 읽기 전용) |
-| 검증 | 에이전트 `devkit:verifier` | 분석 문서의 요구사항·유지 항목별로 diff를 대조해 met / not met / cannot tell 을 `file:line` 근거와 함께 판정하고, 마지막 줄은 `VERDICT: PASS` / `VERDICT: FAIL` (세션 모델·effort, 읽기 전용) |
+| 화면 | 에이전트 `devkit:spec-analyst` | 설계서 페이지(텍스트, 노트, 목업)를 develop-screen spec 양식으로 정리한다. 추정은 `Estimate:`, 애매한 상태는 확인 필요로 남긴다 (세션 모델, spec 파일만 쓴다) |
+| 검증 | 에이전트 `devkit:verifier` | 분석 문서나 화면 spec의 요구사항·유지 항목별로 diff를 대조해 met / not met / cannot tell 을 `file:line` 근거와 함께 판정하고, 마지막 줄은 `VERDICT: PASS` / `VERDICT: FAIL` (세션 모델·effort, 읽기 전용) |
 
 `analyze`의 공통 위험 체크리스트는 어느 도메인에서나 되풀이되는 실패 지점을 다룬다. 이번 변경에 해당하는 질문만 골라 `file:line` 근거나 "확인 필요"로 답한다.
 
@@ -47,7 +47,7 @@
 | 배포 · 호환 | 옛 코드가 새 스키마에서도 도는가? 되돌릴 수 있나? |
 | 표시 · 오류 | 실패를 성공처럼 숨기지 않는가? |
 
-조건이 맞을 때 `suggest-skills`가 제안하는 청사진: 프로젝트 전용 흐름 스킬(`analyze`·`develop` 위에 이 저장소만의 단계를 더함), `db-analyst`·`knowledge-reader`·`spec-analyst` 에이전트, `visual-docs`, 외부 도구 스킬.
+조건이 맞을 때 `suggest-skills`가 제안하는 청사진: 프로젝트 전용 흐름 스킬(`analyze`·`develop` 위에 이 저장소만의 단계를 더함), `db-analyst`·`knowledge-reader`·형식별 analyst 에이전트, `visual-docs`, 외부 도구 스킬.
 
 ## 작업 흐름
 
@@ -77,7 +77,7 @@ flowchart LR
 | 1. 스캔 | 스크립트가 하위 프로젝트, 런타임과 포트, CI, DB 종류, 기존 커밋 관례를 모은다 |
 | 2. 인터뷰 | 스캔으로 정할 수 없는 것만 두세 번에 나눠 묻는다. 질문마다 추천안이 붙는다 |
 | 3. 계획 승인 | 만들 파일 목록을 먼저 보여 준다. 승인 전에는 아무것도 쓰지 않는다 |
-| 4. 작성 | 근거가 있는 내용만 쓴다. 이미 있는 문서는 덮어쓰지 않고 빠진 부분만 더한다 |
+| 4. 작성 | 근거가 있는 내용만 쓴다. 이미 있는 문서는 덮어쓰지 않고 빠진 부분만 더한다. Claude의 서버 기동을 허용했다면 `/devkit:run-app`용 로컬 `.devkit/runtime.json`도 함께 쓴다 |
 | 5. 점검 | 깨진 링크, 비밀값처럼 생긴 값, 채우지 않은 빈칸을 검사한다 |
 
 인터뷰에서 묻는 질문 예:

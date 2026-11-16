@@ -1,10 +1,10 @@
-# Blueprint: spec-analyst agent
+# Blueprint: format analyst agent
 
-Build together with the project work flow skill (project-flow blueprint). `.claude/agents/spec-analyst.md`
+Build together with the project work flow skill (project-flow blueprint). `.claude/agents/{{format}}-analyst.md` (not `spec-analyst`: devkit has an agent of that name for screen design documents)
 
 ```markdown
 ---
-name: spec-analyst
+name: {{format}}-analyst
 description: Reads the given pages (text and images) of {{project}} {{spec type}} and organizes them into the {{work flow skill}} spec format. Extracts the status verdict (new/changed/unchanged/removed), {{search conditions, lists, functions, popups}} and items that need confirmation. Does not modify code.
 model: inherit
 tools: Read, Grep, Glob, Bash

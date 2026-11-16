@@ -1,6 +1,6 @@
 ---
 name: develop-screen
-description: Turns a screen design document (화면설계서 / UI spec / storyboard as an attached or local pptx, pdf, slide images, or a Google Slides/Drive/Figma link a connected tool can read) into working screens. Splits the deck into pages, writes a per-screen spec with status (new/modify/keep/delete), traces the impact in the current code, designs DB changes, gets approval, then implements UI, API, data access and SQL, checks the result against the mockup and reports per feature number. Repo-specific folders, layers, status symbols, glossary and checks come from the repo's .devkit/develop-screen/profile.md. Use for "화면설계서 보고 개발해줘", "설계서 p12 구현", "이 PDF 화면 만들어줘", "implement this UI spec". Not for changes requested without a design document (devkit:analyze), code review, or report/print layouts.
+description: Builds screens from a screen design document (화면설계서 / UI spec / storyboard: pptx, pdf, slide images, or a Google Slides, Drive or Figma link a connected tool can read) — per-screen spec with status, impact trace, DB design, approval, implementation, SQL, mockup comparison and a per-feature report. Use for "화면설계서 보고 개발해줘", "설계서 p12 구현", "이 PDF 화면 만들어줘", "implement this UI spec". Not for changes without a design document (devkit:analyze), code review, or report/print layouts.
 argument-hint: "<file path | attachment | link> [p<N> ...] [screen ID]"
 ---
 
@@ -30,17 +30,17 @@ Progress:
 
 1. **Profile**: read `<repo>/.devkit/develop-screen/profile.md` if it exists. It sets the work and SQL folders, the document language, status symbols, glossary, layer order, copy sources, DB agent and checks. Without one, use the defaults in [profile.md](references/profile.md) and offer once, after 🛑A, to save what you learned as the profile.
 2. **Tools**: check once (ToolSearch for deferred tools) which of these are available and report them in one line each as `available / missing → fallback`: the document connectors the link needs, a browser tool for screen checks, a read-only DB query tool, the profile's DB agent, `devkit:spec-analyst`, `devkit:code-reader`. Do not stop for a missing tool; use the fallback in [inputs.md](references/inputs.md).
-3. **Split** (run; the deck folder is the profile's, default `<work>/_deck/<deck name>/`):
+3. **Split**: the deck folder is the profile's (default `<work>/_deck/<deck name>/`). First, if Git would track the work or deck folder (`git check-ignore -q <folder>` fails), add it to `.git/info/exclude` and say so; if it already holds tracked files (`git ls-files <folder>`), ask instead. Then run:
    ```bash
    python3 -I "${CLAUDE_PLUGIN_ROOT}/skills/develop-screen/scripts/extract_deck.py" <input> <deck folder> --pages <N...> [--status "<profile symbols>"] [--id-label "<profile regex>"]
    ```
-   It handles pptx (presentation order, notes, slide images), pdf, image files or folders, and exported text. Page numbers are the document's order, not numbers printed on the slides; cross-check the screen ID and title of every requested page against its image.
-4. **Mockup**: get an image of every requested page (slide images from the split, `Read` of the PDF page, or a connector thumbnail). A mockup outranks the text for columns, required marks, masking, button positions and layout. Unreadable or cut-off parts are `needs confirmation`; ask for an original capture.
+   It handles pptx (presentation order, notes, the pictures embedded in each slide — not a render of the slide), pdf, image files or folders, and exported text. Page numbers are the document's order, not numbers printed on the slides; cross-check the screen ID and title of every requested page against its image.
+4. **Mockup**: get an image of every requested page (a pdf or image page from the split, `Read` of the PDF page, or a connector thumbnail). A pptx gives only embedded pictures: use one only when it shows the whole screen; when a requested page has none, or only logos, icons or fragments, ask for a PDF export or a capture of that page. A mockup outranks the text for columns, required marks, masking, button positions and layout. Unreadable or cut-off parts are `needs confirmation`; ask for an original capture.
 5. Read consecutive pages with the same screen ID (tabs, popups) as one bundle. If the document points to another file (program list, code table), look for it next to the deck and read it as supporting input.
 
 ## 1. Spec → status
 
-Give `devkit:spec-analyst` the page text, notes and image paths, the [spec template](references/spec-template.md) path, the profile's status legend and the document language, and the spec path to write (`<work>/<screen ID>/spec.md`). It fills only what the document shows.
+Give `devkit:spec-analyst` the page text, notes and image paths, the [spec template](references/spec-template.md) path, the profile's status legend and the document language, and the spec path to write (`<work>/<screen ID>/spec.md`). It fills only what the document shows. Then fill the header's branch and base commit (`git rev-parse --short HEAD`) yourself.
 
 Status comes from the page's mark (`index.tsv` `status`, the badge on the image, the profile's symbols). `A → B` means B; a date note (`10/21 수정`) is not a status.
 
@@ -92,11 +92,11 @@ Follow the profile's layer order (default: schema baseline → data access → s
 
 ## 6. Verify
 
-- Checks: pick from the profile's checks (or `devkit:check`) through `devkit:check-runner` and record the `CHECKS:` line with `record_run.py` (`devkit:develop` shows how, `--task <screen ID>`).
+- Checks: pick from the profile's checks (else its own discovery) through `devkit:check-runner` and record its `CHECKS:` line: `python3 -I "${CLAUDE_PLUGIN_ROOT}/skills/check/scripts/record_run.py" --repo <repo> --task <screen ID> --line "<line>"`.
 - Running app: `devkit:run-app up --task <screen ID>` when the repo has `.devkit/runtime.json`, else only an environment the user started. Stop what you started at the end.
 - **Mockup comparison (required before reporting)**: capture each screen and popup with a browser tool and compare it item by item with the mockup (split direction, columns, required marks, masking, buttons, titles), in a table in the spec. A passing build is not "matches the document".
 - **Behaviour**: query → create → re-query → edit → re-query, confirming saved values with a DB read. For modify, walk the keep-as-is list. Use recognisable dummy data and report what is left behind. The user does password logins; ask again if a new tab needs one.
-- Have `devkit:verifier` judge the spec (feature numbers and keep-as-is list) against the diff and record its `VERDICT:` line.
+- Have `devkit:verifier` judge the diff against the spec (feature numbers and keep-as-is list) — pass the spec path, its base commit and the `check-runner` result — and record its `VERDICT:` line the same way.
 - Write anything not run as `not run`.
 
 ## 🛑 B. DB apply
