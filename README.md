@@ -15,7 +15,9 @@ Skills and docs are written in English; Claude answers in the language of each r
 | Always | Guard hook `hooks/guard.py` | Enforces Git and server-start rules in code right before shell commands run (see "Guard hook") |
 | Analyze | `/devkit:analyze` | Reads a requirement, issue or bug from any source; traces current code → gap → impact → common risk check → implementation plan in an analysis doc; asks for approval |
 | Implement | `/devkit:develop` | Implements the approved plan, DB change and rollback SQL (`00_check` → `01_change` → `99_rollback`, run by a person), verification and regression check, per-requirement report |
-| Verify | `/devkit:check` | Finds lint, type, build and test commands and runs only the related ones (user-invoked only) |
+| Screens | `/devkit:develop-screen` | Builds screens from a screen design document (attached or local pptx, pdf, slide images, or a link a connected tool reads): splits pages, writes a per-screen spec with status, traces impact, designs DB changes, approval gate, implements, writes SQL, compares the result with the mockup and reports per feature number. Repo specifics (folders, layers, status symbols, glossary, checks) come from the local `.devkit/develop-screen/profile.md` |
+| Verify | `/devkit:check` | Finds lint, type, build and test commands and runs only the related ones, then writes a run record (user-invoked only) |
+| Run | `/devkit:run-app` | Starts, checks and stops the app servers without an IDE from the repo's local `.devkit/runtime.json`: TCP preflight (DB tunnel), start in dependency order, health wait, logs and PID state per checkout, separate ports per worktree, a runtime run record. Never opens tunnels, never takes over a port in use |
 | Commit | `/devkit:commit` | Commits named files following the repo's Git rules |
 | Push | `/devkit:push` | Checks outgoing commits and whether the remote is ahead, blocks protected-branch and force pushes, then pushes |
 | PR/MR | `/devkit:pr-publish` | Review → title and body draft → confirmation → create or update the PR/MR with `gh`/`glab`. Pins the remote SHA, publishes only what it reviewed and stops if the remote moved |
@@ -27,6 +29,7 @@ Skills and docs are written in English; Claude answers in the language of each r
 | Setup | `/devkit:improve-skill` | While you work in a project, fixes one of that project's own skills (e.g. `.claude/skills`) that you keep correcting: checks it for overlap with the skills you already use, diagnoses each correction against the authoring rules, edits only that skill after approval and checks it. Not for plugin or user-level skills (user-invoked only) |
 | Explore | Agent `devkit:code-reader` | Handles multi-file exploration and returns only conclusions (session model, low effort, read-only) |
 | Verify | Agent `devkit:check-runner` | Runs the lint, type, build and test commands for a change and returns exit codes and only the related errors, ending in `CHECKS: PASS`, `CHECKS: PASS (<k> not run)` or `CHECKS: FAIL`. Skips installs, DB-backed tests and servers and lists them as `needs install` / `not run` (session model, low effort, no source edits) |
+| Screens | Agent `devkit:spec-analyst` | Reads design document pages (text, notes, mockups) into the develop-screen spec template; marks guesses `Estimate:` and unclear status as needs confirmation (session model, read-only) |
 | Verify | Agent `devkit:verifier` | Judges the diff against an analysis doc's requirement and keep-as-is items as met / not met / cannot tell with `file:line` evidence, ending in `VERDICT: PASS` / `VERDICT: FAIL` (session model and effort, read-only) |
 
 The common risk checklist in `analyze` covers failure points that recur in every domain. It answers only the questions this change touches, with `file:line` evidence or `needs confirmation`:
@@ -63,7 +66,7 @@ flowchart LR
 4. Several independent requests at once: `/devkit:parallel-work <numbered requests>` → approve the task split → workers run in parallel → confirm commit, merge and the integrated check.
 5. Occasionally: `/devkit:suggest-skills` → get evidence-backed candidates for this repo's rule rows, skills and agents, and build only the chosen ones. Claude suggests it once when the same task repeats or the same correction is given twice. To fix a project skill you keep correcting, run `/devkit:improve-skill <name>`.
 
-Analysis docs and work SQL live in `<repo>/.devkit/work/<task ID>/` (excluded from Git).
+Analysis docs and work SQL live in `<repo>/.devkit/work/<task ID>/` (excluded from Git). Run records (`check-runner`, `verifier`, runtime and DB verdicts) are JSON files in its `runs/` folder, written by `skills/check/scripts/record_run.py` (schema `devkit.run/1`; `.devkit/runs/` without a task).
 
 ## Setting up a repository
 
@@ -180,13 +183,13 @@ Rules that must hold every time, without exception, are enforced in code (determ
 | Decision | Commands (Bash and PowerShell tools) |
 |---|---|
 | Deny | `git add .`, `-A`, `-u`; `git commit -a`, `-n`, `--no-verify`; `git push -f`, `--force`, `+ref`, `--no-verify`; commit messages containing AI attribution (`Co-Authored-By: Claude`, `Generated with Claude Code`) via `-m`, heredoc or a `-F` file |
-| Ask | `--force-with-lease`, `--amend`, pushes to protected branches (`main`, `master`, `release/*`, `prod*`), server and container starts (`bootRun`, `spring-boot:run`, `npm run dev`, `docker compose up` etc.) |
+| Ask | `--force-with-lease`, `--amend`, pushes to protected branches (`main`, `master`, `release/*`, `prod*`), server and container starts (`bootRun`, `spring-boot:run`, `npm run dev`, `docker compose up` etc.), unless they match the repo's `.devkit/guard.json` `allow_server` patterns; with `.devkit/runtime.json` the message points to `devkit:run-app` |
 
 - Turn off: `/plugin` > devkit > Configure options > Git guard (per user), or `DEVKIT_GUARD=off` in the settings `env` (use this to set it for a whole repo). Restart Claude Code after changing an option.
 - Repos that want AI attribution: `DEVKIT_AI_TRAILER=allow` in the settings `env`.
 - The setting that stops attribution from being written at all (`"attribution": {"commit": "", "pr": ""}`) is written by `devkit:setup` according to the interview answer.
 - A guard error never blocks work (`onFailure: continue`). Ambiguous commands pass (missed detection over false positives).
-- Tests: `python3 -I hooks/guard_test.py`
+- Tests: `python3 -I hooks/guard_test.py`; harness and run records: `python3 -I skills/run-app/scripts/runtime_test.py`; design document split: `python3 -I skills/develop-screen/scripts/extract_deck_test.py`
 
 ## Changing principles or adding skills
 

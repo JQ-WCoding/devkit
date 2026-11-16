@@ -48,13 +48,16 @@ CASES = [
 HERE = os.path.dirname(GUARD)
 
 
-def run(command, env=None, tool='Bash'):
-    payload = json.dumps({'tool_name': tool, 'tool_input': {'command': command}, 'cwd': TMP})
+def run(command, env=None, tool='Bash', cwd=TMP, reason=False):
+    payload = json.dumps({'tool_name': tool, 'tool_input': {'command': command}, 'cwd': cwd})
     p = subprocess.run([sys.executable, '-I', GUARD], input=payload.encode('utf-8'), capture_output=True,
                        env={**{k: v for k, v in os.environ.items() if not k.startswith(('DEVKIT_', 'CLAUDE_PLUGIN_OPTION_'))}, **(env or {})})
     assert p.returncode == 0, p.stderr
     out = p.stdout.decode('ascii')  # output must always be ASCII (code-page independent)
-    return json.loads(out)['hookSpecificOutput']['permissionDecision'] if out.strip() else None
+    if not out.strip():
+        return None
+    hook = json.loads(out)['hookSpecificOutput']
+    return hook['permissionDecisionReason'] if reason else hook['permissionDecision']
 
 
 fails, total = [], 0
@@ -71,6 +74,32 @@ for label, c, env in (('DEVKIT_GUARD=off', 'git add .', {'DEVKIT_GUARD': 'off'})
     total += 1
     if got := run(c, env):
         fails.append((label, c, None, got))
+# per-repo allow list (.devkit/guard.json) and the runtime harness hint, also from a worktree below the repo
+REPO = os.path.join(TMP, 'repo')
+WT = os.path.join(REPO, '.worktrees', 'task-a', 'web')
+os.makedirs(WT)
+os.makedirs(os.path.join(REPO, '.devkit'))
+with open(os.path.join(REPO, '.devkit', 'guard.json'), 'w') as f:
+    json.dump({'allow_server': [{'pattern': r'npm run dev( .*)?', 'reason': 'web dev server'}, '[bad(regex']}, f)
+for c, cwd, want in (('npm run dev', REPO, None), ('cd web && npm run dev -- --port 3011', WT, None),
+                     ('npm run preview', REPO, 'ask'), ('./gradlew bootRun', REPO, 'ask'),
+                     ('npm run dev && rm -rf x', REPO, None), ('npm run dev', TMP, 'ask')):
+    total += 1
+    if (got := run(c, cwd=cwd)) != want:
+        fails.append(('allow_server', f'{c} @ {cwd}', want, got))
+with open(os.path.join(REPO, '.devkit', 'runtime.json'), 'w') as f:
+    f.write('{}')
+total += 1
+if 'runtime harness' not in (got := run('./gradlew bootRun', cwd=REPO, reason=True) or ''):
+    fails.append(('runtime hint', './gradlew bootRun', 'reason mentions runtime harness', got))
+total += 1
+if 'runtime harness' in (got := run('./gradlew bootRun', reason=True) or ''):
+    fails.append(('no runtime hint without runtime.json', './gradlew bootRun', 'plain reason', got))
+with open(os.path.join(REPO, '.devkit', 'guard.json'), 'w') as f:
+    f.write('{not json')
+total += 1
+if (got := run('npm run dev', cwd=REPO)) != 'ask':
+    fails.append(('unreadable guard.json keeps asking', 'npm run dev', 'ask', got))
 total += 1
 p = subprocess.run([sys.executable, '-I', os.path.join(HERE, 'session_start.py')], capture_output=True)
 ctx = json.loads(p.stdout.decode('ascii'))['hookSpecificOutput']['additionalContext']

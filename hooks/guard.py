@@ -4,6 +4,7 @@ Input: the PreToolUse JSON Claude Code sends on stdin (tool_name Bash|PowerShell
 hooks.json runs it with python3 directly (exec form, no shell), so it behaves the same on macOS, Linux and Windows.
 Output: hookSpecificOutput (permissionDecision deny|ask) only when it intervenes; otherwise nothing (normal permission flow).
 Disable: the plugin option guard (/plugin > devkit > Configure options) or DEVKIT_GUARD=off. Allow AI attribution: DEVKIT_AI_TRAILER=allow.
+Per repo: server commands that fully match an allow_server pattern in .devkit/guard.json pass without asking.
 When unsure it lets the command through (a false positive must not block real work).
 """
 import json
@@ -22,6 +23,9 @@ SERVER = [
 ]
 RUNNERS = {'gradle', 'gradlew', 'mvn', 'mvnw', 'npm', 'pnpm', 'yarn', 'bun', 'npx', 'docker', 'docker-compose',
            'python', 'python3', 'flask', 'uvicorn', 'rails', 'bundle'}
+GUARD_CONFIG = os.path.join('.devkit', 'guard.json')  # per-repo {"allow_server": [pattern | {"pattern", "reason"}]}
+RUNTIME_CONFIG = os.path.join('.devkit', 'runtime.json')
+HARNESS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'skills', 'run-app', 'scripts', 'runtime.py')
 HEREDOC = re.compile(r'<<-?\s*([\'"]?)(\w+)\1[^\n]*\n.*?\n\s*\2\b', re.S)
 
 
@@ -136,8 +140,47 @@ def check(command, cwd):
             continue
         for pat, what in SERVER:
             if pat.search(seg):
-                return decide('ask', f'This is a {what} command. Start or stop servers and containers only when the user asks')
+                if allowed_server(seg, cwd):
+                    break
+                reason = f'This is a {what} command. Start or stop servers and containers only when the user asks'
+                if find_up(cwd, RUNTIME_CONFIG):
+                    reason += (f'. This repo uses the runtime harness: python3 -I "{HARNESS}" up|status|down '
+                               '(see the devkit:run-app skill)')
+                return decide('ask', reason)
     return None
+
+
+def find_up(cwd, rel):
+    """Nearest <dir>/<rel> from cwd upward; worktrees under <repo>/.worktrees/ find the main repo's .devkit/."""
+    d = os.path.abspath(cwd)
+    while True:
+        p = os.path.join(d, rel)
+        if os.path.isfile(p):
+            return p
+        parent = os.path.dirname(d)
+        if parent == d:
+            return None
+        d = parent
+
+
+def allowed_server(segment, cwd):
+    """True if the segment fully matches an allow_server pattern in the repo's .devkit/guard.json."""
+    path = find_up(cwd, GUARD_CONFIG)
+    if not path:
+        return False
+    try:
+        with open(path, encoding='utf-8') as f:
+            entries = json.load(f).get('allow_server') or []
+    except (OSError, ValueError, AttributeError):
+        return False  # unreadable config: keep asking
+    for entry in entries:
+        pattern = entry.get('pattern') if isinstance(entry, dict) else entry
+        try:
+            if isinstance(pattern, str) and re.fullmatch(pattern, segment.strip()):
+                return True
+        except re.error:
+            continue
+    return False
 
 
 def main():

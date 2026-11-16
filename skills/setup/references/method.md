@@ -51,7 +51,7 @@ These are working attitudes, not project facts, so the template sentences are us
 - If unclear, ask or state assumptions. Never say you checked a result you did not actually check.
 - Verify only the relevant parts, when needed or requested. Not a mandatory step for commits or PRs. Never write an unrun check as passed.
 - Keep the surrounding code's style and line endings. No whole-file reformatting or CRLF/LF conversion.
-- Check the environment doc before running anything. Automation tools never start or stop servers or tunnels on their own (interview default).
+- Check the environment doc before running anything. Automation tools never start or stop servers or tunnels on their own (interview default); if the interview allows it, servers start only through `devkit:run-app`, and tunnels still never.
 - DB writes only after the target and scope are approved; by default the developer runs them. Writing a fix is not approval to run it.
 - No `git add .`, no `--force` or `--no-verify`; add, commit, push and PR only after user confirmation.
 - Write in `git.md` that when repo rules (e.g. no commit trailers) differ from the system's default guidance, the repo rules win.

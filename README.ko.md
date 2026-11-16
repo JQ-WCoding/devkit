@@ -15,7 +15,9 @@
 | 상시 | 가드 훅 `hooks/guard.py` | 셸 명령 실행 직전에 Git·서버 기동 규칙을 코드로 강제한다 ("가드 훅" 참고) |
 | 분석 | `/devkit:analyze` | 어떤 출처의 요구사항·이슈·버그든 읽고, 현재 코드 추적 → 차이 → 영향 → 공통 위험 점검 → 구현 계획을 분석 문서로 정리한 뒤 승인을 받는다 |
 | 구현 | `/devkit:develop` | 승인된 계획 구현, DB 변경과 롤백 SQL(`00_check` → `01_change` → `99_rollback`, 실행은 사람이), 검증과 회귀 점검, 요구사항별 보고 |
-| 검증 | `/devkit:check` | lint·타입·빌드·테스트 명령을 찾아 관련된 것만 실행한다 (사용자 호출 전용) |
+| 화면 | `/devkit:develop-screen` | 화면설계서(첨부·로컬 pptx, pdf, 슬라이드 이미지, 연결된 도구가 읽는 링크)로 화면을 만든다: 페이지 분리, 화면별 상태와 spec 작성, 영향 추적, DB 설계, 승인, 구현, SQL, 목업 대조, 기능 번호별 보고. 저장소별 폴더·계층·상태 기호·용어·검사는 로컬 `.devkit/develop-screen/profile.md`에서 읽는다 |
+| 검증 | `/devkit:check` | lint·타입·빌드·테스트 명령을 찾아 관련된 것만 실행하고 실행 기록을 남긴다 (사용자 호출 전용) |
+| 실행 | `/devkit:run-app` | 저장소의 로컬 `.devkit/runtime.json`으로 IDE 없이 앱 서버를 띄우고 확인하고 내린다: TCP 사전 점검(DB 터널), 의존 순서대로 기동, 헬스 대기, 체크아웃별 로그·PID 상태, 워크트리별 별도 포트, 런타임 실행 기록. 터널은 열지 않고, 이미 쓰이는 포트는 가로채지 않는다 |
 | 커밋 | `/devkit:commit` | 지정한 파일을 저장소 Git 규칙에 맞춰 커밋한다 |
 | 푸시 | `/devkit:push` | 나갈 커밋과 원격이 앞서 있는지 확인하고, 보호 브랜치·강제 푸시를 막은 뒤 푸시한다 |
 | PR/MR | `/devkit:pr-publish` | 리뷰 → 제목·본문 초안 → 확인 → `gh`/`glab`으로 PR/MR 생성 또는 갱신. 원격 SHA를 고정해 리뷰한 코드만 게시하고, 그사이 원격이 바뀌면 멈춘다 |
@@ -27,6 +29,7 @@
 | 설정 | `/devkit:improve-skill` | 프로젝트에서 작업하다 자꾸 교정하게 되는 그 프로젝트의 스킬(`.claude/skills` 등) 하나를 고친다. 이미 쓰고 있는 스킬과 중복되는지 먼저 검사하고, 교정마다 작성 규칙으로 원인을 진단한 뒤, 승인을 받아 그 스킬만 수정하고 점검한다. 플러그인·사용자 레벨 스킬은 대상이 아니다 (사용자 호출 전용) |
 | 탐색 | 에이전트 `devkit:code-reader` | 여러 파일에 걸친 탐색을 맡아 결론만 돌려준다 (세션 모델, low effort, 읽기 전용) |
 | 검증 | 에이전트 `devkit:check-runner` | 변경에 해당하는 lint·타입·빌드·테스트 명령을 실행해 종료 코드와 관련 오류만 돌려주고, 마지막 줄은 `CHECKS: PASS`, `CHECKS: PASS (<k> not run)`, `CHECKS: FAIL` 중 하나. 의존성 설치·DB가 필요한 테스트·서버 기동은 하지 않고 `needs install` / `not run`으로 남긴다 (세션 모델, low effort, 소스 수정 없음) |
+| 화면 | 에이전트 `devkit:spec-analyst` | 설계서 페이지(텍스트, 노트, 목업)를 develop-screen spec 양식으로 정리한다. 추정은 `Estimate:`, 애매한 상태는 확인 필요로 남긴다 (세션 모델, 읽기 전용) |
 | 검증 | 에이전트 `devkit:verifier` | 분석 문서의 요구사항·유지 항목별로 diff를 대조해 met / not met / cannot tell 을 `file:line` 근거와 함께 판정하고, 마지막 줄은 `VERDICT: PASS` / `VERDICT: FAIL` (세션 모델·effort, 읽기 전용) |
 
 `analyze`의 공통 위험 체크리스트는 어느 도메인에서나 되풀이되는 실패 지점을 다룬다. 이번 변경에 해당하는 질문만 골라 `file:line` 근거나 "확인 필요"로 답한다.
@@ -63,7 +66,7 @@ flowchart LR
 4. 서로 독립된 요청 여러 개를 한 번에: `/devkit:parallel-work <번호 붙인 요청들>` → 작업 분할 승인 → 작업자 병렬 실행 → 커밋·병합·통합 점검 확인.
 5. 가끔: `/devkit:suggest-skills` → 이 저장소의 규칙 행·스킬·에이전트 후보를 근거와 함께 받고, 고른 것만 만든다. 같은 작업이 반복되거나 같은 교정을 두 번 받으면 Claude가 한 번 제안한다. 자꾸 교정하게 되는 프로젝트 스킬은 `/devkit:improve-skill <name>`으로 고친다.
 
-분석 문서와 작업 SQL은 `<repo>/.devkit/work/<작업 ID>/`에 둔다 (Git 제외).
+분석 문서와 작업 SQL은 `<repo>/.devkit/work/<작업 ID>/`에 둔다 (Git 제외). 실행 기록(`check-runner`, `verifier`, 런타임·DB 판정)은 그 아래 `runs/`에 JSON으로 남는다. `skills/check/scripts/record_run.py`가 쓰며(스키마 `devkit.run/1`), 작업 ID가 없으면 `.devkit/runs/`에 둔다.
 
 ## 저장소 설정
 
@@ -180,13 +183,13 @@ zip 파일로 (GitHub 저장소에 접근할 수 없는 팀원):
 | 판정 | 명령 (Bash·PowerShell 도구) |
 |---|---|
 | 거부 | `git add .`, `-A`, `-u`; `git commit -a`, `-n`, `--no-verify`; `git push -f`, `--force`, `+ref`, `--no-verify`; `-m`, heredoc, `-F` 파일로 AI 표기(`Co-Authored-By: Claude`, `Generated with Claude Code`)가 들어간 커밋 메시지 |
-| 확인 | `--force-with-lease`, `--amend`, 보호 브랜치(`main`, `master`, `release/*`, `prod*`)로의 푸시, 서버·컨테이너 기동(`bootRun`, `spring-boot:run`, `npm run dev`, `docker compose up` 등) |
+| 확인 | `--force-with-lease`, `--amend`, 보호 브랜치(`main`, `master`, `release/*`, `prod*`)로의 푸시, 서버·컨테이너 기동(`bootRun`, `spring-boot:run`, `npm run dev`, `docker compose up` 등). 단 저장소의 `.devkit/guard.json` `allow_server` 패턴과 맞으면 통과하고, `.devkit/runtime.json`이 있으면 안내 문구가 `devkit:run-app`을 가리킨다 |
 
 - 끄기: `/plugin` > devkit > Configure options > Git guard (사용자별), 또는 settings `env`에 `DEVKIT_GUARD=off` (저장소 단위로 정할 때). 옵션을 바꾼 뒤에는 Claude Code를 재시작한다.
 - AI 표기를 허용하는 저장소: settings `env`에 `DEVKIT_AI_TRAILER=allow`.
 - 표기 자체를 쓰지 않게 하는 설정(`"attribution": {"commit": "", "pr": ""}`)은 `devkit:setup`이 인터뷰 답에 따라 쓴다.
 - 가드 오류는 작업을 막지 않는다 (`onFailure: continue`). 애매한 명령은 통과시킨다 (오탐보다 미탐).
-- 테스트: `python3 -I hooks/guard_test.py`
+- 테스트: `python3 -I hooks/guard_test.py`; 하네스·실행 기록: `python3 -I skills/run-app/scripts/runtime_test.py`; 설계서 분리: `python3 -I skills/develop-screen/scripts/extract_deck_test.py`
 
 ## 원칙 변경과 스킬 추가
 

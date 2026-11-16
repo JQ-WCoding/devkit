@@ -28,7 +28,7 @@ If there is a CI config, compare against the checks it actually runs. If there a
 
 ## 3. Rules while running
 
-- Do not run commands that start servers, DBs or containers (`dev`, `start`, `serve`, `bootRun`, `docker compose up` and so on).
+- Do not run commands that start servers, DBs or containers (`dev`, `start`, `serve`, `bootRun`, `docker compose up` and so on). Checks that need a running app use `devkit:run-app` when the repo has `.devkit/runtime.json`; otherwise the user starts it.
 - If dependency installation (`npm install`, `npm ci`, `pip install` and so on) is needed, ask first. Lock files or installed modules may change.
 - Do not run autofix (`--fix`, formatters) over whole files. Use it only after confirmation when the lines it changes are within the request.
 - Run tests that need a DB or external services only after confirming the target environment.
@@ -37,4 +37,12 @@ If there is a CI config, compare against the checks it actually runs. If there a
 
 ## 4. Results
 
-Report the commands run, exit codes, and only the errors and warnings related to the change. For existing violations, judge only the ones related to this change and give a count for the rest. Write checks that were not run as `not run`; if a tool is missing, say so. Do not create evidence files or verification logs.
+Report the commands run, exit codes, and only the errors and warnings related to the change. For existing violations, judge only the ones related to this change and give a count for the rest. Write checks that were not run as `not run`; if a tool is missing, say so.
+
+End with a `CHECKS:` line in the `devkit:check-runner` format and record it (add `--task <ID>` when working from an analysis doc):
+
+```bash
+python3 -I "${CLAUDE_PLUGIN_ROOT}/skills/check/scripts/record_run.py" --repo <repo root> --line "<CHECKS: line>"
+```
+
+That JSON record is the only evidence file; do not write other logs or reports into the repo.

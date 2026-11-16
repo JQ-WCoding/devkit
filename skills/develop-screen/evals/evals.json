@@ -1,0 +1,51 @@
+[
+  {
+    "skills": ["develop-screen"],
+    "query": "~/Downloads/화면설계서_v3.pptx p12 개발해줘",
+    "files": ["<local pptx>"],
+    "expected_behavior": [
+      "Reads .devkit/develop-screen/profile.md (or states the defaults) and reports available / missing tools in one pass",
+      "Runs extract_deck.py, takes p12 by presentation order and cross-checks the screen ID and title against the slide image",
+      "Writes the spec with devkit:spec-analyst and decides status from the page mark and profile legend; asks when it is unclear",
+      "Changes no code, schema baseline or SQL before 🛑A approval"
+    ]
+  },
+  {
+    "skills": ["develop-screen"],
+    "query": "Implement the screens on pages 3-4 of this PDF",
+    "files": ["<attached pdf, no pdftotext installed>"],
+    "expected_behavior": [
+      "Reads the requested PDF pages with the Read tool after extract_deck.py reports no text tool, using one read for text and mockup",
+      "Treats pages 3 and 4 as one bundle when they share a screen ID (tab or popup)",
+      "Leaves values the document cannot decide as needs confirmation instead of guessing"
+    ]
+  },
+  {
+    "skills": ["develop-screen"],
+    "query": "설계서 p41은 '수정' 표시인데 뭐가 바뀌는지 모르겠어. 반영해줘",
+    "files": [],
+    "expected_behavior": [
+      "Does not take identical feature wording as evidence of no change; compares with a previous document version or lists mockup-vs-current differences",
+      "Builds a per-feature current / requested / difference table and a keep-as-is list, and asks about scope at 🛑A",
+      "Leaves features without a requested change untouched"
+    ]
+  },
+  {
+    "skills": ["develop-screen"],
+    "query": "구현 끝났으면 검증하고 보고해줘",
+    "files": [".devkit/runtime.json"],
+    "expected_behavior": [
+      "Starts the app with devkit:run-app, compares every screen and popup with the mockup item by item and records the comparison in the spec",
+      "Records CHECKS and VERDICT lines with record_run.py and reports per feature number with checks not run marked not run",
+      "Explains the SQL apply order at 🛑B and does not run write SQL itself"
+    ]
+  },
+  {
+    "skills": ["develop-screen"],
+    "query": "이 버튼 색만 바꿔줘",
+    "files": [],
+    "expected_behavior": [
+      "Does not use develop-screen without a design document; handles it as a normal change"
+    ]
+  }
+]

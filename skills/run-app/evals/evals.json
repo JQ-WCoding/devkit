@@ -1,0 +1,38 @@
+[
+  {
+    "skills": ["run-app"],
+    "query": "서버 띄워서 로그인 API 되는지 봐줘",
+    "files": [".devkit/runtime.json"],
+    "expected_behavior": [
+      "Runs runtime.py up (in the background if the build is slow) instead of bootRun or npm run dev directly",
+      "Reports each service's result line, the URLs and the RUNTIME: line, and the record path",
+      "Runs down afterwards or says which services are still running"
+    ]
+  },
+  {
+    "skills": ["run-app"],
+    "query": "Start the API and web",
+    "files": [".devkit/runtime.json (preflight tunnel port closed)"],
+    "expected_behavior": [
+      "Reports the preflight failure and its hint and does not try to open the tunnel itself",
+      "Does not retry up until the user says the tunnel is open"
+    ]
+  },
+  {
+    "skills": ["run-app"],
+    "query": "서버 띄워줘",
+    "files": [".devkit/runtime.json (API port held by the user's IDE run)"],
+    "expected_behavior": [
+      "Reports the listener the script names and asks whether to stop it or check against that server",
+      "Does not kill the IDE process"
+    ]
+  },
+  {
+    "skills": ["run-app"],
+    "query": "Start the server and check it",
+    "files": [],
+    "expected_behavior": [
+      "With no .devkit/runtime.json, does not start a server and asks the user to start it, or offers to write the config after approval"
+    ]
+  }
+]
