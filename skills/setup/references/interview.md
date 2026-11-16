@@ -19,7 +19,7 @@ Ask about work policies code cannot decide and environment facts that need confi
 
 | Item | Question | Default | Affects |
 |---|---|---|---|
-| Server start | May Claude start and stop the API and web servers? | No, the developer starts them in the IDE. If yes: only through the devkit runtime harness (`devkit:run-app`, local `.devkit/runtime.json`); tunnels and VPNs stay with the developer | `common.md` running, verification skills |
+| Server start | May Claude start and stop the API and web servers? | No, the developer starts them in the IDE. If yes: only through the devkit runtime harness (`devkit:run-app`, local `.devkit/runtime.json`); tunnels and VPNs stay with the developer | `common.md` running, verification skills, local `.devkit/runtime.json` |
 | DB writes | Who runs DB write SQL? | The developer. Claude only writes SQL and runs read-only queries | `common.md`, `db.md`, `db-analyst` tools |
 | Mandatory checks | Make lint and build checks mandatory for every task and commit? | No, pick them when needed | `common.md` verification |
 | Task tracking | Where are tasks and issues tracked, and what does an issue key look like? | Propose the key shape found in the fingerprint's commits and branches (`ABC-123`, `#45`); if none, "none" | `git.md` branch names, commit and PR linking rules |

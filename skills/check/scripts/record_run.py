@@ -63,12 +63,15 @@ def parse_line(line):
     """'CHECKS: PASS (2 not run)' -> ('checks', 'PARTIAL', '2 not run')."""
     m = LINE.match(line or '')
     if not m:
-        raise ValueError(f'not a CHECKS:/VERDICT: line: {line!r}')
+        raise ValueError(f'not a CHECKS:/VERDICT: line: {line!r}. Accepted: "CHECKS: PASS", "CHECKS: PASS (<k> not run)", '
+                         '"CHECKS: FAIL (<n> commands)", "CHECKS: FAIL (none run)", "VERDICT: PASS", "VERDICT: FAIL (<n> items)"')
     kind = 'checks' if m.group(1) == 'CHECKS' else 'verifier'
     detail = m.group(4) or ''
     verdict = m.group(2)
     if verdict == 'PASS' and 'not run' in detail:
         verdict = 'PARTIAL'
+    elif kind == 'checks' and verdict == 'PASS' and detail:
+        raise ValueError(f'{line!r}: a CHECKS: PASS detail must be "<k> not run"')
     return kind, verdict, detail
 
 

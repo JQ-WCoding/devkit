@@ -10,7 +10,7 @@ import sys
 ROOT = os.environ.get('CLAUDE_PLUGIN_ROOT') or os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 try:
     with open(os.path.join(ROOT, 'skills', 'using-devkit', 'SKILL.md'), encoding='utf-8') as f:
-        body = re.sub(r'\A---\n.*?\n---\n', '', f.read().replace('\r\n', '\n'), flags=re.S).strip()
+        body = re.sub(r'\A---\n.*?\n---\n', '', f.read().replace('\r\n', '\n'), flags=re.S).strip().replace('${CLAUDE_PLUGIN_ROOT}', ROOT)
 except OSError:
     sys.exit(0)
 print(json.dumps({'hookSpecificOutput': {'hookEventName': 'SessionStart', 'additionalContext': body}}))

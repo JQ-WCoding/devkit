@@ -2,7 +2,8 @@
 
 | Input | How |
 |---|---|
-| Local or attached `.pptx` | `extract_deck.py` reads it directly: presentation order from `ppt/presentation.xml` `sldIdLst` (not the `slideN` file name), text, speaker notes, slide images into `<deck>/media/` |
+| Local or attached `.pptx` | `extract_deck.py` reads it directly: presentation order from `ppt/presentation.xml` `sldIdLst` (not the `slideN` file name), text, speaker notes, and the pictures embedded in each slide into `<deck>/media/` (not a render: a screen drawn with shapes or tables gives no picture) |
+| `.pptx` page with no picture, or only logos, icons or fragments | Ask for a PDF export or a capture of that page for the mockup; text and notes still come from the pptx |
 | `.pdf` | `extract_deck.py` records the pages (text and PNGs too when `pdftotext` / `pdftoppm` are installed). Otherwise read the requested pages with `Read` (`pages="N"`): one read gives both the text and the mockup |
 | Images (`.png`, `.jpg` …) or a folder of them | One page per image, folder sorted by name. Read each image; the text comes from the image |
 | `.ppt`, `.key`, `.docx`, `.hwp` | Not read directly. Ask for a `.pptx` or `.pdf` export (or slide images) |
@@ -11,7 +12,7 @@
 | Figma or other design tool links | Use a connected tool for that service if there is one; else ask for PNG or PDF exports of the frames |
 | Pasted text only | Save it to a file in the scratchpad and pass it to `extract_deck.py`; ask for the mockup images |
 
-- Keep originals the user will reuse in the profile's deck folder (Git-excluded), not in the scratchpad.
+- Keep originals the user will reuse in the profile's deck folder (kept out of Git at step 0), not in the scratchpad.
 - Large tool results (document text) are saved to a file whose path the result gives; pass that path on instead of copying the text.
 - If two sources disagree (text export vs image), the image wins; note the disagreement in the spec.
 
