@@ -184,6 +184,7 @@ zip 파일로 (GitHub 저장소에 접근할 수 없는 팀원):
 |---|---|
 | 거부 | `git add .`, `-A`, `-u`; `git commit -a`, `-n`, `--no-verify`; `git push -f`, `--force`, `+ref`, `--no-verify`; `-m`, heredoc, `-F` 파일로 AI 표기(`Co-Authored-By: Claude`, `Generated with Claude Code`)가 들어간 커밋 메시지 |
 | 확인 | `--force-with-lease`, `--amend`, 보호 브랜치(`main`, `master`, `release/*`, `prod*`)로의 푸시, 서버·컨테이너 기동(`bootRun`, `spring-boot:run`, `npm run dev`, `docker compose up` 등). 단 저장소의 `.devkit/guard.json` `allow_server` 패턴과 맞으면 통과하고, `.devkit/runtime.json`이 있으면 안내 문구가 `devkit:run-app`을 가리킨다 |
+| 거부 (zsh만) | bash는 그대로 넘기지만 zsh에서는 실패하는 따옴표 없는 단어: `echo ====` 구분선이나 `[ "$a" == "$b" ]`처럼 `==`로 시작하는 단어, `VAR==x`의 값, `--include=*.java` 같은 옵션 글롭. 메시지에 따옴표를 붙인 형태(`'===='`, `--include='*.java'`)를 알려준다 |
 
 - 끄기: `/plugin` > devkit > Configure options > Git guard (사용자별), 또는 settings `env`에 `DEVKIT_GUARD=off` (저장소 단위로 정할 때). 옵션을 바꾼 뒤에는 Claude Code를 재시작한다.
 - AI 표기를 허용하는 저장소: settings `env`에 `DEVKIT_AI_TRAILER=allow`.
@@ -201,4 +202,4 @@ zip 파일로 (GitHub 저장소에 접근할 수 없는 팀원):
 
 ## 상태
 
-0.12.1 · 2026-11-17. MIT 라이선스로 배포한다 (`LICENSE` 참고).
+0.12.2 · 2026-11-17. MIT 라이선스로 배포한다 (`LICENSE` 참고).
