@@ -42,6 +42,15 @@
   },
   {
     "skills": ["develop-screen"],
+    "query": "설계서 p7 화면 만들어줘 (기존 테이블과 API로 조회만 하는 화면이고, 설계서에 애매한 부분이 없다)",
+    "files": [],
+    "expected_behavior": [
+      "Shows the spec summary and records 'no gate: <reason>' instead of waiting at 🛑A, then implements",
+      "Reports the checks with the verdict word record_run.py printed (PARTIAL is never passed)"
+    ]
+  },
+  {
+    "skills": ["develop-screen"],
     "query": "이 버튼 색만 바꿔줘",
     "files": [],
     "expected_behavior": [

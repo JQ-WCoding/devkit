@@ -1,6 +1,6 @@
 # Templates
 
-Contents: How to use · Korean fixed sentences · .gitignore · .claude/settings.json · CLAUDE.md · docs/rules/README.md · common.md · git.md · environments.md · Layer doc · Onboarding guide
+Contents: How to use · Korean fixed sentences · .gitignore · .claude/settings.json · CLAUDE.md · docs/rules/README.md · common.md · git.md · environments.md · glossary.md · Layer doc · Onboarding guide
 
 ## How to use
 
@@ -112,6 +112,12 @@ Use these verbatim when the document language is Korean (same order as the Engli
 환경이 바뀌면 이 문서의 주소·명령·확인일·검증 범위를 함께 갱신한다. 소스의 기본값만으로 실제 연결 대상을 단정하지 않는다.
 ```
 
+`glossary.md`:
+
+```markdown
+코드나 주석과 뜻이 다른 용어, 저장소 어디에도 없는 운영 전제를 적는다. 행마다 결정 출처(고객·담당자 결정, 계약, 팀 합의)를 근거로 단다. 코드에서만 본 뜻은 행이 되지 않는다.
+```
+
 Onboarding guide:
 
 ```markdown
@@ -185,6 +191,7 @@ Read the common rules and the areas related to the task.
 | Environments, profiles, DB, deploy addresses | [Environments](environments.md) |
 | {{layer area}} | [{{layer}} rules]({{file}}.md) |
 | Commits, branches, merging | [Git rules](git.md) |
+| Terms and operating premises | [Glossary](glossary.md) |
 
 The docs in this folder are the source of truth for shared rules. Personal AI tool config and local hooks are not part of the repo. Installing a specific tool or hook is not a required part of the team's dev environment.
 ```
@@ -314,6 +321,28 @@ As of: {{YYYY-MM-DD}}. {{one sentence on how local development works}}
 - {{date, OS and scope checked, and what was not verified}}
 
 When the environment changes, update the addresses, commands, checked date and checked scope in this doc together. Do not conclude the real connection target from source defaults alone.
+```
+
+## glossary.md
+
+Created empty; rows are added only with a `decision` or `agreement` source (`devkit:analyze` cross-check.md, "Glossary and premises"). analyze and peer-review read it first.
+
+```markdown
+# Glossary
+
+[Rules index](README.md)
+
+Terms whose meaning differs from the code or comments, and operating premises no repo file records. Each row cites who decided it (customer or owner decision, contract, team agreement). A meaning seen only in code is not a row.
+
+## Terms
+
+| Term | Current meaning | Legacy meaning | Evidence | Re-check when |
+|---|---|---|---|---|
+
+## Operating premises
+
+| Premise | Holds where | Evidence | Re-check when |
+|---|---|---|---|
 ```
 
 ## Layer doc

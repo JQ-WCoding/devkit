@@ -19,6 +19,7 @@ Build it from `docs/rules/git.md` (branch flow, commit format) and the repo's to
 | `forbidden_paths` | `[{prefix, message, judgment?}]` — paths that must not be committed |
 | `no_mix` | `[{areas: [a, b], message, judgment?}]` — areas that must not share a commit |
 | `type_path` | `[{type, prefix, message, judgment?}]` — a commit type that should not touch a path |
+| `shared_paths` | `[{prefix, steward, message?}]` — shared code one owner keeps; `steward` is a git author name or a list. A commit by anyone else touching the prefix is listed as a proposal needing the steward's approval |
 | `revert_markers` | Extra subject words that mark a revert (besides `Revert`) |
 | `brief.summary` | One or two lines on the repo for the reviewer brief (stack, layout) |
 | `brief.focus`, `brief.notes` | Repo-specific review points and caveats added to the brief |
@@ -46,6 +47,7 @@ Write each `message` in the rules' language and name the rule doc it rests on, e
   },
   "body": {"max_lines": 3, "bullet": "-"},
   "forbid_trailers": true,
+  "shared_paths": [{"prefix": "web/src/common/excel/", "steward": "Kim", "message": "export runs server-side"}],
   "brief": {
     "summary": "Spring API in api/, React web in web/, SQL migrations in db/.",
     "focus": ["Tenant filter (TENANT_ID) on every query of shared tables"]

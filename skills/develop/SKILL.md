@@ -10,7 +10,7 @@ Make no changes outside the approved plan. If something in the plan cannot be do
 
 ## 0. Preconditions
 
-- Find the analysis doc: argument → the analysis just approved in this conversation → an `analysis.md` in the work folder (the local work-folder rule in `docs/rules/`, else `.devkit/work/`) whose branch name or issue key matches → the most recent `analysis.md` (confirm which). If none, run `devkit:analyze` first. For a tiny change (one file, a few lines, no risk-check items), you may show a three-line summary without an analysis doc and ask once whether to proceed.
+- Find the analysis doc: argument → the analysis just approved in this conversation → an `analysis.md` in the work folder (the local work-folder rule in `docs/rules/`, else `.devkit/work/`) whose branch name or issue key matches → the most recent `analysis.md` (confirm which). If none, run `devkit:analyze` first. For a tiny change (one file, a few lines, no risk-check items), you may show a three-line summary without an analysis doc and proceed.
 - If related files changed since the analysis's base commit (`git log <base commit>..HEAD -- <files>`), say so and ask whether to update the analysis.
 - Branch: unless the user asks, work on the current branch. When asked for a new branch, follow the naming rule in `docs/rules/git.md` (else `feat/<task ID>-<short name>`, `fix/…`).
 - If the working tree has changes unrelated to this task, say so and do not touch those files.

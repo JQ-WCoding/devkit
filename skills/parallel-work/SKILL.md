@@ -14,7 +14,7 @@ The work spans several turns: copy this checklist into your response and tick it
 ```
 Parallel work progress:
 - [ ] 0. Choose modes (launcher, workspace)
-- [ ] 1. Split the request → approval (base branch, screen check)
+- [ ] 1. Split the request → approval when needed (base branch, screen check)
 - [ ] 2. Prepare workspaces → launch workers
 - [ ] 3. Collect reports → check actual results → results table
 - [ ] 4-1. Commit → 4-2. Merge point → 4-3. Merge → 4-4. Integrated check
@@ -61,7 +61,7 @@ Two independent choices. Each mode has its own reference file: read the two that
 6. Decide once — **screen check**: whether to start a server and check the merged result in the browser, and where. "n/a" if there is no UI.
    - If the repo has `.devkit/runtime.json`, the central session starts it with `devkit:run-app` (`--repo <merge point>`). Otherwise the user starts the server with their usual setup, at the location the workspace file gives. Get approval for any branch switch now. Workers never start servers.
    - Decide whether checks that write data (save, delete) are allowed. If so, list the targets and how to revert them. If not decided, screen checks only read and observe requests.
-7. 🛑 Show a table and get approval: launcher · workspace (plus the items its file adds) · screen check (yes/no, location, write checks and how to revert) · per task: kind · slug · scope · parallel/ordered/combined/central-direct · open points. Get the user's answers to open points now. Unanswered ones go into the brief as "don't implement; report the options".
+7. 🛑 Show a table: launcher · workspace (plus the items its file adds) · screen check (yes/no, location, write checks and how to revert) · per task: kind · slug · scope · parallel/ordered/combined/central-direct · open points. Wait for approval only when there are open points, write checks, a branch switch or a `git init`; get the answers to open points now, and unanswered ones go into the brief as "don't implement; report the options". Otherwise launch right after showing it.
 
 ## 2. Prepare workspaces → launch workers
 

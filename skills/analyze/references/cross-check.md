@@ -27,7 +27,7 @@ Progress:
 3. Round n: launch one `devkit:code-reader` per lane in one message, `effort: "higher"`, with the lane brief. Save each reply's JSON block verbatim to `round-<n>/lane-<name>.json`. Lanes never see each other's files.
 4. Launch the comparator (general-purpose subagent) with its brief → save to `round-<n>/compare.json`.
 5. Run `python3 -I "<plugin root>/skills/analyze/scripts/cross_check.py" check <cross-check dir> --repo <repo root>`. Exit 1 prints what to fix. On `STOP: no`, run the next round with lanes on the listed items only, each brief carrying a targeted question.
-6. Put `results.md` in the analysis doc's requirement summary, `not-rules.md` under "Not turned into rules", and ask `questions.md` at the 🛑 gate. Only `proceed` items get an implementation plan.
+6. Put `results.md` in the analysis doc's requirement summary, `not-rules.md` under "Not turned into rules", and ask `questions.md` at the 🛑 gate, which always stops when it has questions. Only `proceed` items get an implementation plan.
 
 `plan.json`:
 

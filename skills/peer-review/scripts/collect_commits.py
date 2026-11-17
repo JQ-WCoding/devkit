@@ -19,7 +19,7 @@ Options
 
 Config: .devkit/peer-review/config.json (optional; see references/config.md).
 State:  .devkit/peer-review/state.json
-Only the commit format is checked here. Code content is not read.
+Only the commit format and shared-path proposals are checked here. Code content is not read.
 """
 import argparse
 import datetime
@@ -97,6 +97,7 @@ class Rules:
         self.forbidden_paths = cfg.get("forbidden_paths", [])
         self.no_mix = cfg.get("no_mix", [])
         self.type_path = cfg.get("type_path", [])
+        self.shared_paths = cfg.get("shared_paths", [])
         self.revert_markers = ["Revert", *cfg.get("revert_markers", [])]
         self.configured = bool(cfg)
 
@@ -206,6 +207,17 @@ def check_commit(R, subject, body, files):
         if any(p.startswith(fp["prefix"]) for p in paths):
             issues.append(note(fp))
     return issues
+
+
+def proposal_notes(R, author, paths):
+    """Shared code changed by someone other than its steward is a proposal, not a finished change."""
+    out = []
+    for sp in R.shared_paths:
+        stewards = sp["steward"] if isinstance(sp["steward"], list) else [sp["steward"]]
+        if author not in stewards and any(p.startswith(sp["prefix"]) for p in paths):
+            extra = f" ({sp['message']})" if sp.get("message") else ""
+            out.append(f"proposal: touches shared `{sp['prefix']}`; needs {' or '.join(stewards)}'s approval{extra}")
+    return out
 
 
 def is_ancestor(R, sha):
@@ -383,6 +395,8 @@ def main():
             notes = check_commit(R, subject, body, files) + line_notes(sha, files)
             for n in notes:
                 print(f"  - ⚠️ {n}")
+            for n in proposal_notes(R, author, [p for _, _, p in files]):
+                print(f"  - 🔶 {n}")
         print(f"\n  Total +{tot_a} -{tot_d}\n")
 
     rows = []
