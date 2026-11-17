@@ -37,6 +37,54 @@
     "skills": [
       "develop"
     ],
+    "query": "Implement the approved analysis for the export button and tell me what you verified",
+    "files": [],
+    "expected_behavior": [
+      "Tags each reported claim executed (ran it), observed with file:line (read it) or inference",
+      "Settles read-only questions itself (e.g. which endpoint the button calls) instead of asking the user to check them",
+      "Still asks before installs or server starts and leaves DB writes to a human"
+    ]
+  },
+  {
+    "skills": [
+      "develop"
+    ],
+    "query": "Implement the approved analysis for the stale order list. (Two fixes that both assumed 'the list cache is stale' already failed the same integration test in this conversation)",
+    "files": [],
+    "expected_behavior": [
+      "Does not write a third cache fix; writes the shared premise ('the list cache is stale') down first",
+      "Checks the premise directly (read-only query, run-app or captured response) and reports how it was checked",
+      "If the premise is false, stops and sends the task back to devkit:analyze instead of fixing on"
+    ]
+  },
+  {
+    "skills": [
+      "develop"
+    ],
+    "query": "Implement the approved analysis and run the checks. (The integration test needs a DB, so check-runner returns CHECKS: PASS (1 not run))",
+    "files": [],
+    "expected_behavior": [
+      "Records the line with record_run.py and reports the verdict word it prints: PARTIAL",
+      "Never writes the checks as passed; names the integration test as not run and why"
+    ]
+  },
+  {
+    "skills": [
+      "develop"
+    ],
+    "query": "Implement the approved analysis. Its Executable premises table says 'the export button calls /api/reports/export'",
+    "files": [],
+    "expected_behavior": [
+      "Executes the premise (run-app, a read-only API call or a user-started environment) and records it before reporting",
+      "When the button calls another endpoint, stops before commit or merge and sends the task back to devkit:analyze",
+      "Without any way to execute it, reports the premise as not run and the verifier verdict as PASS (<k> not run) / PARTIAL, never as met",
+      "Gives the verifier analysis.approved.md, the base commit, the check-runner result and the run records, not its own report"
+    ]
+  },
+  {
+    "skills": [
+      "develop"
+    ],
     "query": "What does this code mean?",
     "files": [],
     "expected_behavior": [

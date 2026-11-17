@@ -10,7 +10,8 @@ Task: review the <area> changes among colleague <developer>'s <branch> commits.
 Target commits: <hash list with one-line subjects>
 Read each diff with `git show <hash>`; when needed, follow the full post-change file and its call sites (UI ↔ API ↔ query/mapper ↔ table/procedure).
 
-Rules to read first: <config areas[].rules for this area, plus docs/rules/git.md>
+Rules to read first: <config areas[].rules for this area, plus docs/rules/git.md, plus docs/rules/glossary.md if it exists>
+A term or premise that the glossary defines differently from the code or comments is a question to report, not a defect.
 <config brief.notes, one per line>
 
 Focus:

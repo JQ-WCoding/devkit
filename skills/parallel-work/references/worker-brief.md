@@ -14,6 +14,7 @@ You are a worker started by the central session. Do only this one task.
 - Work folder: <absolute worktree path or absolute repo path>  (don't edit files outside this folder)
 - Branch: <feat/slug | fix/slug | none>
 - To do: <goal and completion criteria as the central session framed them, 2-6 lines>
+- Done when: <per criterion, the evidence that settles it: executed (a check or run you name) | decision (owner source) | observed (file:line)>. Set by the central session; don't redefine it. "Matches the current code" is not verification unless the task is to keep current behavior.
 - Settled decisions: <the user's answers to open points, or "none">
 - Out of scope (don't touch): <files and modules other workers own>
 
@@ -28,7 +29,7 @@ You are a worker started by the central session. Do only this one task.
 - [worktree] If the worktree has no dependency folder (node_modules etc.), install dependencies before running checks.
 - Don't implement unclear choices that aren't in "Settled decisions"; report the options and their impact instead.
 - Run only the checks that fit what you changed: the repo's rules if any, otherwise lint/build/test from the manifests (package.json, build.gradle, pyproject.toml, …).
-- After you report, the central session may send fixes from its checks. Then fix only the scope you were given and report again the same way.
+- If this brief has a "Fix" section, another worker already did this task: read its report, fix only the scope given there and report the same way.
 
 ## Report
 - Contents: conclusion → full list of changed files with reasons → checks run and results (say so for checks you didn't run) → remaining work and open questions.

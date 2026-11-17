@@ -36,6 +36,17 @@
     "skills": [
       "pr-publish"
     ],
+    "query": "Open a PR for this branch (it edits docs/rules/booking.md and .claude/skills/booking-flow/SKILL.md)",
+    "files": [],
+    "expected_behavior": [
+      "The body has a 'Rules / devkit changes' section with each changed rule row's evidence type and a one-line why for each prohibition",
+      "States the result of applying the rule to the case that triggered it and 'human content approval needed before merge'"
+    ]
+  },
+  {
+    "skills": [
+      "pr-publish"
+    ],
     "query": "Review this function",
     "files": [],
     "expected_behavior": [

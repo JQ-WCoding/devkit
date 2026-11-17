@@ -7,7 +7,7 @@ argument-hint: "<skill name>"
 
 # Improve one project skill from corrections
 
-One skill per call; never creates skills, agents or rule docs, never edits plugin or user-level skills. A correction that holds for the whole repo → draft a `docs/rules/` row in the report, do not write it.
+One skill per call; never creates skills, agents or rule docs, never edits plugin or user-level skills. A correction that holds for the whole repo → draft a `docs/rules/` row with its `Level` (suggest-skills' pinpoint-checklist) in the report, do not write it.
 
 `<plugin root>` is the absolute path two levels above this skill's folder (`${CLAUDE_PLUGIN_ROOT}` may be unset in the shell, so write it out). Temp files go in the session scratchpad, else `mktemp -d`, never a fixed `/tmp` path.
 

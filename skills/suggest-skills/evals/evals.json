@@ -39,6 +39,18 @@
     "skills": [
       "suggest-skills"
     ],
+    "query": "This is the second time I'm telling you: use the shared date helper, not new Date(). Make sure it doesn't happen again. (docs/rules/front.md already has a row for this, without an enforced-by note)",
+    "files": [],
+    "expected_behavior": [
+      "Raises the correction with a Level above doc (e.g. check: a lint rule whose error names the shared date helper), not a reworded rule row",
+      "Writes no lint rule, code or test itself; puts a handoff in suggestions.md with the past-mistake commit and 'fails on <commit>^, passes on HEAD' and tells the user to run devkit:analyze with it",
+      "Says the existing row gets '(enforced by <path>)' only once the enforcer exists"
+    ]
+  },
+  {
+    "skills": [
+      "suggest-skills"
+    ],
     "query": "Rename this function",
     "files": [],
     "expected_behavior": [

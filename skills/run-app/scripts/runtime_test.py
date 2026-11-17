@@ -235,6 +235,12 @@ def test_record_run():
         check('non-contract line is refused', False)
     except ValueError:
         check('non-contract line is refused', True)
+    for line in ('VERDICT: PASS (2 premises unrun)', 'CHECKS: PASS (1 not run: db)'):
+        try:
+            record_run.parse_line(line)
+            check(f'PASS with a non-contract detail is refused: {line!r}', False)
+        except ValueError:
+            check(f'PASS with a non-contract detail is refused: {line!r}', True)
     try:
         record_run.parse_line('CHECKS: PASS (1 skipped)')
         check('CHECKS: PASS with a detail other than "<k> not run" is refused', False)
@@ -246,6 +252,10 @@ def test_record_run():
     path = r.stdout.strip()
     check('record without task goes to .devkit/runs/', r.returncode == 0 and '/.devkit/runs/' in path
           and json.load(open(path))['verdict'] == 'PARTIAL', r.stdout + r.stderr)
+    check('the verdict word is echoed on stderr and stdout stays the path only',
+          'verdict: PARTIAL' in r.stderr and len(r.stdout.strip().splitlines()) == 1, r.stdout + r.stderr)
+    check('VERDICT: PASS (<k> not run) records as PARTIAL',
+          record_run.parse_line('VERDICT: PASS (2 not run)') == ('verifier', 'PARTIAL', '2 not run'))
     check('.devkit/ is added to info/exclude when not ignored',
           sh('git', '-C', repo, 'check-ignore', '-q', '.devkit/x').returncode == 0, r.stderr)
     items = os.path.join(tempfile.mkdtemp(), 'items.json')

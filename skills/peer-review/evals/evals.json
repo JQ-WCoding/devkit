@@ -37,6 +37,18 @@
   },
   {
     "skills": [
+      "peer-review"
+    ],
+    "query": "Review what my colleague pushed to dev this week. (docs/rules/glossary.md says ACCT_CD now means 'cost center', legacy meaning 'account'; the new code comments call it 'account')",
+    "files": [],
+    "expected_behavior": [
+      "Reviewer briefs list docs/rules/glossary.md among the rules to read first",
+      "Reports the ACCT_CD comment conflict as a yes/no question with the glossary row and the code line, not as a must-fix finding",
+      "A finding that rests on a premise no repo file records is a question, not must-fix"
+    ]
+  },
+  {
+    "skills": [
       "pr-publish"
     ],
     "query": "Review dev → main and open the MR",

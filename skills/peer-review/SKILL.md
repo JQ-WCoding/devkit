@@ -71,6 +71,7 @@ A review always finds something, so certainty is not importance. Ask three quest
 
 - **Must-fix**: (A or B) and C. Fix before release or before the feature goes live.
 - **Optional**: everything else (UX, display-only, no matching data). Note what would change the call.
+- **Question, not must-fix**: a finding that conflicts with a `docs/rules/glossary.md` term or premise row, or rests on a meaning or premise no repo file records (a legacy column meaning, how a site operates, intent stated only in a commit message). Report it as a yes/no question with both sides' evidence.
 - Severity says how bad it is if it happens; must-fix/optional says whether to act now. Report both.
 - A pre-existing pattern the commit only exposed stays in the report, but name the owner of that code rather than the commit author.
 

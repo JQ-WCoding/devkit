@@ -11,11 +11,16 @@ Write to `<work folder>/<task ID>/analysis.md`. Delete sections that do not appl
 ## Requirement summary
 Split the requirement into numbered items. Quote the source wording briefly and write interpretations separately.
 
-| No. | Requirement | Source wording | Interpretation · question |
-|---|---|---|---|
+| No. | Requirement | Source wording | Interpretation · question | Done when (evidence type) |
+|---|---|---|---|---|
+
+Cross-check mode: the status per item from `cross-check/results.md`, and a "Not turned into rules" list from `not-rules.md`.
 
 ## Terms
 Requirement terms ↔ code terms (table, class, screen names). Only unfamiliar domain terms.
+
+| Term | Code term | Evidence (glossary row, owner source, `file:line`) |
+|---|---|---|
 
 ## Current behavior
 What happens today for this requirement, as `file:line` in the order entry point (screen · API · batch · message) → processing → storage.
@@ -48,6 +53,12 @@ In order. Per step: file to change · one-line change · how to verify.
 ## DB change (if any)
 Objects · change · impact on existing data · location of change SQL and rollback SQL. A human runs them.
 
+## Executable premises
+Statements the change relies on that a run can check (API call, screen action, read-only query). develop executes each before reporting; one not executed stays `not run`.
+
+| Premise | How to execute | Result · run record |
+|---|---|---|
+
 ## Verification plan
 | Check | Method (automated check · screen · API · DB query) | Data |
 |---|---|---|
@@ -56,6 +67,8 @@ Objects · change · impact on existing data · location of change SQL and rollb
 - [ ] Decisions a person must make. If there are options, list them with a recommendation.
 
 ## Decision log
-| Date | Question | Decision |
-|---|---|---|
+The user's wording verbatim; your reading apart. Only the wording counts as a decision.
+
+| Date | Question | Answer (verbatim) | Interpretation | Re-check when |
+|---|---|---|---|---|
 ```
