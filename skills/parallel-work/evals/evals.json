@@ -68,6 +68,15 @@
     ]
   },
   {
+    "skills": ["parallel-work"],
+    "query": "Run these in parallel: 1) add input validation to the signup API, 2) fix the footer link on the landing page (no open questions, no screen check)",
+    "files": [],
+    "expected_behavior": [
+      "Shows the split table and launches the workers without waiting for approval, since there are no open points, write checks, branch switch or git init",
+      "Still asks before committing and merging in step 4"
+    ]
+  },
+  {
     "skills": [],
     "query": "Change the timeout in the config file to 30 seconds",
     "files": [],

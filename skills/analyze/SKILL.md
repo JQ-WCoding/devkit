@@ -59,9 +59,11 @@ From [risk-checklist.md](references/risk-checklist.md), pick **only items whose 
 
 ## 🛑 Approval
 
-Save the analysis doc and show a summary (number of requirements, places that change, cautions from the risk check, whether there is a DB change, expected scope). Ask the `needs confirmation` items with AskUserQuestion (with options and a recommendation). Record the answers with the date in the doc's "Decision log", the user's wording apart from your reading. Once approved, copy the doc to `analysis.approved.md` next to it (again after any later approved amendment); the verifier judges against that copy.
+Save the analysis doc and show a summary (number of requirements, places that change, cautions from the risk check, whether there is a DB change, expected scope).
 
-If the user only wanted the analysis, stop here. If they say to proceed, move on to `devkit:develop`.
+Stop for approval only when a human must decide: `needs confirmation` items that a read or run cannot settle, cross-check questions, a DB change, a change to shared modules or components, a delete, or the user asked only for the analysis. Ask those with AskUserQuestion (with options and a recommendation) and record the answers with the date in the doc's "Decision log", the user's wording apart from your reading. Otherwise log `no gate: <reason>` there and go on.
+
+Either way, copy the doc to `analysis.approved.md` next to it (again after any later approved amendment); the verifier judges against that copy. Then move on to `devkit:develop`, unless the user only wanted the analysis.
 
 ## Report
 

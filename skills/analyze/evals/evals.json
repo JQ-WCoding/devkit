@@ -88,6 +88,27 @@
     "skills": [
       "analyze"
     ],
+    "query": "Analyze and fix: the order list API returns cancelled orders (no DB change, no shared module, nothing unclear)",
+    "files": [],
+    "expected_behavior": [
+      "Writes the analysis doc, logs 'no gate: <reason>' in the decision log and does not wait for approval",
+      "Still copies the doc to analysis.approved.md and goes on to devkit:develop"
+    ]
+  },
+  {
+    "skills": [
+      "analyze"
+    ],
+    "query": "Analyze this: add a cancel_reason column to the orders table",
+    "files": [],
+    "expected_behavior": [
+      "Stops at the gate because the change includes a DB change, and asks for approval before develop"
+    ]
+  },
+  {
+    "skills": [
+      "analyze"
+    ],
     "query": "Fix this one typo",
     "files": [],
     "expected_behavior": [

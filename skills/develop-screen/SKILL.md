@@ -6,14 +6,14 @@ argument-hint: "<file path | attachment | link> [p<N> ...] [screen ID]"
 
 # Screen design document → screens
 
-Follow the steps in order. At a 🛑 gate, do not move on without user approval. What the document cannot decide is never filled in by guesswork: mark it `needs confirmation` and settle it at 🛑A.
+Follow the steps in order. 🛑B always waits for the user; 🛑A waits only when it has something to decide (below). What the document cannot decide is never filled in by guesswork: mark it `needs confirmation` and settle it at 🛑A.
 
 Progress:
 - [ ] 0 Input and profile
 - [ ] 1 Spec (status)
 - [ ] 2 Impact
 - [ ] 3 DB
-- [ ] 🛑A Design approval
+- [ ] 🛑A Design approval (when needed)
 - [ ] 4 Implement
 - [ ] 5 SQL
 - [ ] 6 Verify
@@ -76,7 +76,7 @@ Live checks go into `<sql>/00_check.sql`. With a read-only query tool, record th
 
 ## 🛑 A. Design approval
 
-Show the spec summary (status, scope, layout, API, new or changed DB objects, needs confirmation) and ask what the document cannot decide (scope, keys, data granularity, code scheme, shared keys, security). Record answers in the spec's decisions table with the date and departures from the document under "Changes from the document". Add confirmed term mappings to the profile glossary.
+Show the spec summary (status, scope, layout, API, new or changed DB objects, needs confirmation). Stop and ask only when there is something to decide: `needs confirmation` items, new or changed DB objects, shared keys or components, a delete status, security; otherwise record `no gate: <reason>` in the decisions table and implement. Ask what the document cannot decide (scope, keys, data granularity, code scheme, shared keys, security). Record answers in the spec's decisions table with the date and departures from the document under "Changes from the document". Add confirmed term mappings to the profile glossary.
 
 ## 4. Implement
 
@@ -105,4 +105,4 @@ Confirm the target DB first. By default the developer runs write SQL. Explain th
 
 ## 7. Report
 
-In the document language: per feature number `implemented / deferred (reason) / needs confirmation`, changed files, SQL files, checks run with results and record paths (including `not run`), mockup comparison result, test data left behind, servers still running. Commit, push and PR only on request (`devkit:commit`, `devkit:push`, `devkit:pr-publish`).
+In the document language: per feature number `implemented / deferred (reason) / needs confirmation`, changed files, SQL files, checks run with results, record paths and the `verdict:` word `record_run.py` printed (`PARTIAL` is never "passed"; including `not run`), mockup comparison result, test data left behind, servers still running. Commit, push and PR only on request (`devkit:commit`, `devkit:push`, `devkit:pr-publish`).
