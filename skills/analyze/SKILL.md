@@ -1,6 +1,6 @@
 ---
 name: analyze
-description: Before changing code, turn a requirement, issue or bug (any source) into an analysis doc — current-code trace, impact, common risk check, implementation plan — and get approval. Use for "analyze this issue", "where do I fix this", "find the bug cause", "check impact".
+description: Before changing code, turn a requirement, issue or bug (any source) into an analysis doc — current-code trace, impact, common risk check, implementation plan — and get approval; on request, cross-checks intent sources against current state with separate analysts. Use for "analyze this issue", "where do I fix this", "find the bug cause", "check impact", "cross-check this rules draft".
 argument-hint: "<issue link | file path | requirement> [task ID]"
 ---
 
@@ -12,6 +12,7 @@ Decide what to change, why and how far before touching code. This skill **does n
 |---|---|
 | [analysis-template.md](references/analysis-template.md) | Analysis doc format |
 | [risk-checklist.md](references/risk-checklist.md) | Step 4 risk check |
+| [cross-check.md](references/cross-check.md) | Cross-check mode, glossary format, rules-change gate |
 
 ## 0. Read the input
 
@@ -34,7 +35,8 @@ Split the requirement into numbered items and keep the source wording apart from
 
 ## 2. Trace the current code
 
-- Skim the repo rules (`CLAUDE.md`, `docs/rules/`) first to align terms and structure.
+- Skim the repo rules (`CLAUDE.md`, `docs/rules/`) first to align terms and structure; read `docs/rules/glossary.md` in full if it exists.
+- **Cross-check mode** (the user asks for it; offer it once when the input is a `docs/rules` draft or touches a glossary term): follow [cross-check.md](references/cross-check.md) instead of tracing here first. Only its `proceed` items get a plan; the rest go to the 🛑 gate.
 - Follow entry points (screen, API, batch, message consumer) → processing → storage (table, file, external) as `file:line`. With several entry points or more than 10 files to scan, hand them to `devkit:code-reader` in parallel, one per entry point. Smaller than that, read directly.
 - With dynamic calls (string paths, reflection, config routing), do not conclude "unused" from a text search alone.
 - **Bug**: define the minimal reproduction steps and confirm the cause with evidence (code, logs, data). If not confirmed, write the hypothesis and how to check it. If two earlier fixes resting on the same premise failed, write that premise down and check it directly before planning a third. Look for the same cause elsewhere. If production data must be queried, use read-only queries only, after confirming the target DB.
@@ -57,7 +59,7 @@ From [risk-checklist.md](references/risk-checklist.md), pick **only items whose 
 
 ## 🛑 Approval
 
-Save the analysis doc and show a summary (number of requirements, places that change, cautions from the risk check, whether there is a DB change, expected scope). Ask the `needs confirmation` items with AskUserQuestion (with options and a recommendation). Record the answers with the date in the doc's "Decision log".
+Save the analysis doc and show a summary (number of requirements, places that change, cautions from the risk check, whether there is a DB change, expected scope). Ask the `needs confirmation` items with AskUserQuestion (with options and a recommendation). Record the answers with the date in the doc's "Decision log", the user's wording apart from your reading. Once approved, copy the doc to `analysis.approved.md` next to it (again after any later approved amendment); the verifier judges against that copy.
 
 If the user only wanted the analysis, stop here. If they say to proceed, move on to `devkit:develop`.
 

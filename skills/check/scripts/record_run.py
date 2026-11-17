@@ -3,8 +3,9 @@
 Usage:
   python3 -I record_run.py --repo <repo> [--task <id>] --line "CHECKS: PASS (2 not run)" [--summary <text>]
   python3 -I record_run.py --repo <repo> [--task <id>] --kind db --verdict FAIL --summary <text> [--items <json file|->]
-Prints the path of the written file. Records go to <main repo>/.devkit/work/<task>/runs/ (or .devkit/runs/ without a
-task); --work-dir overrides the work folder when the repo rules name another one.
+Prints the path of the written file on stdout and `verdict: <PASS|FAIL|PARTIAL>` on stderr (quote that word in
+reports). Records go to <main repo>/.devkit/work/<task>/runs/ (or .devkit/runs/ without a task); --work-dir overrides
+the work folder when the repo rules name another one.
 Items are a JSON list of {"name", "result", "detail"?}; other keys are refused so environment values and secrets
 cannot slip into a record.
 """
@@ -64,14 +65,17 @@ def parse_line(line):
     m = LINE.match(line or '')
     if not m:
         raise ValueError(f'not a CHECKS:/VERDICT: line: {line!r}. Accepted: "CHECKS: PASS", "CHECKS: PASS (<k> not run)", '
-                         '"CHECKS: FAIL (<n> commands)", "CHECKS: FAIL (none run)", "VERDICT: PASS", "VERDICT: FAIL (<n> items)"')
+                         '"CHECKS: FAIL (<n> commands)", "CHECKS: FAIL (none run)", "VERDICT: PASS", "VERDICT: PASS (<k> not run)", '
+                         '"VERDICT: FAIL (<n> items)"')
     kind = 'checks' if m.group(1) == 'CHECKS' else 'verifier'
     detail = m.group(4) or ''
     verdict = m.group(2)
-    if verdict == 'PASS' and 'not run' in detail:
-        verdict = 'PARTIAL'
-    elif kind == 'checks' and verdict == 'PASS' and detail:
-        raise ValueError(f'{line!r}: a CHECKS: PASS detail must be "<k> not run"')
+    if verdict == 'PASS' and detail:
+        if re.fullmatch(r'\d+ not run', detail):
+            verdict = 'PARTIAL'
+        elif not (kind == 'verifier' and re.fullmatch(r'\d+ items', detail)):
+            # any other PASS detail could hide unrun work, so it is refused rather than recorded as PASS
+            raise ValueError(f'{line!r}: a PASS detail must be "<k> not run"' + (' or "<n> items"' if kind == 'verifier' else ''))
     return kind, verdict, detail
 
 
@@ -150,6 +154,7 @@ def main(argv=None):
         return 2
     if note:
         print(f'note: {note}', file=sys.stderr)
+    print(f'verdict: {verdict}', file=sys.stderr)
     print(path)
     return 0
 

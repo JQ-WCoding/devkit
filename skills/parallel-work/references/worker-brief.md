@@ -14,6 +14,7 @@ You are a worker started by the central session. Do only this one task.
 - Work folder: <absolute worktree path or absolute repo path>  (don't edit files outside this folder)
 - Branch: <feat/slug | fix/slug | none>
 - To do: <goal and completion criteria as the central session framed them, 2-6 lines>
+- Done when: <per criterion, the evidence that settles it: executed (a check or run you name) | decision (owner source) | observed (file:line)>. Set by the central session; don't redefine it. "Matches the current code" is not verification unless the task is to keep current behavior.
 - Settled decisions: <the user's answers to open points, or "none">
 - Out of scope (don't touch): <files and modules other workers own>
 

@@ -45,4 +45,4 @@ End with one `CHECKS:` line — `CHECKS: PASS`, `CHECKS: PASS (<k> not run)`, `C
 python3 -I "${CLAUDE_PLUGIN_ROOT}/skills/check/scripts/record_run.py" --repo <repo root> --line "<CHECKS: line>"
 ```
 
-That JSON record is the only evidence file; do not write other logs or reports into the repo.
+Report the `verdict:` word it prints (`PARTIAL` for `PASS (<k> not run)`), never "passed" for a PARTIAL. That JSON record is the only evidence file; do not write other logs or reports into the repo.

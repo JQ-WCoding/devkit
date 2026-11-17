@@ -20,6 +20,7 @@ Make no changes outside the approved plan. If something in the plan cannot be do
 - Do the plan one step at a time, in order. When a step is done, mark it `done` in the analysis doc.
 - Follow the approach of the existing files you are imitating and `docs/rules/`. By default do not modify shared modules, shared styles or shared components; if it is truly needed, give the reason and confirm first.
 - Every changed line must map to a requirement item. Defects you happen to see are not fixed; list them in the report.
+- A change to `docs/rules` (or a glossary) follows the rules-change gate in `devkit:analyze`'s [cross-check.md](../analyze/references/cross-check.md#rules-change-gate).
 - When editing files with a script, preserve line endings (CRLF/LF) and encoding.
 
 ## 2. DB change (if any)
@@ -33,6 +34,8 @@ Make no changes outside the approved plan. If something in the plan cannot be do
 
 - Automated checks: when the analysis doc's verification plan or the user calls for them, run the checks for the changed subprojects through `devkit:check-runner`; otherwise name them and ask.
 - Behavior check: if the repo has `.devkit/runtime.json`, start the app with `devkit:run-app` (`up --task <task ID>`) and stop what you started afterwards; otherwise do not start servers yourself and check only in an environment the user started. Confirm saved values by querying again. Insert recognizable dummy test data and report what was left behind.
+- Executable premises (the analysis doc's table): execute each before the report, through `devkit:run-app`, a read-only API call or query, or an environment the user started, and record it (`--kind runtime|db`). With none of these available it stays `not run`, never assumed true. A false premise: stop before commit or merge and go back to `devkit:analyze`.
+- Verifier input: the frozen `analysis.approved.md` (else `analysis.md`, and say there was no frozen copy), the base commit, the `check-runner` result and the run record paths; never your report.
 - Record each verdict: pass the `CHECKS:` line from `devkit:check-runner` and the `VERDICT:` line from `devkit:verifier` to `python3 -I "${CLAUDE_PLUGIN_ROOT}/skills/check/scripts/record_run.py" --repo <repo> --task <task ID> --line "<line>"` (`run-app up` records itself). For a DB or API check, record `--kind db|runtime --verdict PASS|FAIL|PARTIAL --summary <text>` with `--items` (`[{"name","result","detail"}]`, no credentials).
 - Regression: go through the analysis doc's **keep-as-is list** one by one.
 - If there is a design or mockup, capture the result screen and compare item by item. Do not say "matches the requirement" just because the build passes.
@@ -45,6 +48,6 @@ If there is a DB change, explain the target (local, dev, prod), run order, accou
 ## 4. Report
 
 - Per requirement item: `implemented / deferred (reason) / needs confirmation`
-- Changed files, SQL files, verification run and results (including `not run`) with the run record paths, servers still running, test data left behind, defects found but not fixed
+- Changed files, SQL files, verification run and results (including `not run`) with the run record paths and the `verdict:` word `record_run.py` printed (`PARTIAL` is never "passed"), servers still running, test data left behind, defects found but not fixed
 - One line on next steps: commit with `devkit:commit`, push with `devkit:push`, PR/MR with `devkit:pr-publish` — done when requested
 - Add decisions made during implementation to the analysis doc's "Decision log"

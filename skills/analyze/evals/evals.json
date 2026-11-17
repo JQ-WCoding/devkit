@@ -39,6 +39,55 @@
     "skills": [
       "analyze"
     ],
+    "query": "Cross-check this 16-line docs/rules/booking.md draft before we merge it",
+    "files": [],
+    "expected_behavior": [
+      "Uses cross-check mode: writes plan.json with a should lane (decision records, agreements) and an is lane (code, config) whose patterns do not overlap, without tracing code first",
+      "Launches the lanes as devkit:code-reader in one message, saves their JSON verbatim, runs the comparator, then cross_check.py check until exit 0",
+      "Lines backed only by current code are listed in not-rules.md as current-state descriptions (16 rows when no intent source backs any line) and none gets an implementation plan",
+      "Asks questions.md at the gate and stores answers verbatim apart from the interpretation"
+    ]
+  },
+  {
+    "skills": [
+      "analyze"
+    ],
+    "query": "Cross-check how our payment webhook handler treats refunds against the provider's API docs",
+    "files": [],
+    "expected_behavior": [
+      "Picks lanes from the External API integration row: provider docs (should), handler code (is), optionally captured payloads (is)",
+      "Exports the provider docs into cross-check/sources/<lane>/ with the origin URL instead of letting lanes fetch them",
+      "Turns mismatches into yes/no questions with one line of evidence per side"
+    ]
+  },
+  {
+    "skills": [
+      "analyze"
+    ],
+    "query": "Analyze this issue: the order list shows cancelled orders",
+    "files": [],
+    "expected_behavior": [
+      "Runs the normal analysis without spawning lanes or a comparator",
+      "Reads docs/rules/glossary.md if it exists before tracing the code",
+      "After approval, copies the doc to analysis.approved.md"
+    ]
+  },
+  {
+    "skills": [
+      "analyze"
+    ],
+    "query": "Analyze this requirement: add ACCT_CD to the expense export. (docs/rules/glossary.md says ACCT_CD now means 'cost center', legacy meaning 'account'; code comments still say 'account')",
+    "files": [],
+    "expected_behavior": [
+      "Reads docs/rules/glossary.md in full before tracing the code",
+      "Lists the glossary-vs-comment conflict as a needs-confirmation question with both sides' evidence, not as a settled meaning",
+      "Offers cross-check mode once because the input touches a glossary term"
+    ]
+  },
+  {
+    "skills": [
+      "analyze"
+    ],
     "query": "Fix this one typo",
     "files": [],
     "expected_behavior": [
