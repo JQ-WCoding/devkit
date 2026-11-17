@@ -40,7 +40,7 @@ Ask with AskUserQuestion only the [interview.md](references/interview.md) items 
 
 Show everything at once and get approval. Create no files in the repo before approval.
 
-- Files to create, one line each. State that layer docs hold fact rows only (applies-to path, language, runtime, aliases, reference files) and that rule rows are added later by `devkit:suggest-skills`
+- Files to create, one line each, including the empty `docs/rules/glossary.md`. State that layer docs hold fact rows only (applies-to path, language, runtime, aliases, reference files) and that rule rows are added later by `devkit:suggest-skills`
 - Whether to create an onboarding guide (`docs/guide/`) and its step list
 - Lines to add to `.gitignore` (or "no change" and why if all are present) and the fingerprint's Tracked docs/ files count. Run `git check-ignore -v <path>` for every planned path — if a file meant to be shared is ignored, add it to the allow list or rename it to match an existing allowed name
 - Whether repo-wide file checkers (nohttp, license headers, markdownlint, spell check, etc. — find them in CI and build config) also apply to the new docs, and if so, that the docs will follow those rules
@@ -50,7 +50,7 @@ Show everything at once and get approval. Create no files in the repo before app
 
 ## 2. Write
 
-Order: `docs/rules/` (README → common → git → environments → layer docs) → `docs/guide/` (if created) → `CLAUDE.md` → `.gitignore` → `.claude/settings.json` or `.claude/settings.local.json` → `.devkit/runtime.json` (if approved).
+Order: `docs/rules/` (README → common → git → environments → glossary (empty skeleton; never overwrite an existing one) → layer docs) → `docs/guide/` (if created) → `CLAUDE.md` → `.gitignore` → `.claude/settings.json` or `.claude/settings.local.json` → `.devkit/runtime.json` (if approved).
 
 - Use [templates.md](references/templates.md) as the skeleton. Fill `{{…}}` slots from the fingerprint and answers; delete the whole row when there is no evidence.
 - Write environment values with their source (link to the config file) and add "as of" and "checked scope". Values the user confirmed get "user confirmed"; otherwise "from config files · not verified by running or connecting". Values with no evidence at all are `unverified`. For credentials, write only how they are delivered.

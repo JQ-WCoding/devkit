@@ -39,6 +39,17 @@
     "skills": [
       "setup"
     ],
+    "query": "Set up devkit in this repo",
+    "files": [],
+    "expected_behavior": [
+      "The setup plan lists an empty docs/rules/glossary.md and a Glossary row in docs/rules/README.md",
+      "In extend mode an existing glossary.md is left as is"
+    ]
+  },
+  {
+    "skills": [
+      "setup"
+    ],
     "query": "Fix the bug on the shipping screen",
     "files": [],
     "expected_behavior": [
