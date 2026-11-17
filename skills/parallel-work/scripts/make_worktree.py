@@ -1,4 +1,4 @@
-"""Create a worker worktree: <repo>/.worktrees/<slug> on branch <type>/<slug>, cut from <base branch>.
+"""Create a worker worktree: <repo>/worktrees/<slug> on branch <type>/<slug>, cut from <base branch>.
 
 Usage: python3 -I make_worktree.py <slug> [feat|fix] [base branch | -] [extra paths to link ...]
   Empty or '-' base branch = the main repo's current branch.
@@ -20,9 +20,13 @@ SLUG = re.compile(r'[a-z0-9][a-z0-9-]{0,31}')
 DEFAULT_LINKS = ('.env',)
 # .claude: in a worktree Claude Code reads settings.local.json from the main checkout, and falls back to the
 # main checkout's skills when the worktree has no .claude/skills (checked below).
-# .git and .worktrees must never be linked into a worktree.
-NEVER_LINK = ('.claude', '.git', '.worktrees')
-EXCLUDE_LINE = '/.worktrees/'
+# .git and the worktree folders must never be linked into a worktree.
+NEVER_LINK = ('.claude', '.git', 'worktrees', '.worktrees')
+# Not a dot-folder: some tools skip config under a path element starting with '.', e.g. Spring Boot 2.3's
+# ConfigFileApplicationListener ignores application.yml there, so the app fails to start in the worktree.
+# .worktrees is the old location, still listed so old worktrees are never linked.
+WT_DIR = 'worktrees'
+EXCLUDE_LINE = '/%s/' % WT_DIR
 
 
 def die(msg):
@@ -91,18 +95,21 @@ def main(argv):
         base = current
 
     branch = '%s/%s' % (kind, slug)
-    wt = os.path.join(root, '.worktrees', slug)
+    wt = os.path.join(root, WT_DIR, slug)
 
     if git(['rev-parse', '--verify', '--quiet', 'refs/heads/' + base], root, ok_codes=(0, 1)).returncode != 0:
         die("no local base branch '%s'. If it exists only on the remote, ask the user, then: git branch %s origin/%s"
             % (base, base, base))
+    if git(['ls-files', '--', WT_DIR], root).stdout.strip():
+        die('the repo tracks a %s/ folder, so worker worktrees cannot go there. Ask the user where to put them'
+            % WT_DIR)
     if os.path.lexists(wt):
         die('%s already exists. To continue that work, launch the worker in that folder' % wt)
     if git(['rev-parse', '--verify', '--quiet', 'refs/heads/' + branch], root, ok_codes=(0, 1)).returncode == 0:
-        die('branch %s already exists. To reuse it (after user approval): git worktree add .worktrees/%s %s'
-            % (branch, slug, branch))
+        die('branch %s already exists. To reuse it (after user approval): git worktree add %s/%s %s'
+            % (branch, WT_DIR, slug, branch))
 
-    # Exclude .worktrees/ on this machine only (.git/info/exclude is never committed and is shared by
+    # Exclude worktrees/ on this machine only (.git/info/exclude is never committed and is shared by
     # all worktrees). Leave .gitignore alone.
     exclude = os.path.join(common, 'info', 'exclude')
     os.makedirs(os.path.dirname(exclude), exist_ok=True)
@@ -160,6 +167,11 @@ def main(argv):
              % ' '.join(copied))
     if skipped:
         warn('could not link: ' + ', '.join(skipped))
+
+    hidden = [p for p in wt.replace('\\', '/').split('/') if p.startswith('.')]
+    if hidden:
+        warn('the worktree path has a hidden element (%s). Some tools skip config files under such paths '
+             '(Spring Boot 2.3 ignores application.yml), so an app started there may fail' % ', '.join(hidden))
 
     sha = git(['rev-parse', '--short', base], root).stdout.strip()
     print('worktree: ' + wt)

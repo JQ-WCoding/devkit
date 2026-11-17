@@ -23,7 +23,7 @@ python3 -I <script> scan <repo root> [--scratchpad <this session's scratchpad pa
 |---|---|---|
 | Removal candidates | `_dryrun*`, `_tmp*`, `tmp`, `tmp_*`, `tmp1`, `scratch*`, `test-results` and similar folders at the root or under `docs/` (not `templates/` or `temperature/`); `*.bak`, `*.orig`, `*.tmp`, `*~`, `*.swp`, `*.rej` anywhere. Untracked only, not ignored: images at the root or directly in `docs/`, scripts and notes at the root. A temp folder holding protected files is split into its other files | Clean up after confirmation |
 | Needs review | Other untracked files | Show the list only; clean up only what the user names |
-| Protected | Tracked files; any path through `src`, `test(s)`, `node_modules`, `build`, `out`, `dist`, `target`, `logs`, `.venv`, `.worktrees`, `.devkit`, `.claude` and other tool folders; `CLAUDE.md`, `AGENTS.md`, `.env*`, `.mcp.json`; the repo's `protect` globs | Not listed and never touched |
+| Protected | Tracked files; any path through `src`, `test(s)`, `node_modules`, `build`, `out`, `dist`, `target`, `logs`, `.venv`, `worktrees`, `.worktrees`, `.devkit`, `.claude` and other tool folders; `CLAUDE.md`, `AGENTS.md`, `.env*`, `.mcp.json`; the repo's `protect` globs | Not listed and never touched |
 | Other sessions' scratchpads | Sibling folders of this session's scratchpad, with size and last change | Only when the user wants; a recent last change may be a live session (e.g. a parallel-work worker) |
 
 **Repo-specific protections** live in `<repo>/.devkit/clean-temp/config.json` (local, like `.devkit/peer-review/`):

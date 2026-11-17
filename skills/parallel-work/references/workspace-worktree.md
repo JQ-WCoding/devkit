@@ -16,8 +16,9 @@ Pick the local-only files workers need (rules, environment, local docs; not buil
 python3 -I <scripts>/make_worktree.py <slug> <feat|fix> <base branch> [local-only paths to link ...]
 ```
 
-- It creates `<repo>/.worktrees/<slug>` with the task branch cut from the base branch, and links `.env` and any given paths that git doesn't track. Where symlinks are not allowed (Windows without Developer Mode) it copies them and says so; tell the user edits to the copies don't reach the main repo.
-- `CLAUDE.md` and `CLAUDE.local.md` load from the parent repo folder, and `.claude/` settings and skills come from the main checkout, so neither is linked. Don't pass `.claude`; the script skips it, along with `.git` and `.worktrees`. On `WARN: local .claude/skills|agents not in the worktree`, tell the user which ones workers may not see.
+- It creates `<repo>/worktrees/<slug>` (not a dot-folder: Spring Boot 2.3 and other tools skip config under a hidden path element, so the app would not start there) with the task branch cut from the base branch, and links `.env` and any given paths that git doesn't track. Where symlinks are not allowed (Windows without Developer Mode) it copies them and says so; tell the user edits to the copies don't reach the main repo.
+- `CLAUDE.md` and `CLAUDE.local.md` load from the parent repo folder, and `.claude/` settings and skills come from the main checkout, so neither is linked. Don't pass `.claude`; the script skips it, along with `.git`, `worktrees` and the old `.worktrees`. On `WARN: local .claude/skills|agents not in the worktree`, tell the user which ones workers may not see.
+- On `WARN: the worktree path has a hidden element`, tell the user an app started there may not load its config (the repo itself sits under a dot-folder).
 - On `ERROR`, follow the next action the message gives. Reusing an existing branch needs user approval.
 - On `WARN: main repo has uncommitted changes`, tell the user those changes are not in the worktree. Leave the paths listed under `WARN: worktree shows changes that must not be committed` out of the 4-1 commit.
 - Work folder: the worktree path for edit tasks, `<repo>` for read tasks.
@@ -39,7 +40,7 @@ Merge where the base branch is checked out. Don't switch the main repo to anothe
 - Main repo is on the base branch with uncommitted changes → stop. Show the changed files and ask the user to commit or stash them; don't stash for them.
 - Base branch is checked out in another worktree (not one this run created) → stop, report its path and ask the user whether to merge there.
 - Screen check in the main repo was approved and the base branch is not checked out anywhere else → switch it (`git switch <base branch>`) and merge there.
-- Base branch is checked out nowhere → create a merge worktree: `git worktree add .worktrees/merge-<base branch with / replaced by -> <base branch>`. Link the same local files as in step 2 if needed.
+- Base branch is checked out nowhere → create a merge worktree: `git worktree add worktrees/merge-<base branch with / replaced by -> <base branch>`. Link the same local files as in step 2 if needed.
 - If the chosen merge point has uncommitted changes, stop and report.
 
 ## 4-3. Merge
@@ -53,6 +54,6 @@ Record `git rev-parse HEAD` as the pre-merge point first. Merge ordered tasks in
 
 ## 4-7. Clean up
 
-After the workers are cleaned up: `git worktree remove .worktrees/<slug>` → `git branch -d <task branch>`. Never delete an unmerged branch. Remove the merge worktree the same way (never delete the base branch).
+After the workers are cleaned up: `git worktree remove worktrees/<slug>` → `git branch -d <task branch>`. Never delete an unmerged branch. Remove the merge worktree the same way (never delete the base branch).
 
-`.worktrees/` is excluded only through `.git/info/exclude` (the script adds it). Don't edit `.gitignore`.
+`worktrees/` is excluded only through `.git/info/exclude` (the script adds it). Don't edit `.gitignore`.

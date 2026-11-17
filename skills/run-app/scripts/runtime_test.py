@@ -211,7 +211,7 @@ def test_worktree_slot():
     while api + 10 > 65535 or record_run_port_open(api + 10):
         api = free_port()
     repo = new_repo({'services': [http_service('api', api)]})
-    wt = os.path.join(repo, '.worktrees', 'task-a')
+    wt = os.path.join(repo, 'worktrees', 'task-a')
     sh('git', '-C', repo, 'worktree', 'add', '-q', '-b', 'feat/task-a', wt)
     code, out = harness(wt, 'up', '--task', 'T-3')
     check('worktree instance gets port +10 and its own state', code == 0 and f'port {api + 10}' in out
@@ -270,7 +270,7 @@ def test_worktree_env_file_and_repo_after_command():
     repo = new_repo({'services': [svc]})
     with open(os.path.join(repo, 'local.env'), 'w') as f:  # untracked, so the worktree does not have it
         f.write('WHERE=main\n')
-    wt = os.path.join(repo, '.worktrees', 'task-b')
+    wt = os.path.join(repo, 'worktrees', 'task-b')
     sh('git', '-C', repo, 'worktree', 'add', '-q', '-b', 'feat/task-b', wt)
     r = sh(PY, '-I', RUNTIME, 'up', '--repo', wt)
     seen = open(probe).read() if os.path.exists(probe) else ''

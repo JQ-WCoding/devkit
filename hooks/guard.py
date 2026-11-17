@@ -151,7 +151,7 @@ def check(command, cwd):
 
 
 def find_up(cwd, rel):
-    """Nearest <dir>/<rel> from cwd upward; worktrees under <repo>/.worktrees/ find the main repo's .devkit/."""
+    """Nearest <dir>/<rel> from cwd upward; worktrees under <repo>/worktrees/ find the main repo's .devkit/."""
     d = os.path.abspath(cwd)
     while True:
         p = os.path.join(d, rel)

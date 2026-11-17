@@ -17,7 +17,7 @@ This file only maps parallel-work steps onto Orca's supervised loop. Orca's comm
   ORCA orchestration worker-start --spec "<filled brief>" --task-title <slug> --worktree current --agent claude --json
   ```
 
-- `--worktree current` puts every worker in the central session's workspace; the brief's `cd <work folder>` line sends edit workers into their `.worktrees/<slug>` (the same as subagents). Don't use `new-child` or `new-top-level`: this skill creates and merges the worktrees itself.
+- `--worktree current` puts every worker in the central session's workspace; the brief's `cd <work folder>` line sends edit workers into their `worktrees/<slug>` (the same as subagents). Don't use `new-child` or `new-top-level`: this skill creates and merges the worktrees itself.
 - Write down each `dispatch_id` and terminal handle next to its slug. A non-zero exit is not a reason to relaunch: read `failedStage` and `residualResources` and follow the guide's recovery reference.
 
 ## Wait and receive

@@ -76,7 +76,7 @@ for label, c, env in (('DEVKIT_GUARD=off', 'git add .', {'DEVKIT_GUARD': 'off'})
         fails.append((label, c, None, got))
 # per-repo allow list (.devkit/guard.json) and the runtime harness hint, also from a worktree below the repo
 REPO = os.path.join(TMP, 'repo')
-WT = os.path.join(REPO, '.worktrees', 'task-a', 'web')
+WT = os.path.join(REPO, 'worktrees', 'task-a', 'web')
 os.makedirs(WT)
 os.makedirs(os.path.join(REPO, '.devkit'))
 with open(os.path.join(REPO, '.devkit', 'guard.json'), 'w') as f:

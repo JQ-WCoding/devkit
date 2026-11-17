@@ -21,9 +21,9 @@ import time
 CONFIG = os.path.join('.devkit', 'clean-temp', 'config.json')
 
 # Never listed or touched: in-progress sources, tests, dependencies, build output, logs, tool and agent
-# folders (.worktrees = parallel-work worktrees, .devkit = devkit work docs and state).
+# folders (worktrees, .worktrees = parallel-work worktrees, new and old location; .devkit = devkit work docs and state).
 PROTECTED_DIR_PARTS = {'src', 'test', 'tests', '__tests__', 'node_modules', '.gradle', 'build', 'out',
-                       'dist', 'target', 'logs', '.venv', 'venv', '__pycache__', '.git', '.worktrees',
+                       'dist', 'target', 'logs', '.venv', 'venv', '__pycache__', '.git', 'worktrees', '.worktrees',
                        '.devkit', '.claude', '.codex', '.agents', '.idea', '.vscode'}
 PROTECTED_NAME_GLOBS = ('CLAUDE.md', 'CLAUDE.local.md', 'AGENTS.md', 'AGENTS.local.md', '.env*',
                         '.mcp.json', '.DS_Store')

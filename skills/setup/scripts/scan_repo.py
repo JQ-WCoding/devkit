@@ -17,7 +17,7 @@ from pathlib import Path
 SKIP_DIRS = {
     '.git', 'node_modules', 'build', 'dist', 'out', 'target', '.gradle', '.idea', '.vscode',
     'vendor', 'venv', '.venv', '__pycache__', 'coverage', '.next', '.nuxt', 'bin', 'obj',
-    'logs', '.claude', '.codex', '.agents', '.cache', 'tmp',
+    'logs', '.claude', '.codex', '.agents', '.cache', 'tmp', 'worktrees',  # worktrees: parallel-work task copies
 }
 # Cap the number of files read so even very large repos finish in 1-2 minutes
 MAX_WALK_FILES = 40000

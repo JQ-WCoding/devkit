@@ -26,7 +26,7 @@ One skill per call; never creates skills, agents or rule docs, never edits plugi
 Root: `git rev-parse --show-toplevel`.
 
 - A prefixed name (`<plugin>:<n>`) is a plugin skill: out of scope, stop.
-- Bare `<n>`: `find "<root>" \( -name .git -o -name node_modules -o -name .worktrees \) -prune -o -path '*/skills/<n>/SKILL.md' -print`. Resolve each match and the root with `realpath`; drop matches outside the root.
+- Bare `<n>`: `find "<root>" \( -name .git -o -name node_modules -o -name worktrees -o -name .worktrees \) -prune -o -path '*/skills/<n>/SKILL.md' -print`. Resolve each match and the root with `realpath`; drop matches outside the root.
 - None left: out of this project's scope, stop (do not look for it in `~/.claude`). Several: ask with AskUserQuestion.
 
 Read the target `SKILL.md`, the files it links and `evals/evals.json`; record line endings (`file <path>`).

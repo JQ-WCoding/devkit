@@ -11,7 +11,8 @@ import sys
 from pathlib import Path
 
 SKIP_DIRS = {'.git', 'node_modules', 'build', 'dist', 'out', 'target', '.gradle', 'vendor', 'venv',
-             '.venv', '__pycache__', '.claude', '.next', '.nuxt', 'coverage'}
+             '.venv', '__pycache__', '.claude', '.next', '.nuxt', 'coverage',
+             'worktrees'}  # parallel-work task copies (dot-folders are skipped anyway)
 MAX_DEPTH = 3
 # Kind is decided by the package.json script name. Start, deploy and autofix are not checks, so they go to the excluded list
 KIND_BY_SCRIPT = [
