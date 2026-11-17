@@ -96,9 +96,9 @@ Each step happens only after 🛑 user confirmation. Push only when asked separa
    - For each task, decide in a table what to look at (screen behavior, requests, DB rows, logs), check it, and fill in the results in the same table.
    - Run write checks only on the targets approved in step 1. Revert afterwards, confirm the original state with a read, and note it in the table.
 6. **Fixes from checks** (integrated check, screen check and final review alike; 🛑 after approval)
-   - Default: send the problem and the scope to fix to the worker that did the task (launcher file) → check its report → in worktree mode, commit in its worktree and merge again → run the integrated check again.
+   - Default: a fresh worker in the same work folder (launcher file), briefed with the original brief, decisions settled since, the prior report and a "Fix" section (the problem, the scope to fix, "report again the same way"); a resumed worker can drop later directives → check its report → in worktree mode, commit in its worktree and merge again → run the integrated check again.
    - Exception: a fix of a few lines, or one spanning several tasks, is done by the central session itself at the merge point (in-place: `<repo>`); in worktree mode, as a new commit.
-7. **Clean up** — only after the integrated check, the screen check (if any) and any final review the user added (`/code-review` etc.) are finished and their fixes are in. Don't end workers before then; fixes go to them (orca: the launcher file says how). Clean up workers as the launcher file describes, then workspaces as the workspace file describes.
+7. **Clean up** — only after the integrated check, the screen check (if any) and any final review the user added (`/code-review` etc.) are finished and their fixes are in. Don't remove workspaces before then; fix workers run in them. Clean up workers as the launcher file describes, then workspaces as the workspace file describes.
 
 ## Never
 

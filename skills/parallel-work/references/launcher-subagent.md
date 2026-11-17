@@ -16,7 +16,8 @@ Subagents can't ask the user anything mid-run. The brief tells them to stop and 
 
 ## Answer, instruct, send fixes
 
-SendMessage with `to` set to the agent ID. The subagent continues with its earlier context.
+- Answers and instructions to a running or blocked worker: SendMessage with `to` set to the agent ID. The subagent continues with its earlier context.
+- Fixes (4-6) go to a fresh subagent, launched as in Launch, not to the agent that reported done. Its prompt is the original brief plus a "Fix" section holding the problem, the scope to fix and the earlier agent's final reply (its report).
 
 ## Long checks (central session)
 

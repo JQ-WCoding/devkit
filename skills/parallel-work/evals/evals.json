@@ -41,7 +41,8 @@
       "Finds ORCA_TERMINAL_HANDLE and HC_TERMINAL_ID empty, tells the user subagents will be used, and reads launcher-subagent.md",
       "After approval, creates worktrees with make_worktree.py and launches both subagents with the Agent tool in one response",
       "The brief includes the line to start every command with 'cd <work folder> &&' and the final-reply report format",
-      "Uses no hc or orca commands, and sends fixes with SendMessage"
+      "Uses no hc or orca commands, and answers a blocked worker with SendMessage",
+      "When the integrated check fails in one task after its worker reported done, sends the fix to a fresh subagent briefed with the original brief, the prior report and a Fix section, not by SendMessage to the done agent"
     ]
   },
   {

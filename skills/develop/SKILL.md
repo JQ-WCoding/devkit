@@ -36,7 +36,7 @@ Make no changes outside the approved plan. If something in the plan cannot be do
 - Record each verdict: pass the `CHECKS:` line from `devkit:check-runner` and the `VERDICT:` line from `devkit:verifier` to `python3 -I "${CLAUDE_PLUGIN_ROOT}/skills/check/scripts/record_run.py" --repo <repo> --task <task ID> --line "<line>"` (`run-app up` records itself). For a DB or API check, record `--kind db|runtime --verdict PASS|FAIL|PARTIAL --summary <text>` with `--items` (`[{"name","result","detail"}]`, no credentials).
 - Regression: go through the analysis doc's **keep-as-is list** one by one.
 - If there is a design or mockup, capture the result screen and compare item by item. Do not say "matches the requirement" just because the build passes.
-- If something fails, fix it and run the same verification again. Write verification that was not run as `not run`.
+- If something fails, fix it and run the same verification again. When a second fix resting on the same premise fails the same check, stop fixing: write the premise down and check it directly (read-only query, run-app, captured response); if it is false, go back to `devkit:analyze`. Write verification that was not run as `not run`.
 
 ## 🛑 DB apply
 

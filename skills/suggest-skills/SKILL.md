@@ -42,7 +42,7 @@ python3 -I "${CLAUDE_PLUGIN_ROOT}/skills/setup/scripts/scan_repo.py" <repo root>
 
 **Skill and agent candidates** (`skills` or both): match the conditions in [catalog.md](references/catalog.md) against the fingerprint and history. Reading a blueprint to judge fit is fine. Find repeated tasks in groups of same-type commits (same scope, same verb, same folder pattern), traces of repeating the same steps in this conversation, and repeated tasks the user mentioned.
 
-**Corrections**: if the user made the same correction twice or more in this conversation, raise it as a rule row or skill content candidate. Corrections aimed at an existing skill inside this project go to `devkit:improve-skill` instead.
+**Corrections**: if the user made the same correction twice or more in this conversation, raise it as a rule row or skill content candidate with a `Level` (pinpoint-checklist). If a rule row for it already exists without an `enforced by` note, the candidate goes one level above `doc`; a reworded row is not a fix. Corrections aimed at an existing skill inside this project go to `devkit:improve-skill` instead.
 
 Save the raw tables returned by subagents to `<scratchpad>/candidates.md`, and the main agent's merged verdicts to `<scratchpad>/suggestions.md` (adopted candidates, `needs confirmation`, discarded with reasons).
 
@@ -54,13 +54,14 @@ Show one table and let the user choose (AskUserQuestion multiSelect, up to 4 per
 |---|---|---|---|---|
 
 - At most 3 recommended; the rest go on one line each as "next candidates".
-- For rule rows, show the count per target doc and 2–3 representative rows (the full set is in `suggestions.md`).
+- For rule rows, show the count per target doc and 2–3 representative rows (the full set is in `suggestions.md`). For a row above `doc`, "What gets built" is the row plus an analyze handoff for its enforcer.
 - If a rule row needs a layer doc that does not exist yet, ask separately with a single choice: "new doc / section of an existing doc".
 - If you found places where existing rules and code disagree, report only the difference, taking code as the reference. Do not silently change rules.
 
 ## 2. Build (chosen items only)
 
 - **Rule rows**: add to the matching `docs/rules/<layer>.md` in the existing style. If the layer doc is missing, create it from the setup layer doc skeleton and add one line each to the `docs/rules/README.md` index and the `CLAUDE.md` table.
+- **Enforcers** (`structure`, `type`, `check`, `test` rows): write no code, lint rules or tests here. Add the handoff to `suggestions.md` (rule, level, past-mistake commit, requirement "fails on `<commit>^`, passes on HEAD") and tell the user to run `devkit:analyze` with it. Once an enforcer exists, end the row's rule cell with `(enforced by <path>)`; a row without it is unenforced.
 - **Agents**: write the blueprint skeleton to `.claude/agents/<name>.md`. Fill `{{…}}` from evidence and delete lines without evidence. Use the DB MCP tool names actually visible in this session.
 - **Skills**: build under `.claude/skills/<name>/` following [skill-authoring.md](references/skill-authoring.md) — at least 3 eval scenarios, rules as links to `docs/rules/`, scripts run with `python3 -I`.
 - If you built a skill or agent, add one line each (what it is and when to use it) to the "Project skills and agents" section of `CLAUDE.md`.

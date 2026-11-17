@@ -37,7 +37,7 @@ Split the requirement into numbered items and keep the source wording apart from
 - Skim the repo rules (`CLAUDE.md`, `docs/rules/`) first to align terms and structure.
 - Follow entry points (screen, API, batch, message consumer) → processing → storage (table, file, external) as `file:line`. With several entry points or more than 10 files to scan, hand them to `devkit:code-reader` in parallel, one per entry point. Smaller than that, read directly.
 - With dynamic calls (string paths, reflection, config routing), do not conclude "unused" from a text search alone.
-- **Bug**: define the minimal reproduction steps and confirm the cause with evidence (code, logs, data). If not confirmed, write the hypothesis and how to check it. Look for the same cause elsewhere. If production data must be queried, use read-only queries only, after confirming the target DB.
+- **Bug**: define the minimal reproduction steps and confirm the cause with evidence (code, logs, data). If not confirmed, write the hypothesis and how to check it. If two earlier fixes resting on the same premise failed, write that premise down and check it directly before planning a third. Look for the same cause elsewhere. If production data must be queried, use read-only queries only, after confirming the target DB.
 
 ## 3. Differences and impact
 

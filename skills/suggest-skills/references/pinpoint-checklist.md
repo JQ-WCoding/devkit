@@ -73,13 +73,14 @@ Pick only questions that fit the stack. Parentheses are examples; do not ask abo
 Subagents return only this table (`confirmed` rows first, up to 15 rows).
 
 ```markdown
-| Area | Rule candidate (one line, rule style) | Source | Evidence | Confidence |
-|---|---|---|---|---|
-| front | Use `api/client.ts`; no new direct fetch | S1 | src/api/client.ts:12 · imported by 214 files · direct fetch in 3 files (login, upload) | confirmed |
-| back | List queries keep `PageRequest` input and `total` output | S2 | src/common/Page.java:8 · 41 queries | confirmed |
-| db | Bulk saves use batch INSERT | S3 | a1b2c3d fix: upload timeout · row-by-row insert loop in the diff | guessed |
+| Area | Rule candidate (one line, rule style) | Source | Evidence | Confidence | Level |
+|---|---|---|---|---|---|
+| front | Use `api/client.ts`; no new direct fetch | S1 | src/api/client.ts:12 · imported by 214 files · direct fetch in 3 files (login, upload) · ↑ fetch must stay for the client itself | confirmed | check |
+| back | List queries keep `PageRequest` input and `total` output | S2 | src/common/Page.java:8 · 41 queries · ↑ mapper XML is untyped, no linter reads it | confirmed | doc |
+| db | Bulk saves use batch INSERT | S3 | a1b2c3d fix: upload timeout · row-by-row insert loop in the diff · ↑ small saves may loop; size is a judgment | guessed | doc |
 ```
 
+- `Level` is the highest level that would stop the mistake: `structure` (one owner, delete the old way) → `type` → `check` (lint, hook or CI whose error names the fix) → `test` → `doc` (judgment calls only). Below `structure`, end the evidence cell with `↑ <why no higher level works>`.
 - `Confidence` is either `confirmed` (opened the evidence code or config and saw the behavior) or `guessed` (saw only frequency, names, comments or commit messages). If mixed, write `guessed` and say in the evidence cell what you looked at.
 - Raise exemplar file candidates as `S4` rows with one phrase in the evidence cell on why it is the exemplar.
 - Raise items needing an interview as `S5` rows, with the proposed default and its evidence in the evidence cell.
