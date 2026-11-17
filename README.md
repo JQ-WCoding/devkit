@@ -184,6 +184,7 @@ Rules that must hold every time, without exception, are enforced in code (determ
 |---|---|
 | Deny | `git add .`, `-A`, `-u`; `git commit -a`, `-n`, `--no-verify`; `git push -f`, `--force`, `+ref`, `--no-verify`; commit messages containing AI attribution (`Co-Authored-By: Claude`, `Generated with Claude Code`) via `-m`, heredoc or a `-F` file |
 | Ask | `--force-with-lease`, `--amend`, pushes to protected branches (`main`, `master`, `release/*`, `prod*`), server and container starts (`bootRun`, `spring-boot:run`, `npm run dev`, `docker compose up` etc.), unless they match the repo's `.devkit/guard.json` `allow_server` patterns; with `.devkit/runtime.json` the message points to `devkit:run-app` |
+| Deny (zsh only) | Unquoted words zsh fails on but bash passes through: a word starting with `==` such as an `echo ====` separator or `[ "$a" == "$b" ]`, a `VAR==x` value, and an option glob such as `--include=*.java`. The message gives the quoted form (`'===='`, `--include='*.java'`) |
 
 - Turn off: `/plugin` > devkit > Configure options > Git guard (per user), or `DEVKIT_GUARD=off` in the settings `env` (use this to set it for a whole repo). Restart Claude Code after changing an option.
 - Repos that want AI attribution: `DEVKIT_AI_TRAILER=allow` in the settings `env`.

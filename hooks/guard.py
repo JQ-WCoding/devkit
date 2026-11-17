@@ -4,6 +4,7 @@ Input: the PreToolUse JSON Claude Code sends on stdin (tool_name Bash|PowerShell
 hooks.json runs it with python3 directly (exec form, no shell), so it behaves the same on macOS, Linux and Windows.
 Output: hookSpecificOutput (permissionDecision deny|ask) only when it intervenes; otherwise nothing (normal permission flow).
 Disable: the plugin option guard (/plugin > devkit > Configure options) or DEVKIT_GUARD=off. Allow AI attribution: DEVKIT_AI_TRAILER=allow.
+Under zsh (Bash tool, $SHELL ends in zsh) it also denies unquoted words zsh fails on: `====` and `--opt=*.glob`.
 Per repo: server commands that fully match an allow_server pattern in .devkit/guard.json pass without asking.
 When unsure it lets the command through (a false positive must not block real work).
 """
@@ -26,6 +27,8 @@ RUNNERS = {'gradle', 'gradlew', 'mvn', 'mvnw', 'npm', 'pnpm', 'yarn', 'bun', 'np
 GUARD_CONFIG = os.path.join('.devkit', 'guard.json')  # per-repo {"allow_server": [pattern | {"pattern", "reason"}]}
 RUNTIME_CONFIG = os.path.join('.devkit', 'runtime.json')
 HARNESS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'skills', 'run-app', 'scripts', 'runtime.py')
+ASSIGNMENT = re.compile(r'^[A-Za-z_]\w*=')
+ZSH_OPT_GLOB = re.compile(r'^--?[\w-]+=')  # an option word whose value zsh globs as a whole (NOMATCH)
 HEREDOC = re.compile(r'<<-?\s*([\'"]?)(\w+)\1[^\n]*\n.*?\n\s*\2\b', re.S)
 
 
@@ -127,8 +130,63 @@ def commit_message(args, command, cwd):
     return '\n'.join(msg)
 
 
-def check(command, cwd):
+def shell_words(segment):
+    """Split like a shell: [(text, quoted)] where quoted[i] says whether character i was quoted or escaped."""
+    words, text, quoted, quote, i = [], [], [], None, 0
+    while i < len(segment):
+        c = segment[i]
+        if quote:
+            if c == quote:
+                quote = None
+            elif c == '\\' and quote == '"' and i + 1 < len(segment):
+                i += 1
+                text.append(segment[i]), quoted.append(True)
+            else:
+                text.append(c), quoted.append(True)
+        elif c in '\'"':
+            quote = c
+        elif c == '\\' and i + 1 < len(segment):
+            i += 1
+            text.append(segment[i]), quoted.append(True)
+        elif c.isspace():
+            if text or quoted:
+                words.append((''.join(text), quoted))
+            text, quoted = [], []
+        else:
+            text.append(c), quoted.append(False)
+        i += 1
+    if text:
+        words.append((''.join(text), quoted))
+    return words
+
+
+def zsh_trap(segment):
+    """A reason when zsh would fail on an unquoted word that bash passes through literally."""
+    if '[[' in segment:  # [[ a == b ]] is parsed as a condition, not expanded
+        return None
+    leading = True  # VAR=value words before the command name
+    for text, quoted in shell_words(segment):
+        bare = lambda i: i < len(text) and not quoted[i]
+        if bare(0) and bare(1) and text[:2] == '==':  # zsh EQUALS: `====` looks up a command named `===`
+            return (f'zsh reads the unquoted word `{text}` as a command path and fails ("{text[1:]} not found"). '
+                    f"Quote it: '{text}'")
+        m = ASSIGNMENT.match(text)
+        if leading and m and bare(m.end()) and text[m.end()] == '=':  # VAR==x: the value =x is expanded the same way
+            name, value = text[:m.end()], text[m.end():]
+            return (f'zsh reads the unquoted value `{value}` as a command path and fails ("{value[1:]} not found"). '
+                    f"Quote it: {name}'{value}'")
+        leading = leading and bool(m)
+        m = ZSH_OPT_GLOB.match(text)
+        if m and any(text[i] in '*?' and not quoted[i] for i in range(m.end(), len(text))):  # zsh NOMATCH
+            return (f'zsh globs the unquoted `{text}` and fails ("no matches found"). '
+                    f"Quote the pattern: {text[:m.end()]}'{text[m.end():]}'")
+    return None
+
+
+def check(command, cwd, zsh=False):
     for seg in segments(command):
+        if zsh and (reason := zsh_trap(seg)):
+            return decide('deny', reason)
         parsed = git_args(seg)
         if parsed:
             out = check_git(*parsed, command, cwd)
@@ -194,7 +252,8 @@ def main():
     if data.get('tool_name') not in ('Bash', 'PowerShell'):
         return 0
     command = (data.get('tool_input') or {}).get('command') or ''
-    out = check(command, data.get('cwd') or os.getcwd())
+    zsh = data.get('tool_name') == 'Bash' and os.environ.get('SHELL', '').endswith('zsh')
+    out = check(command, data.get('cwd') or os.getcwd(), zsh)
     if out:
         print(json.dumps(out))  # ASCII-escaped: survives any shell or code page
     return 0

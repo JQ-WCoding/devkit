@@ -68,6 +68,31 @@ for label, cases, kw in (('Bash tool', CASES, {}),
         total += 1
         if (got := run(c, **kw)) != want:
             fails.append((label, c, want, got))
+ZSH = {'SHELL': '/bin/zsh'}
+ZSH_CASES = [
+    ('cat a.md; echo ====; cat b.md', 'deny'), ("printf '%s\\n' ===== x", 'deny'), ('[ "$a" == "$b" ] && echo same', 'deny'),
+    ('grep -rn --include=*.java foo src', 'deny'), ('rg --glob=*.md x', 'deny'),
+    ("echo '===='", None), ('echo "=== title ==="', None), ('[[ $a == b ]] && echo y', None), ('echo = x', None),
+    ("grep -rn --include='*.java' foo src", None), ('git log --format=%h --since=2.weeks', None), ('VAR==x env', 'deny'), ("VAR='=x' env", None),
+    ('git commit -m "a\n\n====\n"', None), ("cat <<'EOF'\n====\nEOF", None),
+    ('echo x ==y', 'deny'), ('X=1 VAR==x env', 'deny'),
+    # argument-position == and quotes that open mid-word run fine in zsh (checked with zsh -c)
+    ('pip install requests==2.31.0', None), ('echo a==b', None), ('git log --grep="a == b"', None),
+    ('git commit -m"a ==== b"', None), ("gh api x --jq='.x == 1'", None), ('FOO="x ==== y" env', None),
+    ('echo \\==', None), ('ls --color=auto', None),
+]
+for c, want in ZSH_CASES:
+    total += 1
+    if (got := run(c, ZSH)) != want:
+        fails.append(('zsh', c, want, got))
+for label, c, kw in (('bash shell', 'cat a; echo ====', {'env': {'SHELL': '/bin/bash'}}),
+                     ('PowerShell tool under zsh', 'echo ====', {'env': ZSH, 'tool': 'PowerShell'})):
+    total += 1
+    if got := run(c, **kw):
+        fails.append((label, c, None, got))
+total += 1
+if 'Quote it' not in (run('echo ====', ZSH, reason=True) or ''):
+    fails.append(('zsh reason names the fix', 'echo ====', 'Quote it', None))
 for label, c, env in (('DEVKIT_GUARD=off', 'git add .', {'DEVKIT_GUARD': 'off'}),
                       ('option guard=false', 'git add .', {'CLAUDE_PLUGIN_OPTION_GUARD': 'false'}),
                       ('DEVKIT_AI_TRAILER=allow', HEREDOC_AI, {'DEVKIT_AI_TRAILER': 'allow'})):
