@@ -74,9 +74,38 @@ def default_branch(remote):
     sys.exit(f"[stop] cannot tell the default branch of {remote}. Set `branch` in {CONFIG_PATH}.")
 
 
+# list fields of config.json and the keys each entry needs (the checks below index them directly)
+REQUIRED_KEYS = {
+    "areas": ("name", "prefix"),
+    "forbidden_paths": ("prefix", "message"),
+    "no_mix": ("areas", "message"),
+    "type_path": ("type", "prefix", "message"),
+    "shared_paths": ("prefix", "steward"),
+}
+
+
+def check_config(cfg):
+    """Stop with the field, entry and missing keys instead of a traceback mid-run."""
+    fields = dict(REQUIRED_KEYS)
+    lists = {name: cfg.get(name) for name in fields}
+    lists["subject.forbidden_endings"] = (cfg.get("subject") or {}).get("forbidden_endings")
+    fields["subject.forbidden_endings"] = ("ending", "message")
+    for name, entries in lists.items():
+        if entries is None:
+            continue
+        if not isinstance(entries, list):
+            sys.exit(f"[stop] {CONFIG_PATH}: `{name}` must be a list.")
+        for i, e in enumerate(entries):
+            missing = [k for k in fields[name] if not isinstance(e, dict) or k not in e]
+            if missing:
+                sys.exit(f"[stop] {CONFIG_PATH}: `{name}[{i}]` needs {', '.join(missing)} "
+                         f"(see references/config.md).")
+
+
 class Rules:
     def __init__(self, cfg):
         cfg = cfg or {}
+        check_config(cfg)
         self.remote = cfg.get("remote", "origin")
         self.branch = cfg.get("branch") or default_branch(self.remote)
         self.ref = f"refs/remotes/{self.remote}/{self.branch}"

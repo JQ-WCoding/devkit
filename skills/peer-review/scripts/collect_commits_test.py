@@ -75,6 +75,15 @@ def test_no_shared_paths_no_change():
     check('without shared_paths nothing is tagged', code == 0 and '🔶' not in out and '## Bob' in out, out)
 
 
+def test_missing_config_keys_stop_with_a_message():
+    for cfg, field in (({'branch': 'main', 'shared_paths': [{'prefix': 'shared/'}]}, '`shared_paths[0]` needs steward'),
+                       ({'branch': 'main', 'forbidden_paths': [{'prefix': 'tmp/'}]}, '`forbidden_paths[0]` needs message'),
+                       ({'branch': 'main', 'subject': {'forbidden_endings': [{'message': 'x'}]}},
+                        '`subject.forbidden_endings[0]` needs ending')):
+        code, out = run(repo_with(cfg))
+        check(f'missing key stops with a message: {field}', code != 0 and field in out and 'Traceback' not in out, out)
+
+
 if __name__ == '__main__':
     for fn in [v for k, v in sorted(globals().items()) if k.startswith('test_')]:
         fn()
