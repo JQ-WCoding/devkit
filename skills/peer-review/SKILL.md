@@ -71,6 +71,7 @@ A review always finds something, so certainty is not importance. Ask three quest
 
 - **Must-fix**: (A or B) and C. Fix before release or before the feature goes live.
 - **Optional**: everything else (UX, display-only, no matching data). Note what would change the call.
+- **Proposal**: a commit the script marks 🔶 changed shared code its steward did not write. Report it apart from defects as "needs <steward>'s approval", whatever its quality.
 - **Question, not must-fix**: a finding that conflicts with a `docs/rules/glossary.md` term or premise row, or rests on a meaning or premise no repo file records (a legacy column meaning, how a site operates, intent stated only in a commit message). Report it as a yes/no question with both sides' evidence.
 - Severity says how bad it is if it happens; must-fix/optional says whether to act now. Report both.
 - A pre-existing pattern the commit only exposed stays in the report, but name the owner of that code rather than the commit author.
@@ -81,7 +82,7 @@ Give `file:line`, the failure scenario and the rule, not long explanations. In o
 
 1. One-line conclusion: rule compliance, must-fix count, scope (period, commits, per developer)
 2. Earlier findings (if step 1-1 ran): ID | developer | fixed / not addressed | evidence
-3. Must-fix: item | label | A·B·C answers (with the C count) | `file:line` and scenario
+3. Must-fix: item | label | A·B·C answers (with the C count) | `file:line` and scenario; proposals (🔶) on their own lines with the steward
 4. Optional: one line each, with what would make it must-fix
 5. Rule table: item | ✅/⚠️ | developer and evidence
 6. Per developer: 1–2 things done well + issues raised

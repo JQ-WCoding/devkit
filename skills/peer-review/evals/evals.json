@@ -49,6 +49,16 @@
   },
   {
     "skills": [
+      "peer-review"
+    ],
+    "query": "Review dev since last time (config has shared_paths for web/src/common/excel/ with steward Kim; Lee changed a file there)",
+    "files": [],
+    "expected_behavior": [
+      "Lists Lee's commit as a 🔶 proposal needing Kim's approval, apart from must-fix and optional findings"
+    ]
+  },
+  {
+    "skills": [
       "pr-publish"
     ],
     "query": "Review dev → main and open the MR",
