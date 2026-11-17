@@ -23,8 +23,8 @@ Skills and docs are written in English; Claude answers in the language of each r
 | PR/MR | `/devkit:pr-publish` | Review → title and body draft → confirmation → create or update the PR/MR with `gh`/`glab`. Pins the remote SHA, publishes only what it reviewed and stops if the remote moved. Branches that change `docs/rules/` or `.claude/` get a "Rules / devkit changes" section |
 | Parallel | `/devkit:parallel-work` | Splits a request into independent tasks and runs them in parallel workers (subagents; Orca or Herdr sessions when started inside those terminals), each edit task in its own git worktree. After confirmation it commits, merges, runs the integrated check and cleans up; fixes go to a fresh worker with the consolidated brief |
 | Cleanup | `/devkit:clean-temp` | Lists temp files left during work (dry-run folders, `.bak`/`.tmp`, root temp scripts, captures) and other sessions' scratchpads, and moves only the chosen ones to the OS trash. Never touches tracked files or protected paths; repo-specific protections go in `.devkit/clean-temp/config.json` (user-invoked only) |
-| Review | `/devkit:peer-review` | Reviews teammates' commits on a shared branch since the last review (commit format per `docs/rules/`, must-fix vs optional defects; findings that conflict with the glossary or rest on unrecorded premises become questions), drafts per-developer feedback and tracks findings until fixed |
-| Setup | `/devkit:setup` | Lays down the shared rules skeleton `docs/rules/` (common, Git, environments; layer docs and onboarding when needed), the local router `CLAUDE.md` and `.gitignore` |
+| Review | `/devkit:peer-review` | Reviews teammates' commits on a shared branch since the last review (commit format per `docs/rules/`, must-fix vs optional defects; findings that conflict with the glossary or rest on unrecorded premises become questions; changes to configured shared paths by anyone but their steward are listed as proposals), drafts per-developer feedback and tracks findings until fixed |
+| Setup | `/devkit:setup` | Lays down the shared rules skeleton `docs/rules/` (common, Git, environments, an empty glossary; layer docs and onboarding when needed), the local router `CLAUDE.md` and `.gitignore` |
 | Setup | `/devkit:suggest-skills` | Proposes rule rows, project skills and agents from code pinpoints, repeated tasks and user corrections, each at the highest level that would stop the mistake (structure, type, lint/hook, test, doc); builds only the chosen ones and hands code-level enforcers to `analyze` |
 | Setup | `/devkit:improve-skill` | While you work in a project, fixes one of that project's own skills (e.g. `.claude/skills`) that you keep correcting: checks it for overlap with the skills you already use, diagnoses each correction against the authoring rules, edits only that skill after approval and checks it. Not for plugin or user-level skills (user-invoked only) |
 | Explore | Agent `devkit:code-reader` | Handles multi-file exploration and returns only conclusions (session model, low effort, read-only) |
@@ -51,19 +51,19 @@ Blueprints `suggest-skills` proposes when the conditions fit: a project-specific
 
 ## Workflow
 
-Every repository follows the same order. A person decides at the highlighted points.
+Every repository follows the same order. A person decides at the highlighted points; the plan approval stops only when a human must decide (open questions, a DB change, shared modules, a delete), otherwise the plan is shown and work goes on.
 
 ```mermaid
 flowchart LR
-  A["analyze"] --> H1(["approve the plan"]) --> D["develop"] --> C["check (optional)"] --> CM["commit"] --> P["push"] --> R["pr-publish: review"] --> H2(["confirm"]) --> PR["PR/MR published"]
+  A["analyze"] --> H1(["approve the plan (when needed)"]) --> D["develop"] --> C["check (optional)"] --> CM["commit"] --> P["push"] --> R["pr-publish: review"] --> H2(["confirm"]) --> PR["PR/MR published"]
   classDef human fill:#e8eefb,stroke:#2f5bd3,color:#1e3a8a
   class H1,H2 human
 ```
 
 1. First time in a repo: `/devkit:setup` → answer a few interview questions and approve the setup plan to get the rules skeleton.
-2. Per task: `/devkit:analyze <issue link, file or requirement>` → approve → `/devkit:develop` (checks run through `check-runner`, and `verifier` judges the result against the analysis doc before it is reported done) → `/devkit:check` if needed → `/devkit:commit` → `/devkit:push` → `/devkit:pr-publish`.
+2. Per task: `/devkit:analyze <issue link, file or requirement>` → approve when asked → `/devkit:develop` (checks run through `check-runner`, and `verifier` judges the result against the analysis doc before it is reported done) → `/devkit:check` if needed → `/devkit:commit` → `/devkit:push` → `/devkit:pr-publish`.
 3. As a reviewer: `/devkit:peer-review` → review what teammates pushed to the shared branch since last time. The first run builds `.devkit/peer-review/config.json` from `docs/rules/git.md`.
-4. Several independent requests at once: `/devkit:parallel-work <numbered requests>` → approve the task split → workers run in parallel → confirm commit, merge and the integrated check.
+4. Several independent requests at once: `/devkit:parallel-work <numbered requests>` → approve the task split when it has open points → workers run in parallel → confirm commit, merge and the integrated check.
 5. Occasionally: `/devkit:suggest-skills` → get evidence-backed candidates for this repo's rule rows, skills and agents, and build only the chosen ones. Claude suggests it once when the same task repeats or the same correction is given twice. To fix a project skill you keep correcting, run `/devkit:improve-skill <name>`.
 
 Analysis docs, the frozen `analysis.approved.md`, cross-check runs (`cross-check/`) and work SQL live in `<repo>/.devkit/work/<task ID>/` (excluded from Git). Run records (`check-runner`, `verifier`, runtime and DB verdicts) are JSON files in its `runs/` folder, written by `skills/check/scripts/record_run.py` (schema `devkit.run/1`; `.devkit/runs/` without a task). It prints the verdict word (`PASS`, `FAIL`, `PARTIAL`) that reports quote.

@@ -23,8 +23,8 @@
 | PR/MR | `/devkit:pr-publish` | 리뷰 → 제목·본문 초안 → 확인 → `gh`/`glab`으로 PR/MR 생성 또는 갱신. 원격 SHA를 고정해 리뷰한 코드만 게시하고, 그사이 원격이 바뀌면 멈춘다. `docs/rules/`나 `.claude/`를 바꾼 브랜치는 「Rules / devkit changes」 섹션을 넣는다 |
 | 병렬 | `/devkit:parallel-work` | 요청을 서로 독립된 작업으로 나눠 병렬 작업자(서브에이전트, Orca·Herdr 터미널 안에서는 그 세션)에게 맡기고, 수정 작업은 작업마다 git worktree를 따로 둔다. 확인을 받은 뒤 커밋·병합·통합 점검·정리까지 한다. 수정 라운드는 지시를 모은 새 작업자에게 맡긴다 |
 | 정리 | `/devkit:clean-temp` | 작업 중 남은 임시 파일(드라이런 폴더, `.bak`·`.tmp`, 루트 임시 스크립트, 캡처)과 다른 세션의 scratchpad를 나열하고, 고른 것만 OS 휴지통으로 옮긴다. 추적 파일과 보호 경로는 건드리지 않으며, 저장소별 보호 경로는 `.devkit/clean-temp/config.json`에 둔다 (사용자 호출 전용) |
-| 리뷰 | `/devkit:peer-review` | 공유 브랜치에 팀원이 올린 커밋을 지난 리뷰 이후분만 검토하고(`docs/rules/` 기준 커밋 형식, 필수 수정과 선택 결함 구분, 용어집과 어긋나거나 기록 없는 전제에 기댄 지적은 질문으로), 개발자별 피드백 초안을 쓰고 수정될 때까지 지적 사항을 추적한다 |
-| 설정 | `/devkit:setup` | 공유 규칙 골격 `docs/rules/`(공통, Git, 환경; 필요하면 레이어 문서와 온보딩), 로컬 라우터 `CLAUDE.md`, `.gitignore`를 깐다 |
+| 리뷰 | `/devkit:peer-review` | 공유 브랜치에 팀원이 올린 커밋을 지난 리뷰 이후분만 검토하고(`docs/rules/` 기준 커밋 형식, 필수 수정과 선택 결함 구분, 용어집과 어긋나거나 기록 없는 전제에 기댄 지적은 질문으로, 설정된 공유 경로를 담당자 아닌 사람이 바꾼 커밋은 제안으로), 개발자별 피드백 초안을 쓰고 수정될 때까지 지적 사항을 추적한다 |
+| 설정 | `/devkit:setup` | 공유 규칙 골격 `docs/rules/`(공통, Git, 환경, 빈 용어집; 필요하면 레이어 문서와 온보딩), 로컬 라우터 `CLAUDE.md`, `.gitignore`를 깐다 |
 | 설정 | `/devkit:suggest-skills` | 코드 지점, 반복 작업, 사용자 교정을 근거로 규칙 행·프로젝트 스킬·에이전트를 제안하되 실수를 막을 수 있는 가장 높은 수준(구조·타입·lint/hook·테스트·문서)으로 제안하고, 고른 것만 만들며 코드 수준 강제 장치는 `analyze`로 넘긴다 |
 | 설정 | `/devkit:improve-skill` | 프로젝트에서 작업하다 자꾸 교정하게 되는 그 프로젝트의 스킬(`.claude/skills` 등) 하나를 고친다. 이미 쓰고 있는 스킬과 중복되는지 먼저 검사하고, 교정마다 작성 규칙으로 원인을 진단한 뒤, 승인을 받아 그 스킬만 수정하고 점검한다. 플러그인·사용자 레벨 스킬은 대상이 아니다 (사용자 호출 전용) |
 | 탐색 | 에이전트 `devkit:code-reader` | 여러 파일에 걸친 탐색을 맡아 결론만 돌려준다 (세션 모델, low effort, 읽기 전용) |
@@ -51,19 +51,19 @@
 
 ## 작업 흐름
 
-어느 저장소에서나 같은 순서로 진행한다. 색칠된 곳에서 사람이 결정한다.
+어느 저장소에서나 같은 순서로 진행한다. 색칠된 곳에서 사람이 결정한다. 계획 승인은 사람이 정해야 할 것(열린 질문, DB 변경, 공용 모듈, 삭제)이 있을 때만 멈추고, 그 밖에는 계획을 보여준 뒤 진행한다.
 
 ```mermaid
 flowchart LR
-  A["analyze"] --> H1(["계획 승인"]) --> D["develop"] --> C["check (선택)"] --> CM["commit"] --> P["push"] --> R["pr-publish: 리뷰"] --> H2(["게시 확인"]) --> PR["PR/MR 게시"]
+  A["analyze"] --> H1(["계획 승인 (필요할 때)"]) --> D["develop"] --> C["check (선택)"] --> CM["commit"] --> P["push"] --> R["pr-publish: 리뷰"] --> H2(["게시 확인"]) --> PR["PR/MR 게시"]
   classDef human fill:#e8eefb,stroke:#2f5bd3,color:#1e3a8a
   class H1,H2 human
 ```
 
 1. 저장소에서 처음: `/devkit:setup` → 인터뷰 질문 몇 개에 답하고 설정 계획을 승인하면 규칙 골격이 생긴다.
-2. 작업마다: `/devkit:analyze <이슈 링크, 파일 또는 요구사항>` → 승인 → `/devkit:develop` (점검은 `check-runner`가 돌리고, 완료 보고 전에 `verifier`가 분석 문서 기준으로 판정한다) → 필요하면 `/devkit:check` → `/devkit:commit` → `/devkit:push` → `/devkit:pr-publish`.
+2. 작업마다: `/devkit:analyze <이슈 링크, 파일 또는 요구사항>` → 물으면 승인 → `/devkit:develop` (점검은 `check-runner`가 돌리고, 완료 보고 전에 `verifier`가 분석 문서 기준으로 판정한다) → 필요하면 `/devkit:check` → `/devkit:commit` → `/devkit:push` → `/devkit:pr-publish`.
 3. 리뷰어로서: `/devkit:peer-review` → 지난번 이후 팀원이 공유 브랜치에 올린 것을 리뷰한다. 첫 실행 때 `docs/rules/git.md`로부터 `.devkit/peer-review/config.json`을 만든다.
-4. 서로 독립된 요청 여러 개를 한 번에: `/devkit:parallel-work <번호 붙인 요청들>` → 작업 분할 승인 → 작업자 병렬 실행 → 커밋·병합·통합 점검 확인.
+4. 서로 독립된 요청 여러 개를 한 번에: `/devkit:parallel-work <번호 붙인 요청들>` → 열린 질문이 있으면 작업 분할 승인 → 작업자 병렬 실행 → 커밋·병합·통합 점검 확인.
 5. 가끔: `/devkit:suggest-skills` → 이 저장소의 규칙 행·스킬·에이전트 후보를 근거와 함께 받고, 고른 것만 만든다. 같은 작업이 반복되거나 같은 교정을 두 번 받으면 Claude가 한 번 제안한다. 자꾸 교정하게 되는 프로젝트 스킬은 `/devkit:improve-skill <name>`으로 고친다.
 
 분석 문서, 고정된 승인본 `analysis.approved.md`, 교차 검증 실행(`cross-check/`), 작업 SQL은 `<repo>/.devkit/work/<작업 ID>/`에 둔다 (Git 제외). 실행 기록(`check-runner`, `verifier`, 런타임·DB 판정)은 그 아래 `runs/`에 JSON으로 남는다. `skills/check/scripts/record_run.py`가 쓰며(스키마 `devkit.run/1`), 작업 ID가 없으면 `.devkit/runs/`에 둔다. 보고에는 이 스크립트가 출력하는 판정 단어(`PASS`, `FAIL`, `PARTIAL`)를 그대로 쓴다.
