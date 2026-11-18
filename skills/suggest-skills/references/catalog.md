@@ -35,7 +35,7 @@ Suggest only candidates that pass the adoption criteria in `pinpoint-checklist.m
 
 ## Not suggested
 
-- Skills holding only general development knowledge (generic coding style, language tutorials).
+- Skills holding only general development knowledge (generic coding style, language tutorials). Per-language design principles are recommended by `devkit:analyze` (`design-principles.md`).
 - Turning a one-off task into a skill. Up to the second time, a rule row or note is enough.
 - Agents that need write access. The main agent does writes.
 - Names identical to other plugin or user-level skills. If they overlap, rename or state in each description when not to use it.

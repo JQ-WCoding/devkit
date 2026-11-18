@@ -365,6 +365,8 @@ Applies to: `{{path}}`.
 {{if: the S1 pattern is only clear as code — one reference pattern example}}
 ```
 
+Setup does not write a `## Design principles` section. It is added to a layer doc only after the user decides on a principle `devkit:analyze` recommended (a docs step of that plan; if no layer doc covers the path, analyze offers to create one from this template), as `Principle | Decision (adopted · declined) | Reason · date`.
+
 ## Onboarding guide
 
 Create it only when there are 3+ environment setup steps or external dependencies such as VPN, tunnels or company accounts (confirm at 🛑B). Write a step doc when README or scripts give evidence for its content; for a step with no evidence, put only its name in the table marked `needs confirmation` (never invent install commands).

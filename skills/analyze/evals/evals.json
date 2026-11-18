@@ -114,5 +114,52 @@
     "expected_behavior": [
       "Fixes it directly without using analyze"
     ]
+  },
+  {
+    "skills": [
+      "analyze"
+    ],
+    "query": "Analyze this: add a PartialRefundService that extends RefundService in the Java API and overrides refund() to throw for gift cards",
+    "files": [],
+    "expected_behavior": [
+      "Judges the changed files as class-based Java and reads the API layer doc's ## Design principles section if one exists",
+      "Recommends at most 3 principles whose signal appears (e.g. Liskov substitution for the throwing override, composition over inheritance) with file:line, in the 'Design principles (recommendation)' section",
+      "Does not add them as requirement items or verification items, and asks once at the gate whether to adopt each undecided recommended principle for the API layer"
+    ]
+  },
+  {
+    "skills": [
+      "analyze"
+    ],
+    "query": "Analyze this: the order service should also send the Slack notification. (docs/rules/back.md has a Design principles row: Single responsibility | declined | 'thin services, one per screen' · 2026-10-02)",
+    "files": [],
+    "expected_behavior": [
+      "Reads docs/rules/back.md and skips single responsibility because the repo declined it",
+      "Does not recommend the declined principle or re-ask about it; other principles appear only if their signal is in the change"
+    ]
+  },
+  {
+    "skills": [
+      "analyze"
+    ],
+    "query": "Analyze this: add a formatPrice helper to web/src/utils/money.ts and use it in the cart and checkout components (function-style modules, no classes)",
+    "files": [],
+    "expected_behavior": [
+      "Judges the changed files as TypeScript function-style modules and gives no class rows (SOLID, LSP, inheritance)",
+      "Recommends only signal-backed rows such as DRY or pure functions, or omits the section when there is no signal",
+      "When the repo has no docs/rules, keeps any adoption answer in the analysis doc's decision log and does not create rules docs"
+    ]
+  },
+  {
+    "skills": [
+      "analyze"
+    ],
+    "query": "Analyze this: add a retry wrapper class around the batch/ job runner in Python (docs/rules/ has README.md, common.md and api.md, but no doc covers batch/)",
+    "files": [],
+    "expected_behavior": [
+      "Recommends at most 3 signal-backed principles for the Python batch change and asks once at the gate whether to adopt them for the batch layer",
+      "In the same question offers to create docs/rules/batch.md (not to add them to common.md)",
+      "If accepted, plans a last docs step that creates batch.md from the setup layer-doc template with Applies to, language facts and the Design principles section, and links it from docs/rules/README.md; does not write it during analyze"
+    ]
   }
 ]

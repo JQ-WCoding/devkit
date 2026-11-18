@@ -47,6 +47,8 @@ The common risk checklist in `analyze` covers failure points that recur in every
 | Deployment and compatibility | Does old code run on the new schema? Can it be rolled back? |
 | Display and errors | Is a failure hidden as success? |
 
+It also recommends at most 3 design principles (SOLID, DRY, composition over inheritance, language idioms) for the languages of the changed files — the GitHub Octoverse 2025 top 10 plus Kotlin — only where this change shows the signal. They are recommendations, not requirements: a project records adopt or decline in its layer doc, and declined ones are not suggested again.
+
 Blueprints `suggest-skills` proposes when the conditions fit: a project-specific flow skill (adds this repo's own steps on top of `analyze` and `develop`), `db-analyst`, `knowledge-reader` and format-analyst agents, `visual-docs`, and external-tool skills.
 
 ## Workflow
@@ -202,4 +204,4 @@ Rules that must hold every time, without exception, are enforced in code (determ
 
 ## Status
 
-0.12.2 · 2026-11-17. Released under the MIT License (see `LICENSE`).
+0.13.0 · 2026-11-18. Released under the MIT License (see `LICENSE`).

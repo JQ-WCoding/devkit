@@ -45,6 +45,12 @@ Things that do not change but could break: other features using the same tables,
 ## Risk check
 Only items whose signal appears. | Item | Question | Current · answer (evidence) | Action |
 
+## Design principles (recommendation)
+Not requirement items; develop and the verifier do not judge against them. Only principles whose signal appears in this change, at most 3, per `design-principles.md`. Repo status from the layer doc's `## Design principles` section.
+
+| Principle | Signal (`file:line`) | Suggestion | Repo status (adopted · undecided) |
+|---|---|---|---|
+
 ## Implementation plan
 Precedent: <existing commit or file to follow>
 

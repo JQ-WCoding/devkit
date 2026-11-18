@@ -12,6 +12,7 @@ Decide what to change, why and how far before touching code. This skill **does n
 |---|---|
 | [analysis-template.md](references/analysis-template.md) | Analysis doc format |
 | [risk-checklist.md](references/risk-checklist.md) | Step 4 risk check |
+| [design-principles.md](references/design-principles.md) | Step 4 design principles (recommendation only) |
 | [cross-check.md](references/cross-check.md) | Cross-check mode, glossary format, rules-change gate |
 
 ## 0. Read the input
@@ -50,6 +51,8 @@ Split the requirement into numbered items and keep the source wording apart from
 
 From [risk-checklist.md](references/risk-checklist.md), pick **only items whose signal appears** and write the question and answer (evidence or `needs confirmation`). Do not list items that do not apply.
 
+Then design principles: from [design-principles.md](references/design-principles.md), judge the language and code shape of the **changed files**, skip principles the layer doc declined, and recommend at most 3 whose signal appears in this change. They are recommendations, not requirement items: develop and the verifier do not judge against them. No signal, no section.
+
 ## 5. Implementation plan
 
 - Order: schema and data migration → data access (queries, mappers, repositories) → domain and services → API → UI → config and docs. Follow the repo rules if they set an order.
@@ -61,7 +64,7 @@ From [risk-checklist.md](references/risk-checklist.md), pick **only items whose 
 
 Save the analysis doc and show a summary (number of requirements, places that change, cautions from the risk check, whether there is a DB change, expected scope).
 
-Stop for approval only when a human must decide: `needs confirmation` items that a read or run cannot settle, cross-check questions, a DB change, a change to shared modules or components, a delete, or the user asked only for the analysis. Ask those with AskUserQuestion (with options and a recommendation) and record the answers with the date in the doc's "Decision log", the user's wording apart from your reading. Otherwise log `no gate: <reason>` there and go on.
+Stop for approval only when a human must decide: `needs confirmation` items that a read or run cannot settle, cross-check questions, a DB change, a change to shared modules or components, a delete, an `undecided` recommended design principle, or the user asked only for the analysis. A recommended `undecided` design principle gets one question on adopting it for that layer. Ask those with AskUserQuestion (with options and a recommendation) and record the answers with the date in the doc's "Decision log", the user's wording apart from your reading. Otherwise log `no gate: <reason>` there and go on.
 
 Either way, copy the doc to `analysis.approved.md` next to it (again after any later approved amendment); the verifier judges against that copy. Then move on to `devkit:develop`, unless the user only wanted the analysis.
 
