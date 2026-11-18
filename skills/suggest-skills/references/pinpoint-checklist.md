@@ -87,7 +87,7 @@ Subagents return only this table (`confirmed` rows first, up to 15 rows).
 
 ## Discard
 
-- General best practices, anything in language or framework docs.
+- General best practices, anything in language or framework docs. (Adopting or declining one is decided in `devkit:analyze` and recorded in the layer doc's `## Design principles` section, not suggested here.)
 - Anything linters, type checks, compilers or **existing tests** already prevent.
 - Taste visible in one file only (indentation, etc.). Indentation and line endings end with one line: "follow surrounding files".
 - Rows brought from other projects without evidence.

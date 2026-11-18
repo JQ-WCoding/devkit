@@ -38,7 +38,7 @@ Layers follow the repo structure. Give each sub-project (web, API, mobile, batch
 - End prohibitions with "forbidden" and pre-checks with "ask first". Add a short reason in parentheses only when it changes the next action (`per-row SQL parsing, exceeds transaction limit`).
 - Say what to use by name and how to use it with a **reference file link**. No long explanations.
 - At most one example code block per doc, one reference pattern.
-- Do not write general best practices Claude and developers already know, or things linters and compilers already block.
+- Do not write general best practices Claude and developers already know, or things linters and compilers already block. Exception: a layer doc's `## Design principles` section records the project's own adopt/decline decision on a general principle (evidence: user decision, asked in `devkit:analyze` and written as a docs step of its plan), never its explanation.
 - Add `As of: YYYY-MM-DD` and `Checked scope` (OS and environment checked, what was not verified) to facts that can change. Unchecked values are `unverified`.
 - For credentials, write only the location and delivery method (`delivered individually · never recorded in Git`).
 - Link docs with relative paths, and put `[Rules index](README.md) · [Common rules](common.md)` at the top of each layer doc.
