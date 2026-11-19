@@ -1,8 +1,11 @@
 """Skill load-structure test: structure checks (fail) + always-loaded / per-skill word measurement (report only).
 
-Usage: python3 -I tests/load_structure_test.py [root]
+Usage: python3 -I tests/load_structure_test.py [root | --diff <git-ref> [root]]
   no root: self-tests on temp fixtures, then the checks and the measurement on this repo.
   root:    only the structure checks on <root>/skills (exit 1 on a violation).
+  --diff:  only the measurement at <git-ref> (via git archive into a temp dir) vs the working tree of root
+           (default this repo), as before / after / delta; skill rows only where they changed. Report only:
+           exit 0 unless the ref is not a commit.
 
 Checks for every skills/<name>/ (no word limits anywhere):
   a. No orphan: every .md under references/ (recursively) is reachable by markdown links from SKILL.md,
@@ -18,6 +21,7 @@ Checks for every skills/<name>/ (no word limits anywhere):
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -207,32 +211,82 @@ def description(path):
     return d.group(1).strip().strip('"\'') if d else ''
 
 
-def measure(root):
-    out = subprocess.run([PY, '-I', os.path.join(root, 'hooks', 'session_start.py')], input='{}',
-                         capture_output=True, text=True, timeout=30).stdout
+def measurements(root):
+    """Always-loaded rows [(label, words)] and per-skill {name: (SKILL.md words, ref count, ref words)}."""
+    hook_py = os.path.join(root, 'hooks', 'session_start.py')
+    out = subprocess.run([PY, '-I', hook_py], input='{}', capture_output=True, text=True,
+                         timeout=30).stdout if os.path.isfile(hook_py) else ''
     try:
         hook = json.loads(out)['hookSpecificOutput']['additionalContext']
     except (ValueError, KeyError, TypeError):
         hook = out
     skills = os.path.join(root, 'skills')
-    names = sorted(n for n in os.listdir(skills) if os.path.isfile(os.path.join(skills, n, 'SKILL.md')))
+    names = sorted(n for n in os.listdir(skills) if os.path.isfile(os.path.join(skills, n, 'SKILL.md'))) \
+        if os.path.isdir(skills) else []
     agents_dir = os.path.join(root, 'agents')
     agents = sorted(f for f in os.listdir(agents_dir) if f.endswith('.md')) if os.path.isdir(agents_dir) else []
     listed = [n for n in names if model_invocable(os.path.join(skills, n, 'SKILL.md'))]
-    skill_desc = sum(words(description(os.path.join(skills, n, 'SKILL.md'))) for n in listed)
-    agent_desc = sum(words(description(os.path.join(agents_dir, a))) for a in agents)
-
-    print('\nAlways loaded (words)')
-    print(f'  session_start hook context   {words(hook):6}')
-    print(f'  skill descriptions ({len(listed):2})      {skill_desc:6}   (skills with disable-model-invocation are not listed)')
-    print(f'  agent descriptions ({len(agents):2})      {agent_desc:6}')
-    print(f'  total                        {words(hook) + skill_desc + agent_desc:6}')
-    print('\nPer skill (words): SKILL.md loads on use; every reference loads on demand (rule b), so ref words is the most it can add')
-    print(f'  {"skill":18} {"SKILL.md":>8} {"refs":>5} {"ref words":>9}')
+    always = [('session_start hook context', words(hook)),
+              (f'skill descriptions ({len(listed):2})', sum(words(description(os.path.join(skills, n, 'SKILL.md'))) for n in listed)),
+              (f'agent descriptions ({len(agents):2})', sum(words(description(os.path.join(agents_dir, a))) for a in agents))]
+    always.append(('total', sum(w for _, w in always)))
+    per_skill = {}
     for n in names:
         d = os.path.join(skills, n)
         refs = [os.path.join(p, f) for p, _, fs in os.walk(os.path.join(d, 'references')) for f in fs if f.endswith('.md')]
-        print(f'  {n:18} {words(read(os.path.join(d, "SKILL.md"))):8} {len(refs):5} {sum(words(read(r)) for r in refs):9}')
+        per_skill[n] = (words(read(os.path.join(d, 'SKILL.md'))), len(refs), sum(words(read(r)) for r in refs))
+    return always, per_skill
+
+
+def measure(root):
+    always, per_skill = measurements(root)
+    print('\nAlways loaded (words)')
+    for (label, w), note in zip(always, ['', '   (skills with disable-model-invocation are not listed)', '', '']):
+        print(f'  {label:28} {w:6}{note}')
+    print('\nPer skill (words): SKILL.md loads on use; every reference loads on demand (rule b), so ref words is the most it can add')
+    print(f'  {"skill":18} {"SKILL.md":>8} {"refs":>5} {"ref words":>9}')
+    for n, (md, nrefs, rw) in per_skill.items():
+        print(f'  {n:18} {md:8} {nrefs:5} {rw:9}')
+
+
+def git(root, *args, **kw):
+    return subprocess.run(['git', '-C', root] + list(args), capture_output=True, **kw)
+
+
+def diff(ref, root):
+    """Report-only: the measurement at <ref> (extracted with git archive into a temp dir) vs the working tree."""
+    r = git(root, 'rev-parse', '--verify', '--quiet', '--end-of-options', ref + '^{commit}', text=True)
+    if r.returncode != 0:
+        print(f'not a commit: {ref}')
+        sys.exit(1)
+    sha = r.stdout.strip()
+    tmp = tempfile.mkdtemp(prefix='load-diff-')
+    try:
+        archive = subprocess.Popen(['git', '-C', root, 'archive', '--format=tar', sha], stdout=subprocess.PIPE)
+        untar = subprocess.run(['tar', '-xf', '-', '-C', tmp], stdin=archive.stdout)
+        archive.stdout.close()
+        if archive.wait() or untar.returncode:
+            print(f'could not extract {ref}')
+            sys.exit(1)
+        (a0, s0), (a1, s1) = measurements(tmp), measurements(root)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    row = lambda b, a: f'{b:6} {a:6} {a - b:+6}'
+    print(f'Load change (words): {ref} ({sha[:7]}) -> working tree')
+    print(f'  {"always loaded":28} {"before":>6} {"after":>6} {"delta":>6}')
+    for (_, b), (label, a) in zip(a0, a1):
+        print(f'  {label:28} {row(b, a)}')
+    print(f'\n  {"":20} {"SKILL.md":^20} | {"refs":>4} {"ref words":^20}'.rstrip())
+    print(f'  {"skill (changed only)":20} {"before":>6} {"after":>6} {"delta":>6} | {"now":>4} {"before":>6} {"after":>6} {"delta":>6}')
+    zero = (0, 0, 0)
+    changed = [n for n in sorted(set(s0) | set(s1)) if s0.get(n, zero) != s1.get(n, zero)]
+    for n in changed:
+        (mb, _, rb), (ma, ra_n, ra) = s0.get(n, zero), s1.get(n, zero)
+        print(f'  {n:20} {row(mb, ma)} | {ra_n:4} {row(rb, ra)}')
+    if not changed:
+        print('  (no skill changed)')
+    tot = lambda s, i: sum(v[i] for v in s.values())
+    print(f'  {"total":20} {row(tot(s0, 0), tot(s1, 0))} | {tot(s1, 1):4} {row(tot(s0, 2), tot(s1, 2))}')
 
 
 # ---------- self-tests ----------
@@ -406,6 +460,29 @@ description: Demo.
     check('analyze split layout with an unindexed area file: exit 1', code == 1 and 'risk-checklist/batch.md' in out, out)
 
 
+def run_diff(*args):
+    r = subprocess.run([PY, '-I', os.path.abspath(__file__), '--diff'] + list(args),
+                       capture_output=True, text=True, timeout=60)
+    return r.returncode, r.stdout + r.stderr
+
+
+def test_diff_reports_changed_skills_only():
+    root = fixture()
+    write(os.path.join(root, 'skills', 'other', 'SKILL.md'), '---\nname: other\ndescription: Other.\n---\n# Other\n')
+    g = ['git', '-C', root, '-c', 'user.name=test', '-c', 'user.email=test@example.invalid', '-c', 'commit.gpgsign=false']
+    subprocess.run(g + ['init', '-q'], check=True)
+    subprocess.run(g + ['add', '-A'], check=True)
+    subprocess.run(g + ['commit', '-q', '-m', 'base'], check=True)
+    with open(os.path.join(root, 'skills', 'demo', 'SKILL.md'), 'a', encoding='utf-8') as f:
+        f.write('\nFive more words added here.\n')
+    code, out = run_diff('HEAD', root)
+    demo = next((l for l in out.splitlines() if l.strip().startswith('demo ')), '')
+    check('--diff: the edited skill shows +5 SKILL.md words, exit 0', code == 0 and demo.split()[3:4] == ['+5'], out)
+    check('--diff: an unchanged skill is not listed', 'other' not in out, out)
+    code, out = run_diff('no-such-ref', root)
+    check('--diff with an invalid ref: exit 1', code == 1 and 'not a commit' in out, out)
+
+
 def self_tests():
     for name, fn in list(globals().items()):
         if name.startswith('test_') and callable(fn):
@@ -413,6 +490,11 @@ def self_tests():
 
 
 def main():
+    if len(sys.argv) > 1 and sys.argv[1] == '--diff':
+        if len(sys.argv) not in (3, 4):
+            sys.exit('usage: load_structure_test.py --diff <git-ref> [root]')
+        diff(sys.argv[2], sys.argv[3] if len(sys.argv) == 4 else REPO)
+        return
     if len(sys.argv) > 1:
         errors = check_root(sys.argv[1])
         print('\n'.join(errors) if errors else 'load structure ok')
