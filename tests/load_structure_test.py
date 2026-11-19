@@ -7,9 +7,10 @@ Usage: python3 -I tests/load_structure_test.py [root]
 Checks for every skills/<name>/ (no word limits anywhere):
   a. No orphan: every .md under references/ (recursively) is reachable by markdown links from SKILL.md,
      directly or through linked .md files of the same skill.
-  b. Load condition, in one sentence: every reference file SKILL.md links to is linked at least once from a
-     table row with another non-empty cell, a list item (`-`, `*`, `1.`), or a sentence with a condition word
-     (if, when, unless, only, before, after, without, step); other mentions of the same file may be plain prose.
+  b. Load condition, in one sentence: every reference file is linked at least once (from SKILL.md or a linked
+     reference) by a table row with another non-empty cell, or by a sentence or list item that says when — a
+     condition word (if, when, unless, only, before, after, without, step) or `→`, an enclosing list item that
+     does, or a numbered step (an ordered item or a numbered heading); other mentions may be plain prose.
   c. Broken links: every relative link in SKILL.md and references/**/*.md resolves to an existing file, and a
      `#anchor` on a .md target must match one of its headings (GitHub slug). Links inside fenced code blocks
      and inline code spans are templates, not links, and are skipped; so are URLs with a scheme.
@@ -29,7 +30,9 @@ LINK = re.compile(r'\[[^\]]*\]\(([^)\s]+)\)')
 FENCE = re.compile(r'^\s*(```|~~~)')
 CODE_SPAN = re.compile(r'`[^`]*`')
 LIST_ITEM = re.compile(r'^\s*([-*+]|\d+[.)])\s')
-CONDITION = re.compile(r'\b(if|when|unless|only|before|after|without|step)\b', re.I)
+CONDITION = re.compile(r'\b(if|when|unless|only|before|after|without|step)\b|→', re.I)
+ORDERED = re.compile(r'^\s*\d+[.)]\s')
+STEP_HEADING = re.compile(r'^#{1,6}\s+\d')
 
 
 def read(path):
@@ -72,15 +75,41 @@ def resolve(src, target):
     return dest, anchor
 
 
-def conditioned(line, target):
-    """True for a list item, a table row with another non-empty cell, or a sentence with a condition word."""
-    if LIST_ITEM.match(line):
+def says_when(text):
+    return bool(CONDITION.search(LINK.sub('', text)))
+
+
+def context_conditioned(lines, n):
+    """For a list item at line n: an ordered item, an enclosing list item that says when or is ordered,
+    or a numbered heading above it."""
+    line = lines[n]
+    if ORDERED.match(line):
         return True
+    indent = len(line) - len(line.lstrip())
+    for k in range(n - 1, 0, -1):
+        prev = lines.get(k, '')
+        if STEP_HEADING.match(prev):
+            return True
+        if prev.startswith('#'):
+            return False
+        if LIST_ITEM.match(prev):
+            pi = len(prev) - len(prev.lstrip())
+            if pi < indent:
+                if ORDERED.match(prev) or says_when(prev):
+                    return True
+                indent = pi
+    return False
+
+
+def conditioned(line, target, lines=None, n=None):
+    """True for a table row with another non-empty cell, or a sentence or list item that says when (see b)."""
     if line.strip().startswith('|'):
         cells = [c.strip() for c in line.strip().strip('|').split('|')]
         return any(c and '](' + target + ')' not in c and not re.fullmatch(r':?-+:?', c) for c in cells)
     sentence = next((s for s in re.split(r'(?<=[.!?])\s+', line) if '](' + target + ')' in s), line)
-    return bool(CONDITION.search(LINK.sub('', sentence)))
+    if says_when(sentence):
+        return True
+    return bool(lines and LIST_ITEM.match(line) and context_conditioned(lines, n))
 
 
 def check_skill(skill_dir):
@@ -113,17 +142,19 @@ def check_skill(skill_dir):
                 todo.append(dest)
     errors += [f'orphan reference: {rel(r)} is not reachable from SKILL.md' for r in refs if r not in seen]
 
-    # b. load condition for each reference file SKILL.md links to
+    # b. load condition for each reference file, from SKILL.md or another reference of this skill
     introduced = {}
-    for n, line, target in links(skill_md):
-        dest, _ = resolve(skill_md, target)
-        if dest.endswith('.md') and os.sep + 'references' + os.sep in dest:
-            introduced.setdefault(dest, []).append((n, conditioned(line, target)))
+    for src in [skill_md] + refs:
+        lines = dict(prose_lines(read(src)))
+        for n, line, target in links(src):
+            dest, _ = resolve(src, target)
+            if dest in refs and dest != src:
+                introduced.setdefault(dest, []).append((f'{rel(src)}:{n}', conditioned(line, target, lines, n)))
     for dest, uses in introduced.items():
         if not any(ok for _, ok in uses):
-            lines = ','.join(str(n) for n, _ in uses)
-            errors.append(f'no load condition: {rel(skill_md)}:{lines} -> {os.path.relpath(dest, skill_dir)} '
-                          '(link it from a table row with a When cell, a list item or a sentence that says when)')
+            where = ', '.join(w for w, _ in uses)
+            errors.append(f'no load condition: {where} -> {os.path.relpath(dest, skill_dir)} '
+                          '(link it from a table row with a When cell, or a sentence or list item that says when)')
     return errors
 
 
@@ -168,7 +199,7 @@ def measure(root):
     print(f'  skill descriptions ({len(names):2})      {skill_desc:6}')
     print(f'  agent descriptions ({len(agents):2})      {agent_desc:6}')
     print(f'  total                        {words(hook) + skill_desc + agent_desc:6}')
-    print('\nPer skill (words, loaded on use)')
+    print('\nPer skill (words): SKILL.md loads on use; every reference loads on demand (rule b), so ref words is the most it can add')
     print(f'  {"skill":18} {"SKILL.md":>8} {"refs":>5} {"ref words":>9}')
     for n in names:
         d = os.path.join(skills, n)
@@ -250,6 +281,29 @@ def test_unconditional_link_fails():
     md = GOOD_SKILL.replace('| [guide.md](references/guide.md) | Step 1 |', '| [guide.md](references/guide.md) | |')
     code, out = run(fixture(md))
     check('table row with an empty When cell: exit 1', code == 1 and 'no load condition' in out and 'guide.md' in out, out)
+
+
+def test_list_item_needs_context():
+    md = GOOD_SKILL.replace('1. Read [notes.md](references/notes.md) when the input is a draft.',
+                            '## References\n\n- [notes.md](references/notes.md)')
+    code, out = run(fixture(md))
+    check('bare list item under a plain heading: exit 1', code == 1 and 'no load condition' in out and 'notes.md' in out, out)
+    md = GOOD_SKILL.replace('1. Read [notes.md](references/notes.md) when the input is a draft.',
+                            '- Input is a draft → plan it:\n  - Read [notes.md](references/notes.md).')
+    code, out = run(fixture(md))
+    check('list item under a parent that says when: exit 0', code == 0, out)
+    md = GOOD_SKILL.replace('1. Read [notes.md](references/notes.md) when the input is a draft.',
+                            '## 2. Plan\n\n- Read [notes.md](references/notes.md).')
+    code, out = run(fixture(md))
+    check('list item inside a numbered step heading: exit 0', code == 0, out)
+
+
+def test_nested_reference_needs_condition():
+    refs = {'guide.md': '# Guide\n\n## Usage\n\nBackground: [notes](notes.md).\n', 'notes.md': '# Notes\n'}
+    md = GOOD_SKILL.replace('1. Read [notes.md](references/notes.md) when the input is a draft.\n', '')
+    code, out = run(fixture(md, refs))
+    check('reference linked only from another reference in plain prose: exit 1',
+          code == 1 and 'no load condition' in out and 'notes.md' in out, out)
 
 
 def test_conditional_sentence_passes():
