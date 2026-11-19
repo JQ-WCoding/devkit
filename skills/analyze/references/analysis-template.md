@@ -60,10 +60,10 @@ In order. Per step: file to change · one-line change · how to verify.
 Objects · change · impact on existing data · location of change SQL and rollback SQL. A human runs them.
 
 ## Executable premises
-Statements the change relies on that a run can check (API call, screen action, read-only query). develop executes each before reporting; one not executed stays `not run`.
+Statements the change relies on that a run can check (API call, screen action, read-only query). develop executes each before reporting; one not executed stays `not run`. Kind: `premise` (default; rows without one) · `keep` (a keep-as-is item a run can observe) · `repro` (bug: fails before the fix). `keep`/`repro` run on pre-change code before the first edit (Before), then after.
 
-| Premise | How to execute | Result · run record |
-|---|---|---|
+| ID | Kind | Premise | How to execute | Before | After · run record |
+|---|---|---|---|---|---|
 
 ## Verification plan
 | Check | Method (automated check · screen · API · DB query) | Data |
