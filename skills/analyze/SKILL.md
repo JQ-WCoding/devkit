@@ -17,7 +17,7 @@ Decide what to change, why and how far before touching code. This skill **does n
 
 ## 0. Read the input
 
-Read any source with the tools connected to this session (`gh`/`glab` for issues); if none can read it, ask the user to paste it.
+Read any source with the tools connected to this session; if none can read it, ask the user to paste it. Issues: `gh issue view <n> --comments` / `glab issue view <n> --comments` (comments carry scope changes). A local note: also look for linked notes and attachments in the same folder.
 
 - Write to a tracker (comments, status changes) only on request.
 - Task ID: argument → issue key (`ABC-123`, `#45`) → date plus short name (`2026-11-04-refund-partial`).

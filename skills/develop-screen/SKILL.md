@@ -83,7 +83,7 @@ Show the spec summary (status, scope, layout, API, new or changed DB objects, ne
 Follow the profile's layer order (default: schema baseline → data access → service/rule → API → UI) and the repo rules it links. For modify, change only the requested parts and keep the keep-as-is list intact.
 
 - Match an existing implementation of the same kind for queries, saves, transactions and procedure calls.
-- Shared styles and shared components stay as they are; if they truly cannot do the job, give the reason and confirm first.
+- Shared styles and shared components stay as they are; if they truly cannot do the job, give the reason and confirm first. Preserve line endings when editing with a script.
 - Out-of-scope features decided at 🛑A go to the spec's "Deferred" section.
 
 ## 5. SQL (`<sql>/`)

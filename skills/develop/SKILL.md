@@ -20,8 +20,8 @@ Make no changes outside the approved plan. If something in the plan cannot be do
 - Do the plan one step at a time, in order. When a step is done, mark it `done` in the analysis doc.
 - Follow the approach of the existing files you are imitating and `docs/rules/`. By default do not modify shared modules, shared styles or shared components; if it is truly needed, give the reason and confirm first.
 - Every changed line must map to a requirement item. Defects you happen to see are not fixed; list them in the report.
-- A change to `docs/rules` (or a glossary) follows the rules-change gate in `devkit:analyze`'s [cross-check.md](../analyze/references/cross-check.md#rules-change-gate): read only its `## Evidence types` table and its `## Rules-change gate` section.
-- Preserve encoding when editing with a script.
+- A change to `docs/rules` (or a glossary) follows the rules-change gate in `devkit:analyze`'s [cross-check.md](../analyze/references/cross-check.md#rules-change-gate): read only its `## Evidence types` and `## Rules-change gate` sections.
+- When editing files with a script, preserve line endings (CRLF/LF) and encoding.
 
 ## 2. DB change (if any)
 
