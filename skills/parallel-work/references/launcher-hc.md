@@ -10,7 +10,8 @@ Create `<scratchpad>/reports/` first. Launch each worker exactly like this (don'
 hc run --bg --name <slug> --cwd <work folder> -- claude --permission-mode auto --add-dir <scratchpad>/reports -n <slug> "<filled brief>"
 ```
 
-- After launching, check that `hc get <slug>` shows `status.state` as `working`. If it is `blocked`, show the user `hc read <slug>` and get their answer. Never answer for them with `--force`.
+- About 5 seconds after launching, read each worker's screen with `hc read --lines 15 <slug>`. If it shows the `Adding a new directory:` trust prompt for exactly `<scratchpad>/reports` (the folder this run created), answer it with `hc keys <slug> down enter` ("Yes, add it") without asking — the user has approved this standing answer. A trust prompt for any other path, or any other dialog, still goes to the user.
+- Then check that `hc get <slug>` shows `status.state` as `working`. If it is `blocked`, show the user `hc read <slug>` and get their answer. Never answer for them with `--force`.
 - Workers end when the central session ends. If the central session has to close, add `--outlive-parent` to `hc run` before launching.
 
 ## Wait and receive
