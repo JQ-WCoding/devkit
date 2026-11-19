@@ -1,6 +1,6 @@
 ---
 name: analyze
-description: Before changing code, turn a requirement, issue or bug (any source) into an analysis doc — current-code trace, impact, common risk check, implementation plan — and get approval; on request, cross-checks intent sources against current state with separate analysts. Use for "analyze this issue", "where do I fix this", "find the bug cause", "check impact", "cross-check this rules draft".
+description: Before changing code, turn a requirement, issue or bug (any source) into an analysis doc and get approval; on request, cross-checks intent sources against current state with separate analysts. Use for "analyze this issue", "where do I fix this", "find the bug cause", "check impact", "cross-check this rules draft".
 argument-hint: "<issue link | file path | requirement> [task ID]"
 ---
 
@@ -17,14 +17,7 @@ Decide what to change, why and how far before touching code. This skill **does n
 
 ## 0. Read the input
 
-Any task source is fine.
-
-| Input | How to read |
-|---|---|
-| Pasted text, images, attachments | Read as is. Open images with Read |
-| Local file (Markdown, Obsidian note, PDF, document) | Read the path. Look for linked notes and attachments in the same folder |
-| GitHub/GitLab issue | `gh issue view <number> --comments` / `glab issue view <number> --comments` |
-| Jira, Notion, Confluence, Google Docs and other links | Read with an MCP tool or CLI connected to this session. If none, ask the user to paste the content |
+Read any source with the tools connected to this session (`gh`/`glab` for issues); if none can read it, ask the user to paste it.
 
 - Write to a tracker (comments, status changes) only on request.
 - Task ID: argument → issue key (`ABC-123`, `#45`) → date plus short name (`2026-11-04-refund-partial`).

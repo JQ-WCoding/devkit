@@ -1,8 +1,8 @@
 # How the rules are organised
 
-Contents: two layers · file roles · writing style · policies for every project · how rules grow
+Contents: two layers · file roles · writing style · policies for every project
 
-This layout generalises a rules setup refined on a real project. Only the **structure, style and policies** carry over. Table rows (module names, paths, naming, prohibitions) are filled only from evidence in the target repo or from user answers.
+Only the **structure, style and policies** carry over.
 
 ## Two layers
 
@@ -47,15 +47,8 @@ Layers follow the repo structure. Give each sub-project (web, API, mobile, batch
 
 These are working attitudes, not project facts, so the template sentences are used as is (change only what the interview asked to change). They record the same content as the `using-devkit` principles in a team-shared doc — teammates who do not use devkit see the same standard.
 
-- Make the simplest change within the requested scope. No unrelated refactoring, reordering or extra features. Preserve user changes.
-- If unclear, ask or state assumptions. Never say you checked a result you did not actually check.
-- Verify only the relevant parts, when needed or requested. Not a mandatory step for commits or PRs. Never write an unrun check as passed.
-- Keep the surrounding code's style and line endings. No whole-file reformatting or CRLF/LF conversion.
+- The common.md template's working-principle, code-style and verification sentences in templates.md, as is.
 - Check the environment doc before running anything. Automation tools never start or stop servers or tunnels on their own (interview default); if the interview allows it, servers start only through `devkit:run-app`, and tunnels still never.
 - DB writes only after the target and scope are approved; by default the developer runs them. Writing a fix is not approval to run it.
 - No `git add .`, no `--force` or `--no-verify`; add, commit, push and PR only after user confirmation.
 - Write in `git.md` that when repo rules (e.g. no commit trailers) differ from the system's default guidance, the repo rules win.
-
-## How rules grow
-
-The original project's rules docs grew by 13 commits in the two weeks after first being shared, some added right after the commit that fixed a problem (a batched-INSERT feature → the very next commit added the rule "bulk registration uses batched INSERT", with the reason "exceeds transaction limit" kept). Do not try to make it complete from the start. Setup lays down only the skeleton and policies; pinpoints with clear evidence are added over time with `devkit:suggest-skills`.
