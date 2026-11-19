@@ -26,8 +26,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
 PY = sys.executable
 
-LINK = re.compile(r'\[[^\]]*\]\(([^)\s]+)\)')
-FENCE = re.compile(r'^\s*(```|~~~)')
+LINK = re.compile(r'\[[^\]]*\]\(\s*(?:<([^>]+)>|([^)\s]+))(?:\s+(?:"[^"]*"|' + r"'[^']*'" + r'))?\s*\)')
+FENCE = re.compile(r'^\s*(`{3,}|~{3,})')
 CODE_SPAN = re.compile(r'`[^`]*`')
 LIST_ITEM = re.compile(r'^\s*([-*+]|\d+[.)])\s')
 CONDITION = re.compile(r'\b(if|when|unless|only|before|after|without|step)\b|→', re.I)
@@ -40,22 +40,34 @@ def read(path):
         return f.read()
 
 
+def unfenced(text):
+    """(line number, line) outside fenced code blocks; a fence closes only on the same marker, at least as long."""
+    fence = None
+    for n, line in enumerate(text.splitlines(), 1):
+        m = FENCE.match(line)
+        if m:
+            mark = m.group(1)
+            if fence is None:
+                fence = mark
+                continue
+            if mark[0] == fence[0] and len(mark) >= len(fence) and not line.strip()[len(mark):].strip():
+                fence = None
+                continue
+        if fence is None:
+            yield n, line
+
+
 def prose_lines(text):
     """(line number, line) outside fenced code blocks, with inline code spans blanked."""
-    fenced = False
-    for n, line in enumerate(text.splitlines(), 1):
-        if FENCE.match(line):
-            fenced = not fenced
-            continue
-        if not fenced:
-            yield n, CODE_SPAN.sub('``', line)
+    for n, line in unfenced(text):
+        yield n, CODE_SPAN.sub('``', line)
 
 
 def links(path):
     """(line number, line, target) for each relative link in a markdown file."""
     for n, line in prose_lines(read(path)):
         for m in LINK.finditer(line):
-            target = m.group(1)
+            target = m.group(1) or m.group(2)
             if not re.match(r'^[a-zA-Z][a-zA-Z0-9+.-]*:', target):
                 yield n, line, target
 
@@ -66,7 +78,15 @@ def slug(heading):
 
 
 def anchors(path):
-    return {slug(line.lstrip('#')) for _, line in prose_lines(read(path)) if re.match(r'^#{1,6}\s', line)}
+    """GitHub heading slugs: code spans keep their text; a repeated slug gets -1, -2, ..."""
+    seen, out = {}, set()
+    for _, line in unfenced(read(path)):
+        if re.match(r'^#{1,6}\s', line):
+            s = slug(line.lstrip('#'))
+            k = seen.get(s, 0)
+            out.add(s if k == 0 else f'{s}-{k}')
+            seen[s] = k + 1
+    return out
 
 
 def resolve(src, target):
@@ -92,6 +112,8 @@ def context_conditioned(lines, n):
             return True
         if prev.startswith('#'):
             return False
+        if prev.strip() and not LIST_ITEM.match(prev) and len(prev) - len(prev.lstrip()) < indent:
+            return False
         if LIST_ITEM.match(prev):
             pi = len(prev) - len(prev.lstrip())
             if pi < indent:
@@ -105,7 +127,7 @@ def conditioned(line, target, lines=None, n=None):
     """True for a table row with another non-empty cell, or a sentence or list item that says when (see b)."""
     if line.strip().startswith('|'):
         cells = [c.strip() for c in line.strip().strip('|').split('|')]
-        return any(c and '](' + target + ')' not in c and not re.fullmatch(r':?-+:?', c) for c in cells)
+        return any(LINK.sub('', c).strip() and not re.fullmatch(r':?-+:?', c) for c in cells)
     sentence = next((s for s in re.split(r'(?<=[.!?])\s+', line) if '](' + target + ')' in s), line)
     if says_when(sentence):
         return True
@@ -174,6 +196,11 @@ def words(text):
     return len(text.split())
 
 
+def model_invocable(path):
+    m = re.match(r'---\n(.*?)\n---', read(path), re.S)
+    return not (m and re.search(r'^disable-model-invocation:\s*true\s*$', m.group(1), re.M))
+
+
 def description(path):
     m = re.match(r'---\n(.*?)\n---', read(path), re.S)
     d = re.search(r'^description:\s*(.*)$', m.group(1), re.M) if m else None
@@ -191,12 +218,13 @@ def measure(root):
     names = sorted(n for n in os.listdir(skills) if os.path.isfile(os.path.join(skills, n, 'SKILL.md')))
     agents_dir = os.path.join(root, 'agents')
     agents = sorted(f for f in os.listdir(agents_dir) if f.endswith('.md')) if os.path.isdir(agents_dir) else []
-    skill_desc = sum(words(description(os.path.join(skills, n, 'SKILL.md'))) for n in names)
+    listed = [n for n in names if model_invocable(os.path.join(skills, n, 'SKILL.md'))]
+    skill_desc = sum(words(description(os.path.join(skills, n, 'SKILL.md'))) for n in listed)
     agent_desc = sum(words(description(os.path.join(agents_dir, a))) for a in agents)
 
     print('\nAlways loaded (words)')
     print(f'  session_start hook context   {words(hook):6}')
-    print(f'  skill descriptions ({len(names):2})      {skill_desc:6}')
+    print(f'  skill descriptions ({len(listed):2})      {skill_desc:6}   (skills with disable-model-invocation are not listed)')
     print(f'  agent descriptions ({len(agents):2})      {agent_desc:6}')
     print(f'  total                        {words(hook) + skill_desc + agent_desc:6}')
     print('\nPer skill (words): SKILL.md loads on use; every reference loads on demand (rule b), so ref words is the most it can add')
@@ -304,6 +332,30 @@ def test_nested_reference_needs_condition():
     code, out = run(fixture(md, refs))
     check('reference linked only from another reference in plain prose: exit 1',
           code == 1 and 'no load condition' in out and 'notes.md' in out, out)
+
+
+def test_review_edge_cases():
+    refs = {'guide.md': '# Guide\n\n## Usage\n\n## Run `--no-fetch` mode\n\n## Usage\n', 'notes.md': '# Notes\n'}
+    md = GOOD_SKILL.replace('Later prose may mention [guide.md](references/guide.md#usage) again.',
+                            'Later: [a](references/guide.md#run---no-fetch-mode), [b](references/guide.md#usage-1).')
+    code, out = run(fixture(md, refs))
+    check('anchors keep code-span text and number repeats: exit 0', code == 0, out)
+    md = GOOD_SKILL.replace('Later prose may mention [guide.md](references/guide.md#usage) again.',
+                            'Later prose: [c](references/gone.md "title").')
+    code, out = run(fixture(md))
+    check('titled link to a missing file: broken link, exit 1', code == 1 and 'gone.md' in out, out)
+    md = GOOD_SKILL.replace('```markdown\nTemplate:', '````markdown\n```\n[x](references/zzz.md)\n```\nTemplate:').replace(
+        'are not links.\n```', 'are not links.\n````')
+    code, out = run(fixture(md))
+    check('a ``` line inside a ```` fence stays fenced: exit 0', code == 0, out)
+    md = GOOD_SKILL.replace('1. Read [notes.md](references/notes.md) when the input is a draft.',
+                            '- If x:\n\nA separate paragraph.\n\n  - [notes.md](references/notes.md)')
+    code, out = run(fixture(md))
+    check('list item after a paragraph does not inherit an earlier parent: exit 1', code == 1 and 'notes.md' in out, out)
+    md = GOOD_SKILL.replace('1. Read [notes.md](references/notes.md) when the input is a draft.', '').replace(
+        '| [guide.md](references/guide.md) | Step 1 |', '| [guide.md](references/guide.md) | [notes.md](references/notes.md) |')
+    code, out = run(fixture(md))
+    check('table row whose only other cell is a link: exit 1', code == 1 and 'no load condition' in out, out)
 
 
 def test_conditional_sentence_passes():

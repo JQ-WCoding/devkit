@@ -1,0 +1,21 @@
+# Runs every tracked *_test.py on pull requests and pushes, so a broken skill or script never reaches main
+# (the marketplace installs from main, not from the release tag).
+name: Test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Run tests
+        run: |
+          for t in $(git ls-files '*_test.py'); do
+            echo "== $t"
+            python3 -I "$t" || exit 1
+          done

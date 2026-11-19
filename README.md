@@ -202,7 +202,7 @@ Rules that must hold every time, without exception, are enforced in code (determ
 - The installed copy is per version. To ship changes to the team, bump `version` in `.claude-plugin/plugin.json` (`plugin update` ignores changes at the same version). Pushing that bump to `main` creates the `vX.Y.Z` tag and GitHub release (`.github/workflows/release.yml`); edit the generated notes on GitHub if needed.
 - Anything that differs per project (module names, paths, naming) does not belong in devkit. Put it in each repo's `docs/rules/` and `.claude/`.
 - A new rule or skill step cites a real failure it would have prevented (a commit, a session excerpt or a run record). An idea from a review or another tool stays a candidate until such a failure shows up.
-- Keep prompts to their core and load text only when it is needed: a reference file is linked from its `SKILL.md` (or a linked reference) with when to read it. `python3 -I tests/load_structure_test.py` checks this and prints the always-loaded and per-skill word counts (no limits). The release workflow runs every `*_test.py` before tagging.
+- Keep prompts to their core and load text only when it is needed: a reference file is linked from its `SKILL.md` (or a linked reference) with when to read it. `python3 -I tests/load_structure_test.py` checks this and prints the always-loaded and per-skill word counts (no limits). Every `*_test.py` runs on pull requests and pushes to `main` (`.github/workflows/test.yml`) and again before tagging.
 
 ## Status
 
