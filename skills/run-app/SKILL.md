@@ -1,6 +1,6 @@
 ---
 name: run-app
-description: Starts, checks and stops a repo's app servers (API, web) without an IDE from the repo's .devkit/runtime.json — preflight, start in dependency order, health wait, logs, a run record. Use for "서버 띄워줘", "start the API and web", "check it on a running server", "stop the servers", and before screen or API checks. Without the config it offers to write one; never opens tunnels or VPNs.
+description: Starts, checks and stops a repo's app servers (API, web) without an IDE from the repo's .devkit/runtime.json. Use for "서버 띄워줘", "start the API and web", "check it on a running server", "stop the servers", and before screen or API checks. Without the config it offers to write one; never opens tunnels or VPNs.
 argument-hint: "[preflight | up | status | down | logs] [service...]"
 ---
 

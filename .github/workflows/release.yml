@@ -17,6 +17,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Run tests
+        run: |
+          for t in $(git ls-files '*_test.py'); do
+            echo "== $t"
+            python3 -I "$t" || exit 1
+          done
+
       - name: Tag and release the new version
         env:
           GH_TOKEN: ${{ github.token }}
