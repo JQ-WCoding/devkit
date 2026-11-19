@@ -10,7 +10,7 @@ Languages: GitHub Octoverse 2025 top 10 by contributors (TypeScript, Python, Jav
 
 1. Language and shape come from the **changed files**, not the repo: a Java API and a TypeScript web app in one repo get different rows, and function-style or module-style code gets no class rows.
 2. Read the repo decisions (next section). Skip every principle the repo declined.
-3. Read only the [language files](#language-files) of the changed files' languages; a language not listed gets only the Common table. From the Common table (not for Shell or HCL) and the language table, keep only rows whose signal appears **in this change**. At most 3. No signal, no section. When the change adds or extends classes and a language file you read has a row pointing to Java ("as in Java", "Same as Common and Java"), also read [java.md](design-principles/java.md).
+3. Read only the [language files](#language-files) of the changed files' languages; a language not listed gets only the Common table. From the Common table (not for Shell or HCL) and the language table, keep only rows whose signal appears **in this change**. At most 3. No signal, no section. When a language file you read has a row pointing to Java ("as in Java", "Same as Common and Java"), also read [java.md](design-principles/java.md).
 4. Write them in the analysis doc's "Design principles (recommendation)" section with the evidence `file:line`. Never turn them into requirement items or verification items.
 5. A recommended principle with no repo decision yet gets repo status `undecided` and one question at the 🛑 gate: "adopt for `<layer>`?" (adopt / decline / decide later). Once recorded it is not asked again.
 
