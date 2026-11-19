@@ -90,5 +90,42 @@
     "expected_behavior": [
       "Only explains, without using develop"
     ]
+  },
+  {
+    "skills": [
+      "develop"
+    ],
+    "query": "Implement the approved analysis for the bug where the discount total ignores the second coupon (its Executable premises table has repro row R1: the existing unit test command for the discount module with a new case for two coupons)",
+    "files": [],
+    "expected_behavior": [
+      "Before the first code edit, writes only the new test case and runs baseline.py before --kind repro --repro-path <that test file> for R1 on the unchanged code",
+      "If R1 is red there, implements the fix and runs baseline.py after for R1, expecting green",
+      "If R1 is already green before the fix, stops without editing code and sends the task back to devkit:analyze because the cause is wrong",
+      "Passes the baseline run records to devkit:verifier, which counts R1 met only with before red and after green"
+    ]
+  },
+  {
+    "skills": [
+      "develop"
+    ],
+    "query": "Implement the approved analysis for renaming the export column (keep row K1: the CLI report command for last month must print the same totals)",
+    "files": [],
+    "expected_behavior": [
+      "Captures K1 with baseline.py before --kind keep before any edit, and reruns it with baseline.py after when done",
+      "If the two before runs differ because of a timestamp, records K1 as unstable or adds an --ignore rule under a new ID before editing; it does not compare an unstable row",
+      "Reports K1 as same or differs from the run, not from reading the code"
+    ]
+  },
+  {
+    "skills": [
+      "develop"
+    ],
+    "query": "Fix this small bug in a repo with no test framework and no runnable app: the README example command prints the wrong version string (one line in a shell script)",
+    "files": [],
+    "expected_behavior": [
+      "Treats it as a tiny bug fix and still tries a repro: runs the script command with baseline.py before --kind repro without --task, then after the fix",
+      "Does not install a test framework, start servers or require devkit:run-app",
+      "If nothing can run, reports the repro as not run (PARTIAL) instead of blocking or claiming it passed"
+    ]
   }
 ]

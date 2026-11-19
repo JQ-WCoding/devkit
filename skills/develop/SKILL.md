@@ -10,10 +10,14 @@ Make no changes outside the approved plan. If something in the plan cannot be do
 
 ## 0. Preconditions
 
-- Find the analysis doc: argument → the analysis just approved in this conversation → an `analysis.md` in the work folder (the local work-folder rule in `docs/rules/`, else `.devkit/work/`) whose branch name or issue key matches → the most recent `analysis.md` (confirm which). If none, run `devkit:analyze` first. For a tiny change (one file, a few lines, no risk-check items), you may show a three-line summary without an analysis doc and proceed.
+- Find the analysis doc: argument → the analysis just approved in this conversation → an `analysis.md` in the work folder (the local work-folder rule in `docs/rules/`, else `.devkit/work/`) whose branch name or issue key matches → the most recent `analysis.md` (confirm which). If none, run `devkit:analyze` first. For a tiny change (one file, a few lines, no risk-check items), you may show a three-line summary without an analysis doc and proceed; a tiny bug fix still gets a `repro` row when one can run.
 - If related files changed since the analysis's base commit (`git log <base commit>..HEAD -- <files>`), say so and ask whether to update the analysis.
 - Branch: unless the user asks, work on the current branch. When asked for a new branch, follow the naming rule in `docs/rules/git.md` (else `feat/<task ID>-<short name>`, `fix/…`).
 - If the working tree has changes unrelated to this task, say so and do not touch those files.
+
+## 0.5 Baseline (before the first edit)
+
+If there are `keep` or `repro` rows, capture each on the unchanged code with `baseline.py before` per [baseline.md](references/baseline.md). A `repro` that passes there means the cause is wrong: stop and go back to `devkit:analyze`. A row that cannot run is `not run` (PARTIAL), never a block.
 
 ## 1. Implement
 
@@ -34,7 +38,7 @@ Make no changes outside the approved plan. If something in the plan cannot be do
 
 - Automated checks: when the analysis doc's verification plan or the user calls for them, run the checks for the changed subprojects through `devkit:check-runner`; otherwise name them and ask.
 - Behavior check: if the repo has `.devkit/runtime.json`, start the app with `devkit:run-app` (`up --task <task ID>`) and stop what you started afterwards; otherwise do not start servers yourself and check only in an environment the user started. Confirm saved values by querying again. Insert recognizable dummy test data and report what was left behind.
-- Executable premises (the analysis doc's table): execute each before the report, through `devkit:run-app`, a read-only API call or query, or an environment the user started, and record it (`--kind runtime|db`). With none of these available it stays `not run`, never assumed true. A false premise: stop before commit or merge and go back to `devkit:analyze`.
+- Executable premises (the analysis doc's table): execute each before the report, through `devkit:run-app`, a read-only API call or query, or an environment the user started, and record it (`--kind runtime|db`; `keep`/`repro` rows: `baseline.py after`). With none of these available it stays `not run`, never assumed true. A false premise: stop before commit or merge and go back to `devkit:analyze`.
 - Verifier input: the frozen `analysis.approved.md` (else `analysis.md`, and say there was no frozen copy), the base commit, the `check-runner` result and the run record paths; never your report.
 - Record each verdict: pass the `CHECKS:` line from `devkit:check-runner` and the `VERDICT:` line from `devkit:verifier` to `python3 -I "${CLAUDE_PLUGIN_ROOT}/skills/check/scripts/record_run.py" --repo <repo> --task <task ID> --line "<line>"` (`run-app up` records itself). For a DB or API check, record `--kind db|runtime --verdict PASS|FAIL|PARTIAL --summary <text>` with `--items` (`[{"name","result","detail"}]`, no credentials).
 - Regression: go through the analysis doc's **keep-as-is list** one by one.

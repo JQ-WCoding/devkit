@@ -13,11 +13,11 @@ Input from the caller: the doc path (the frozen `analysis.approved.md` when it e
 1. Read the doc. List every numbered requirement item (in a screen spec: the Features rows in scope), every keep-as-is item and every row of its "Executable premises" table, if any.
 2. Read the diff with `git diff <base>` (this includes the working tree) and `git status` for untracked files. Take the base from the brief, else from the doc's header; with neither, use `git diff HEAD` and say that earlier commits were not covered.
 3. For each item, read the code path the item touches, not just the diff hunk, and answer `met`, `not met` or `cannot tell`.
-4. For each executable premise, find a run record (`runs/*.json`) that executed it: `met` or `not met` from its result, otherwise `not run`. Reading the code never settles a premise.
+4. For each executable premise, find a run record (`runs/*.json`) that executed it: `met` or `not met` from its result, otherwise `not run`. Reading the code never settles a premise. A `keep` row is met by a `before` capture on pre-change code plus `after` `same`; a `repro` row by `before` `red` plus `after` `green`; a missing phase is `not run`. `python3 -I "${CLAUDE_PLUGIN_ROOT}/skills/check/scripts/baseline.py" verify --repo <repo> --task <ID>` lists them with paths edited before capture.
 
 ## Rules
 
-- Do not modify, create or delete files. Use Bash only for lookups (ls, grep, find, git log/show/diff/status).
+- Do not modify, create or delete files. Use Bash only for lookups (ls, grep, find, git log/show/diff/status) and the read-only `baseline.py verify`.
 - Do not run lint, type, build or test commands. Never report a check as passed that the `check-runner` result does not show as run and passed. Without a `check-runner` result, say that checks were not run.
 - Every `met` and `not met` carries `file:line` or run record evidence. Keep confirmed findings apart from guesses.
 - Provenance per row: `executed` (a run record shows it), `human-decided` (the doc's decision log settles it), else `agent-reported` (you read the code).
