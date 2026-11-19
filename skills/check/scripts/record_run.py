@@ -1,4 +1,4 @@
-"""Write one machine-readable run record (a check, verifier, runtime or DB verdict) as JSON.
+"""Write one machine-readable run record (a check, verifier, runtime, DB or baseline verdict) as JSON.
 
 Usage:
   python3 -I record_run.py --repo <repo> [--task <id>] --line "CHECKS: PASS (2 not run)" [--summary <text>]
@@ -18,9 +18,10 @@ import subprocess
 import sys
 
 SCHEMA = 'devkit.run/1'
-KINDS = ('checks', 'verifier', 'runtime', 'db')
+KINDS = ('checks', 'verifier', 'runtime', 'db', 'baseline')
 VERDICTS = ('PASS', 'FAIL', 'PARTIAL')
 ITEM_KEYS = {'name', 'result', 'detail'}
+BASELINE_KEYS = {'phase', 'base', 'pre_change', 'fingerprint'}  # written by baseline.py only
 # last-line contracts of the check-runner and verifier agents
 LINE = re.compile(r'^\s*(CHECKS|VERDICT):\s*(PASS|FAIL)\b\s*(\((.*)\))?\s*$')
 TASK_ID = re.compile(r'^[\w.#-]{1,80}$')  # issue keys (ABC-123, #45) and dated slugs; no path separators
@@ -91,9 +92,11 @@ def check_items(items):
     return items
 
 
-def write_record(repo, kind, verdict, summary, task=None, items=None, log=None, started_at=None, work_dir=None):
+def write_record(repo, kind, verdict, summary, task=None, items=None, log=None, started_at=None, work_dir=None, extra=None):
     if kind not in KINDS:
         raise ValueError(f'kind must be one of {KINDS}')
+    if extra and (kind != 'baseline' or set(extra) - BASELINE_KEYS):
+        raise ValueError(f'extra keys are allowed only on baseline records: {sorted(BASELINE_KEYS)}')
     if verdict not in VERDICTS:
         raise ValueError(f'verdict must be one of {VERDICTS}')
     if task and not TASK_ID.match(task):
@@ -110,7 +113,7 @@ def write_record(repo, kind, verdict, summary, task=None, items=None, log=None, 
         'branch': git(repo, 'branch', '--show-current'), 'commit': git(repo, 'rev-parse', '--short', 'HEAD'),
         'dirty': bool(git(repo, 'status', '--porcelain', '--untracked-files=no')),
         'started_at': started_at, 'finished_at': now.isoformat(timespec='seconds'),
-        'items': check_items(items or []), 'log': log,
+        'items': check_items(items or []), 'log': log, **(extra or {}),
     }
     stamp = now.strftime('%Y%m%dT%H%M%SZ')
     path = os.path.join(folder, f'{stamp}-{kind}.json')

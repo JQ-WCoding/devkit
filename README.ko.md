@@ -14,7 +14,7 @@
 | 상시 | 언어 훅 `hooks/user_prompt.py` | 요청마다 한 줄을 붙여, 진행 메시지·질문·최종 답변을 그 요청의 언어(어떤 언어든)로 쓰게 한다. 끄기: `/plugin` > devkit > Configure options > Language reminder, 또는 settings `env`에 `DEVKIT_LANG_HOOK=off` |
 | 상시 | 가드 훅 `hooks/guard.py` | 셸 명령 실행 직전에 Git·서버 기동 규칙을 코드로 강제한다 ("가드 훅" 참고) |
 | 분석 | `/devkit:analyze` | 어떤 출처의 요구사항·이슈·버그든 읽고, 현재 코드 추적 → 차이 → 영향 → 공통 위험 점검 → 구현 계획을 분석 문서로 정리한 뒤 승인을 받고 승인본을 고정한다. 요청하면 교차 검증 모드로 의도 출처와 현재 상태를 서로 다른 분석가가 읽고, 코드만 근거인 항목이 규칙이 되지 않게 스크립트로 비교한 뒤 불일치만 묻는다 |
-| 구현 | `/devkit:develop` | 승인된 계획 구현, DB 변경과 롤백 SQL(`00_check` → `01_change` → `99_rollback`, 실행은 사람이), 검증과 회귀 점검(실행 가능한 전제는 보고 전에 실행하고, 거짓이면 analyze로 되돌린다), 요구사항별 보고 |
+| 구현 | `/devkit:develop` | 승인된 계획 구현, DB 변경과 롤백 SQL(`00_check` → `01_change` → `99_rollback`, 실행은 사람이), 검증과 회귀 점검(실행 가능한 전제는 보고 전에 실행하고, 거짓이면 analyze로 되돌린다. `keep`/`repro` 행은 첫 수정 전에 변경 전 코드에서 `skills/check/scripts/baseline.py`로 기록하고 수정 후 비교하며, 수정 전에 이미 통과하는 repro는 analyze로 되돌린다), 요구사항별 보고 |
 | 화면 | `/devkit:develop-screen` | 화면설계서(첨부·로컬 pptx, pdf, 슬라이드 이미지, 연결된 도구가 읽는 링크)로 화면을 만든다: 페이지 분리, 화면별 상태와 spec 작성, 영향 추적, DB 설계, 승인, 구현, SQL, 목업 대조, 기능 번호별 보고. 저장소별 폴더·계층·상태 기호·용어·검사는 로컬 `.devkit/develop-screen/profile.md`에서 읽는다 |
 | 검증 | `/devkit:check` | lint·타입·빌드·테스트 명령을 찾아 관련된 것만 실행하고 실행 기록을 남긴다 (사용자 호출 전용) |
 | 실행 | `/devkit:run-app` | 저장소의 로컬 `.devkit/runtime.json`으로 IDE 없이 앱 서버를 띄우고 확인하고 내린다: TCP 사전 점검(DB 터널), 의존 순서대로 기동, 헬스 대기, 체크아웃별 로그·PID 상태, 워크트리별 별도 포트, 런타임 실행 기록. 설정 파일이 없으면 작성을 제안한다. 터널은 열지 않고, 이미 쓰이는 포트는 가로채지 않는다 |
@@ -30,7 +30,7 @@
 | 탐색 | 에이전트 `devkit:code-reader` | 여러 파일에 걸친 탐색을 맡아 결론만 돌려준다 (세션 모델, low effort, 읽기 전용) |
 | 검증 | 에이전트 `devkit:check-runner` | 변경에 해당하는 lint·타입·빌드·테스트 명령을 실행해 종료 코드와 관련 오류만 돌려주고, 마지막 줄은 `CHECKS: PASS`, `CHECKS: PASS (<k> not run)`, `CHECKS: FAIL` 중 하나. 의존성 설치·DB가 필요한 테스트·서버 기동은 하지 않고 `needs install` / `not run`으로 남긴다 (세션 모델, low effort, 소스 수정 없음) |
 | 화면 | 에이전트 `devkit:spec-analyst` | 설계서 페이지(텍스트, 노트, 목업)를 develop-screen spec 양식으로 정리한다. 추정은 `Estimate:`, 애매한 상태는 확인 필요로 남긴다 (세션 모델, spec 파일만 쓴다) |
-| 검증 | 에이전트 `devkit:verifier` | 분석 문서나 화면 spec의 요구사항·유지 항목별로 diff를 대조해 met / not met / cannot tell 을 `file:line` 근거와 함께 판정하고, 실행 가능한 전제는 실행 기록으로 판정하며, 마지막 줄은 `VERDICT: PASS` / `VERDICT: PASS (<k> not run)`(PARTIAL로 기록) / `VERDICT: FAIL` (세션 모델·effort, 읽기 전용) |
+| 검증 | 에이전트 `devkit:verifier` | 분석 문서나 화면 spec의 요구사항·유지 항목별로 diff를 대조해 met / not met / cannot tell 을 `file:line` 근거와 함께 판정하고, 실행 가능한 전제는 실행 기록으로 판정하며(`keep`은 before + after `same`, `repro`는 before `red` + after `green`이면 met), 마지막 줄은 `VERDICT: PASS` / `VERDICT: PASS (<k> not run)`(PARTIAL로 기록) / `VERDICT: FAIL` (세션 모델·effort, 읽기 전용) |
 
 `analyze`의 공통 위험 체크리스트는 어느 도메인에서나 되풀이되는 실패 지점을 다룬다. 이번 변경에 해당하는 질문만 골라 `file:line` 근거나 "확인 필요"로 답한다.
 
@@ -68,7 +68,7 @@ flowchart LR
 4. 서로 독립된 요청 여러 개를 한 번에: `/devkit:parallel-work <번호 붙인 요청들>` → 열린 질문이 있으면 작업 분할 승인 → 작업자 병렬 실행 → 커밋·병합·통합 점검 확인.
 5. 가끔: `/devkit:suggest-skills` → 이 저장소의 규칙 행·스킬·에이전트 후보를 근거와 함께 받고, 고른 것만 만든다. 같은 작업이 반복되거나 같은 교정을 두 번 받으면 Claude가 한 번 제안한다. 자꾸 교정하게 되는 프로젝트 스킬은 `/devkit:improve-skill <name>`으로 고친다.
 
-분석 문서, 고정된 승인본 `analysis.approved.md`, 교차 검증 실행(`cross-check/`), 작업 SQL은 `<repo>/.devkit/work/<작업 ID>/`에 둔다 (Git 제외). 실행 기록(`check-runner`, `verifier`, 런타임·DB 판정)은 그 아래 `runs/`에 JSON으로 남는다. `skills/check/scripts/record_run.py`가 쓰며(스키마 `devkit.run/1`), 작업 ID가 없으면 `.devkit/runs/`에 둔다. 보고에는 이 스크립트가 출력하는 판정 단어(`PASS`, `FAIL`, `PARTIAL`)를 그대로 쓴다.
+분석 문서, 고정된 승인본 `analysis.approved.md`, 교차 검증 실행(`cross-check/`), 작업 SQL은 `<repo>/.devkit/work/<작업 ID>/`에 둔다 (Git 제외). 실행 기록(`check-runner`, `verifier`, 런타임·DB·baseline 판정)은 그 아래 `runs/`에 JSON으로 남는다. `skills/check/scripts/record_run.py`가 쓰며(스키마 `devkit.run/1`), 작업 ID가 없으면 `.devkit/runs/`에 둔다. 보고에는 이 스크립트가 출력하는 판정 단어(`PASS`, `FAIL`, `PARTIAL`)를 그대로 쓴다.
 
 ## 저장소 설정
 
@@ -206,4 +206,4 @@ zip 파일로 (GitHub 저장소에 접근할 수 없는 팀원):
 
 ## 상태
 
-0.14.0 · 2026-11-19. MIT 라이선스로 배포한다 (`LICENSE` 참고).
+0.15.0 · 2026-11-19. MIT 라이선스로 배포한다 (`LICENSE` 참고).

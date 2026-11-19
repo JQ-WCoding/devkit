@@ -33,12 +33,12 @@ Split the requirement into numbered items and keep the source wording apart from
 - **Cross-check mode** (the user asks for it; offer it once when the input is a `docs/rules` draft or touches a glossary term): follow [cross-check.md](references/cross-check.md) instead of tracing here first. Only its `proceed` items get a plan; the rest go to the 🛑 gate.
 - Follow entry points (screen, API, batch, message consumer) → processing → storage (table, file, external) as `file:line`. With several entry points or more than 10 files to scan, hand them to `devkit:code-reader` in parallel, one per entry point. Smaller than that, read directly.
 - With dynamic calls (string paths, reflection, config routing), do not conclude "unused" from a text search alone.
-- **Bug**: define the minimal reproduction steps and confirm the cause with evidence (code, logs, data). If not confirmed, write the hypothesis and how to check it. If two earlier fixes resting on the same premise failed, write that premise down and check it directly before planning a third. Look for the same cause elsewhere. If production data must be queried, use read-only queries only, after confirming the target DB.
+- **Bug**: define the minimal reproduction steps and confirm the cause with evidence (code, logs, data). If not confirmed, write the hypothesis and how to check it. Add a `repro` row to "Executable premises": a run that fails on pre-change code. If two earlier fixes resting on the same premise failed, write that premise down and check it directly before planning a third. Look for the same cause elsewhere. If production data must be queried, use read-only queries only, after confirming the target DB.
 
 ## 3. Differences and impact
 
 - Per requirement item: `current / after / where to change`. Items with no change are marked as untouched.
-- Impact: screens, APIs, batches, DB, external integrations, permissions, config, docs. Record other features that use the same tables, APIs or shared components as the **keep-as-is list**.
+- Impact: screens, APIs, batches, DB, external integrations, permissions, config, docs. Record other features that use the same tables, APIs or shared components as the **keep-as-is list**; for a change, items a run can observe also get `keep` rows in "Executable premises".
 
 ## 4. Risk check
 

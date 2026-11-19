@@ -14,7 +14,7 @@ Skills and docs are written in English; Claude answers in the language of each r
 | Always | Language hook `hooks/user_prompt.py` | Adds one line to every prompt: write progress updates, questions and the final answer in that prompt's language, whatever it is. Turn off: `/plugin` > devkit > Configure options > Language reminder, or `DEVKIT_LANG_HOOK=off` in the settings `env` |
 | Always | Guard hook `hooks/guard.py` | Enforces Git and server-start rules in code right before shell commands run (see "Guard hook") |
 | Analyze | `/devkit:analyze` | Reads a requirement, issue or bug from any source; traces current code → gap → impact → common risk check → implementation plan in an analysis doc; asks for approval and freezes the approved copy. On request, a cross-check mode has separate analysts read intent sources and current state, compares them with a script that keeps code-only findings from becoming rules, and asks only the disagreements |
-| Implement | `/devkit:develop` | Implements the approved plan, DB change and rollback SQL (`00_check` → `01_change` → `99_rollback`, run by a person), verification and regression check (executable premises run before the report; a false one goes back to analyze), per-requirement report |
+| Implement | `/devkit:develop` | Implements the approved plan, DB change and rollback SQL (`00_check` → `01_change` → `99_rollback`, run by a person), verification and regression check (executable premises run before the report; a false one goes back to analyze; `keep`/`repro` rows are captured on pre-change code before the first edit with `skills/check/scripts/baseline.py` and compared after, and a repro that already passes goes back to analyze), per-requirement report |
 | Screens | `/devkit:develop-screen` | Builds screens from a screen design document (attached or local pptx, pdf, slide images, or a link a connected tool reads): splits pages, writes a per-screen spec with status, traces impact, designs DB changes, approval gate, implements, writes SQL, compares the result with the mockup and reports per feature number. Repo specifics (folders, layers, status symbols, glossary, checks) come from the local `.devkit/develop-screen/profile.md` |
 | Verify | `/devkit:check` | Finds lint, type, build and test commands and runs only the related ones, then writes a run record (user-invoked only) |
 | Run | `/devkit:run-app` | Starts, checks and stops the app servers without an IDE from the repo's local `.devkit/runtime.json`: TCP preflight (DB tunnel), start in dependency order, health wait, logs and PID state per checkout, separate ports per worktree, a runtime run record. Without the config it offers to write one. Never opens tunnels, never takes over a port in use |
@@ -30,7 +30,7 @@ Skills and docs are written in English; Claude answers in the language of each r
 | Explore | Agent `devkit:code-reader` | Handles multi-file exploration and returns only conclusions (session model, low effort, read-only) |
 | Verify | Agent `devkit:check-runner` | Runs the lint, type, build and test commands for a change and returns exit codes and only the related errors, ending in `CHECKS: PASS`, `CHECKS: PASS (<k> not run)` or `CHECKS: FAIL`. Skips installs, DB-backed tests and servers and lists them as `needs install` / `not run` (session model, low effort, no source edits) |
 | Screens | Agent `devkit:spec-analyst` | Reads design document pages (text, notes, mockups) into the develop-screen spec template; marks guesses `Estimate:` and unclear status as needs confirmation (session model; writes only the spec file) |
-| Verify | Agent `devkit:verifier` | Judges the diff against an analysis doc's or screen spec's requirement and keep-as-is items as met / not met / cannot tell with `file:line` evidence, plus executable premises from run records, ending in `VERDICT: PASS` / `VERDICT: PASS (<k> not run)` (recorded as PARTIAL) / `VERDICT: FAIL` (session model and effort, read-only) |
+| Verify | Agent `devkit:verifier` | Judges the diff against an analysis doc's or screen spec's requirement and keep-as-is items as met / not met / cannot tell with `file:line` evidence, plus executable premises from run records (`keep` met = before + after `same`; `repro` met = before `red` + after `green`), ending in `VERDICT: PASS` / `VERDICT: PASS (<k> not run)` (recorded as PARTIAL) / `VERDICT: FAIL` (session model and effort, read-only) |
 
 The common risk checklist in `analyze` covers failure points that recur in every domain. It answers only the questions this change touches, with `file:line` evidence or `needs confirmation`:
 
@@ -68,7 +68,7 @@ flowchart LR
 4. Several independent requests at once: `/devkit:parallel-work <numbered requests>` → approve the task split when it has open points → workers run in parallel → confirm commit, merge and the integrated check.
 5. Occasionally: `/devkit:suggest-skills` → get evidence-backed candidates for this repo's rule rows, skills and agents, and build only the chosen ones. Claude suggests it once when the same task repeats or the same correction is given twice. To fix a project skill you keep correcting, run `/devkit:improve-skill <name>`.
 
-Analysis docs, the frozen `analysis.approved.md`, cross-check runs (`cross-check/`) and work SQL live in `<repo>/.devkit/work/<task ID>/` (excluded from Git). Run records (`check-runner`, `verifier`, runtime and DB verdicts) are JSON files in its `runs/` folder, written by `skills/check/scripts/record_run.py` (schema `devkit.run/1`; `.devkit/runs/` without a task). It prints the verdict word (`PASS`, `FAIL`, `PARTIAL`) that reports quote.
+Analysis docs, the frozen `analysis.approved.md`, cross-check runs (`cross-check/`) and work SQL live in `<repo>/.devkit/work/<task ID>/` (excluded from Git). Run records (`check-runner`, `verifier`, runtime, DB and baseline verdicts) are JSON files in its `runs/` folder, written by `skills/check/scripts/record_run.py` (schema `devkit.run/1`; `.devkit/runs/` without a task). It prints the verdict word (`PASS`, `FAIL`, `PARTIAL`) that reports quote.
 
 ## Setting up a repository
 
@@ -206,4 +206,4 @@ Rules that must hold every time, without exception, are enforced in code (determ
 
 ## Status
 
-0.14.0 · 2026-11-19. Released under the MIT License (see `LICENSE`).
+0.15.0 · 2026-11-19. Released under the MIT License (see `LICENSE`).
