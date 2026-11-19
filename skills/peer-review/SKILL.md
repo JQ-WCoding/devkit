@@ -28,17 +28,8 @@ python3 -I "${CLAUDE_PLUGIN_ROOT}/skills/peer-review/scripts/collect_commits.py"
 - Output: commits per developer with format warnings (⚠️). Warnings starting with `judgment:` are conventions the rules do not state — pass them on as "needs checking", never as violations.
 - Merge commits are for reference. Judge them only against the merge rules in `git.md`.
 - Note the remote SHA on the first line; step 6 records it.
-- If there is an "Open findings" section, do step 1-1 first. With no commits and no open findings, say so and stop.
-
-## 1-1. Recheck open findings
-
-For each open finding, read the current code at its `file` on the remote branch (`git show origin/<branch>:<path>`) and decide whether it still holds. "File changed since" only says where to look; it does not mean fixed.
-
-| Result | Action |
-|---|---|
-| Fixed | Report as fixed with the fixing commit; close in step 6 |
-| Still holds | Carry it into this report and that developer's message as "not yet addressed" |
-| User judges it not a problem | Close with `--reason withdrawn` in step 6 |
+- If there is an "Open findings" section, do step 1-1 in [recheck.md](references/recheck.md) first. With no commits and no open findings, say so and stop.
+- If the fetch fails or the recorded SHA is not in the remote history, follow "On failure" in [recheck.md](references/recheck.md).
 
 ## 2. Split the content review
 
@@ -112,8 +103,3 @@ python3 -I "$S" --no-fetch --close F3 F5                     # fixed
 python3 -I "$S" --no-fetch --close F4 --reason withdrawn
 python3 -I "$S" --no-fetch --mark <remote SHA>
 ```
-
-## On failure
-
-- Fetch fails: ask the user to check remote access, and whether to review the locally known remote branch with `--no-fetch`.
-- The recorded SHA is not in the remote history (force update etc.): the script falls back to the last N days and says so; mention it in the report.

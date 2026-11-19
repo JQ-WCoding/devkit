@@ -1,6 +1,6 @@
 ---
 name: spec-analyst
-description: Reads screen design document pages (text, speaker notes and mockup images from a pptx, pdf or image deck) and fills the devkit:develop-screen spec template with status, search conditions, grids, features, popups and open questions. Use from devkit:develop-screen step 1; the caller passes the pages, image paths, template path, status legend and document language. Does not read the codebase or modify code.
+description: Reads screen design document pages (text, speaker notes and mockup images from a pptx, pdf or image deck) and fills the devkit:develop-screen spec template with status, search conditions, grids, features, popups and open questions. Use from devkit:develop-screen step 1. Does not read the codebase or modify code.
 model: inherit
 tools: Read, Grep, Glob, Bash, Write
 ---

@@ -1,6 +1,6 @@
 ---
 name: develop-screen
-description: Builds screens from a screen design document (화면설계서 / UI spec / storyboard: pptx, pdf, slide images, or a Google Slides, Drive or Figma link a connected tool can read) — per-screen spec with status, impact trace, DB design, approval, implementation, SQL, mockup comparison and a per-feature report. Use for "화면설계서 보고 개발해줘", "설계서 p12 구현", "이 PDF 화면 만들어줘", "implement this UI spec". Not for changes without a design document (devkit:analyze), code review, or report/print layouts.
+description: Builds screens from a screen design document (화면설계서 / UI spec / storyboard: pptx, pdf, slide images, or a Google Slides, Drive or Figma link a connected tool can read). Use for "화면설계서 보고 개발해줘", "설계서 p12 구현", "이 PDF 화면 만들어줘", "implement this UI spec". Not for changes without a design document (devkit:analyze), code review, or report/print layouts.
 argument-hint: "<file path | attachment | link> [p<N> ...] [screen ID]"
 ---
 
@@ -34,7 +34,7 @@ Progress:
    ```bash
    python3 -I "${CLAUDE_PLUGIN_ROOT}/skills/develop-screen/scripts/extract_deck.py" <input> <deck folder> --pages <N...> [--status "<profile symbols>"] [--id-label "<profile regex>"]
    ```
-   It handles pptx (presentation order, notes, the pictures embedded in each slide — not a render of the slide), pdf, image files or folders, and exported text. Page numbers are the document's order, not numbers printed on the slides; cross-check the screen ID and title of every requested page against its image.
+   Page numbers are the document's order, not numbers printed on the slides; cross-check the screen ID and title of every requested page against its image.
 4. **Mockup**: get an image of every requested page (a pdf or image page from the split, `Read` of the PDF page, or a connector thumbnail). A pptx gives only embedded pictures: use one only when it shows the whole screen; when a requested page has none, or only logos, icons or fragments, ask for a PDF export or a capture of that page. A mockup outranks the text for columns, required marks, masking, button positions and layout. Unreadable or cut-off parts are `needs confirmation`; ask for an original capture.
 5. Read consecutive pages with the same screen ID (tabs, popups) as one bundle. If the document points to another file (program list, code table), look for it next to the deck and read it as supporting input.
 
@@ -83,7 +83,7 @@ Show the spec summary (status, scope, layout, API, new or changed DB objects, ne
 Follow the profile's layer order (default: schema baseline → data access → service/rule → API → UI) and the repo rules it links. For modify, change only the requested parts and keep the keep-as-is list intact.
 
 - Match an existing implementation of the same kind for queries, saves, transactions and procedure calls.
-- Shared styles and shared components stay as they are; if they truly cannot do the job, give the reason and confirm first. Preserve line endings when editing with a script.
+- Shared styles and shared components stay as they are; if they truly cannot do the job, give the reason and confirm first.
 - Out-of-scope features decided at 🛑A go to the spec's "Deferred" section.
 
 ## 5. SQL (`<sql>/`)

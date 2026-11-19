@@ -1,6 +1,6 @@
 ---
 name: parallel-work
-description: Splits a request into independent tasks, runs them in parallel worker sessions (each edit task in its own git worktree), then collects the reports and, after confirmation, commits, merges, runs the integrated check and cleans up. Use for "run these in parallel", "split these requests and work on them at once", "merge the finished parallel work", or once the user accepts a proposed split. Not for a single task or a few-line change.
+description: Splits a request into independent tasks, runs them in parallel worker sessions (each edit task in its own git worktree), then merges them after confirmation. Use for "run these in parallel", "split these requests and work on them at once", "merge the finished parallel work", or once the user accepts a proposed split. Not for a single task or a few-line change.
 argument-hint: "<request (number the items or put each on its own line)>"
 ---
 
@@ -92,7 +92,7 @@ Each step happens only after 🛑 user confirmation. Push only when asked separa
    - Results table: merged tasks (branches) · checks run · result · checks not run and why. Record the result with `python3 -I "${CLAUDE_PLUGIN_ROOT}/skills/check/scripts/record_run.py" --repo <merge point> --line "<CHECKS: line>"` (same absolute-path rule). The line is `devkit:check-runner`'s last line; for checks you ran yourself, `CHECKS: PASS`, `CHECKS: PASS (<k> not run)` or `CHECKS: FAIL (<n> commands)`. Report the `verdict:` word `record_run.py` prints; `PARTIAL` is never "passed".
    - On failure, stop and report the files and tasks involved. Fix as in 4-6. Roll back only on user request, as the workspace file describes.
 5. **Screen check** — only if chosen in step 1. With `.devkit/runtime.json`, run `devkit:run-app` (`--repo <merge point> up`); a merge worktree gets its own ports, and a port held by another process is reported, not taken over. Stop it with `down` after 4-6's fixes are in, before 4-7. Without the config, the user starts the server:
-   - Tell the user where to start it and to stop any server already on the same port first. Don't check against a server started from another path: find the listener's folder (orca: `orca ports --json`; macOS/Linux: `lsof -nP -iTCP:<port> -sTCP:LISTEN -t`, then `lsof -a -p <pid> -d cwd -Fn`; Windows: `Get-NetTCPConnection -LocalPort <port> -State Listen` → `Get-Process -Id <OwningProcess>`); ask the user if it is still unclear. Confirm the browser actually receives the new code.
+   - Read [screen-check.md](references/screen-check.md) for where the user starts it and how to confirm the server is the one from the merge point.
    - For each task, decide in a table what to look at (screen behavior, requests, DB rows, logs), check it, and fill in the results in the same table.
    - Run write checks only on the targets approved in step 1. Revert afterwards, confirm the original state with a read, and note it in the table.
 6. **Fixes from checks** (integrated check, screen check and final review alike; 🛑 after approval)

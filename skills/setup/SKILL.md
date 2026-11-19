@@ -13,6 +13,7 @@ Follow [method.md](references/method.md): shared source of truth `docs/rules/` +
 | [method.md](references/method.md) | At the start |
 | [interview.md](references/interview.md) | 🛑A |
 | [templates.md](references/templates.md) | Step 2 |
+| [templates-onboarding.md](references/templates-onboarding.md) | Step 2, only when the onboarding guide was approved at 🛑B |
 
 Run the scripts (no need to read them). Put their output in the scratchpad.
 
@@ -34,7 +35,7 @@ If "Possible plaintext secrets" appears, report the locations only. Never print 
 
 ## 🛑 A. Interview
 
-Ask with AskUserQuestion only the [interview.md](references/interview.md) items the fingerprint did not settle (4 questions per call, 2–3 calls). For environment values, show what the fingerprint found and ask only whether it is right. Record answers in `<scratchpad>/decisions.md`.
+Ask with AskUserQuestion only the [interview.md](references/interview.md) items the fingerprint did not settle. For environment values, show what the fingerprint found and ask only whether it is right. Record answers in `<scratchpad>/decisions.md`.
 
 ## 🛑 B. Setup plan approval
 
