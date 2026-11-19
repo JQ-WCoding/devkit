@@ -11,8 +11,8 @@ Decide what to change, why and how far before touching code. This skill **does n
 | Reference | When |
 |---|---|
 | [analysis-template.md](references/analysis-template.md) | Analysis doc format |
-| [risk-checklist.md](references/risk-checklist.md) | Step 4 risk check |
-| [design-principles.md](references/design-principles.md) | Step 4 design principles (recommendation only) |
+| [risk-checklist.md](references/risk-checklist.md) → [risk-checklist/](references/risk-checklist/) | Step 4: the area index, then only the area files whose signal appears |
+| [design-principles.md](references/design-principles.md) → [design-principles/](references/design-principles/) | Step 4, only when code, scripts or infra change: core, then only the changed files' language files |
 | [cross-check.md](references/cross-check.md) | Cross-check mode, glossary format, rules-change gate |
 
 ## 0. Read the input
@@ -49,9 +49,9 @@ Split the requirement into numbered items and keep the source wording apart from
 
 ## 4. Risk check
 
-From [risk-checklist.md](references/risk-checklist.md), pick **only items whose signal appears** and write the question and answer (evidence or `needs confirmation`). Do not list items that do not apply.
+Read the area index in [risk-checklist.md](references/risk-checklist.md), then only the area files whose signal appears. Pick **only items whose signal appears** and write the question and answer (evidence or `needs confirmation`). Do not list items that do not apply.
 
-Then design principles: from [design-principles.md](references/design-principles.md), judge the language and code shape of the **changed files**, skip principles the layer doc declined, and recommend at most 3 whose signal appears in this change. They are recommendations, not requirement items: develop and the verifier do not judge against them. No signal, no section.
+Then design principles, skipped when the change touches no code, script or infra file: read [design-principles.md](references/design-principles.md) and only the language files of the changed files, judge the language and code shape of the **changed files**, skip principles the layer doc declined, and recommend at most 3 whose signal appears in this change. They are recommendations, not requirement items: develop and the verifier do not judge against them. No signal, no section.
 
 ## 5. Implementation plan
 
