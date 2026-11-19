@@ -34,7 +34,7 @@ You are a worker started by the central session. Do only this one task.
 ## Report
 - Contents: conclusion → full list of changed files with reasons → checks run and results (say so for checks you didn't run) → remaining work and open questions.
 - [hc] When done or blocked: hc send <central HC_TERMINAL_ID> "[<slug>] <done|blocked|decision needed>: <one or two line summary>"
-- [hc] Write the full contents to <central scratchpad>/reports/<slug>.md. After reporting, wait for the next instruction; don't end the session.
+- [hc] Write the full contents to <work folder>/.devkit/reports/<slug>.md. After reporting, wait for the next instruction; don't end the session.
 - [subagent] Your final reply is the report. First line: "[<slug>] <done|blocked|decision needed>: <one or two line summary>", then the contents. If you are blocked or need a decision, don't guess and continue; stop and report right there. Answers and further instructions will come as your next message.
 - [orca] Follow the injected Orca preamble. For a decision, use its `ask` command and wait for the answer; don't guess. When done or blocked, first write the full report as your last message (first line "[<slug>] <done|blocked>: <one or two line summary>"), then send `worker_done` once with a three-sentence summary and `--outcome succeeded` (done) or `--outcome failed` (blocked).
 ```

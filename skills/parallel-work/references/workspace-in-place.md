@@ -14,7 +14,7 @@ Every worker edits the same folder, `<repo>`. There are no branches, commits or 
 Record the folder's state before launching (add `--backup` if a backup was approved):
 
 ```bash
-python3 -I <scripts>/inplace_snapshot.py snapshot <repo> <scratchpad>/inplace [--backup]
+python3 -I <scripts>/inplace_snapshot.py snapshot <repo> <scratchpad>/inplace [--backup] --exclude .devkit
 ```
 
 - It skips VCS, dependency and cache folders (`.git`, `node_modules`, `.venv`, `__pycache__`, …). Build output folders (`build`, `dist`, `target`) are not skipped by default, since in a plain folder they may hold sources; add them with `--exclude <folder name>` when they are only output.
@@ -23,7 +23,7 @@ python3 -I <scripts>/inplace_snapshot.py snapshot <repo> <scratchpad>/inplace [-
 ## Step 3: check actual results
 
 ```bash
-python3 -I <scripts>/inplace_snapshot.py changed <repo> <scratchpad>/inplace
+python3 -I <scripts>/inplace_snapshot.py changed <repo> <scratchpad>/inplace --exclude .devkit
 ```
 
 It lists added, modified and deleted files. Compare the list with each report's file list, and report any file that no report mentions or that two tasks both changed.
