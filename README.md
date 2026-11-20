@@ -206,4 +206,4 @@ Rules that must hold every time, without exception, are enforced in code (determ
 
 ## Status
 
-0.15.2 · 2026-11-20. Released under the MIT License (see `LICENSE`).
+0.15.3 · 2026-11-20. Released under the MIT License (see `LICENSE`).
