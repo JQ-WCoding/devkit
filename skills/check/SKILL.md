@@ -9,40 +9,28 @@ argument-hint: "[lint | type | build | test] [paths...]"
 
 Pick and run only the checks that are needed. Skipping them never blocks work, commits or PRs.
 
-## 1. Find the commands
+## 1. Run through check-runner
 
-1. If repo rules (`docs/rules/`, `CLAUDE.md`, project `.claude/skills/*check*`) list check commands, use them.
-2. Otherwise find candidates (a script to run, no need to read it):
+Hand the run to `devkit:check-runner`; it finds the commands (repo rules, else `discover.py`), picks the ones for the change and follows its own run rules. Pass:
 
-```bash
-python3 -I "${CLAUDE_PLUGIN_ROOT}/skills/check/scripts/discover.py" <repo root>
-```
+- repo root, and the changed paths: the argument paths, else `git status` and `git diff --name-only`
+- the kinds from the argument, if any
+- the absolute path of `${CLAUDE_PLUGIN_ROOT}/skills/check/scripts/discover.py`, and the CI config path if there is one, to compare candidates against the checks CI actually runs
 
-If there is a CI config, compare against the checks it actually runs. If there are no candidates, ask the user.
+If it finds no candidates, ask the user for the commands.
 
-## 2. Choose
+## 2. Rows it did not run
 
-- With arguments, do only that kind or those paths.
-- Without, look at changed files with `git status` and `git diff --name-only` and choose lint and type checks for those subprojects. Choose a build when build config, dependencies or import paths changed or the user wants one; choose tests when the changed code has tests.
-- State the chosen commands and the reason in one line, then run them.
+For `needs install` and `not run` rows, ask the user once with the reason per row. Run only the approved ones yourself: a dependency install (lock files or installed modules may change), tests that need a DB or external service after confirming the target environment. Checks that need a running app use `devkit:run-app` when the repo has `.devkit/runtime.json`; otherwise the user starts it. Autofix (`--fix`, formatters) only after confirmation, and only on lines within the request. Do not stash, change the staging area or switch branches for a check.
 
-## 3. Rules while running
+## 3. Results
 
-- Do not run commands that start servers, DBs or containers (`dev`, `start`, `serve`, `bootRun`, `docker compose up` and so on). Checks that need a running app use `devkit:run-app` when the repo has `.devkit/runtime.json`; otherwise the user starts it.
-- If dependency installation (`npm install`, `npm ci`, `pip install` and so on) is needed, ask first. Lock files or installed modules may change.
-- Do not run autofix (`--fix`, formatters) over whole files. Use it only after confirmation when the lines it changes are within the request.
-- Run tests that need a DB or external services only after confirming the target environment.
-- Run long builds and tests in the background and wait for the completion notice.
-- Do not stash, change the staging area or switch branches for a check.
+Report the commands run, exit codes, and only the errors related to the change (a count for pre-existing ones). Write checks that were not run as `not run`.
 
-## 4. Results
-
-Report the commands run, exit codes, and only the errors and warnings related to the change. For existing violations, judge only the ones related to this change and give a count for the rest. Write checks that were not run as `not run`; if a tool is missing, say so.
-
-End with one `CHECKS:` line — `CHECKS: PASS`, `CHECKS: PASS (<k> not run)`, `CHECKS: FAIL (<n> commands)` or `CHECKS: FAIL (none run)` — and record it (add `--task <ID>` when working from an analysis doc):
+The final `CHECKS:` line is check-runner's last line; if you ran rows yourself, form it again over all chosen commands by the Report rules in `${CLAUDE_PLUGIN_ROOT}/agents/check-runner.md`. Record it (add `--task <ID>` when working from an analysis doc):
 
 ```bash
 python3 -I "${CLAUDE_PLUGIN_ROOT}/skills/check/scripts/record_run.py" --repo <repo root> --line "<CHECKS: line>"
 ```
 
-Report the `verdict:` word it prints (`PARTIAL` for `PASS (<k> not run)`), never "passed" for a PARTIAL. That JSON record is the only evidence file; do not write other logs or reports into the repo.
+Report the `verdict:` word it prints, never "passed" for a PARTIAL. That JSON record is the only evidence file; do not write other logs or reports into the repo.
