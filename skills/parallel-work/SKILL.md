@@ -31,7 +31,7 @@ Two independent choices. Each mode has its own reference file: read the two that
 **Launcher** — decide from the environment variables `ORCA_TERMINAL_HANDLE` and `HC_TERMINAL_ID` (`echo "$ORCA_TERMINAL_HANDLE|$HC_TERMINAL_ID"`; PowerShell: `"$env:ORCA_TERMINAL_HANDLE|$env:HC_TERMINAL_ID"`).
 
 - `ORCA_TERMINAL_HANDLE` set → `orca`: one supervised Orca worker per task. Read [launcher-orca.md](references/launcher-orca.md).
-- `HC_TERMINAL_ID` set (`t<number>`) → `hc`: one Herdr child Claude session per task. Read [launcher-hc.md](references/launcher-hc.md).
+- `HC_TERMINAL_ID` set (`t<number>`) → `hc`: one Herdr child agent session per task. Read [launcher-hc.md](references/launcher-hc.md). For a non-`claude` agent, also read [hc-templates.md](references/hc-templates.md).
 - Both set → ask the user which one. Neither → `subagent`: one Agent-tool subagent per task; tell the user in one line that subagents will be used. Read [launcher-subagent.md](references/launcher-subagent.md).
 
 **Workspace** — decide from `git rev-parse --show-toplevel`. Below, `<repo>` is that path (in-place mode: the current working folder).
@@ -55,13 +55,14 @@ Two independent choices. Each mode has its own reference file: read the two that
 4. For each task, decide:
    - **Kind**: `edit` if it changes code, DB objects or docs; `read` if it only investigates or answers.
    - **slug**: lowercase letters, digits and hyphens, 32 characters max. Used as the folder, branch and worker name.
+   - **Agent**: `claude` (default) | `codex` | `antigravity`, or another agent id Orca knows. **Model**: optional, a model id for that agent. Change either only when the user names it; the launcher file says how each is started and which ones it supports.
    - **Open points**: choices the request doesn't settle (behavior, scope, naming).
    - Any extra fields the workspace file adds.
 5. Run at most 3 workers at once unless the user sets another limit. Launch the rest as earlier ones finish.
 6. Decide once — **screen check**: whether to start a server and check the merged result in the browser, and where. "n/a" if there is no UI.
    - If the repo has `.devkit/runtime.json`, the central session starts it with `devkit:run-app` (`--repo <merge point>`). Otherwise the user starts the server with their usual setup, at the location the workspace file gives. Get approval for any branch switch now. Workers never start servers.
    - Decide whether checks that write data (save, delete) are allowed. If so, list the targets and how to revert them. If not decided, screen checks only read and observe requests.
-7. 🛑 Show a table: launcher · workspace (plus the items its file adds) · screen check (yes/no, location, write checks and how to revert) · per task: kind · slug · scope · parallel/ordered/combined/central-direct · open points. Wait for approval only when there are open points, write checks, a branch switch or a `git init`; get the answers to open points now, and unanswered ones go into the brief as "don't implement; report the options". Otherwise launch right after showing it.
+7. 🛑 Show a table: launcher · workspace (plus the items its file adds) · screen check (yes/no, location, write checks and how to revert) · per task: kind · slug · agent · model · scope · parallel/ordered/combined/central-direct · open points. Wait for approval only when there are open points, write checks, a branch switch or a `git init`; get the answers to open points now, and unanswered ones go into the brief as "don't implement; report the options". Otherwise launch right after showing it.
 
 ## 2. Prepare workspaces → launch workers
 
@@ -96,7 +97,7 @@ Each step happens only after 🛑 user confirmation. Push only when asked separa
    - For each task, decide in a table what to look at (screen behavior, requests, DB rows, logs), check it, and fill in the results in the same table.
    - Run write checks only on the targets approved in step 1. Revert afterwards, confirm the original state with a read, and note it in the table.
 6. **Fixes from checks** (integrated check, screen check and final review alike; 🛑 after approval)
-   - Default: a fresh worker in the same work folder (launcher file), briefed with the original brief, decisions settled since, the prior report and a "Fix" section (the problem, the scope to fix, "report again the same way"); a resumed worker can drop later directives → check its report → in worktree mode, commit in its worktree and merge again → run the integrated check again.
+   - Default: a fresh worker in the same work folder with the task's agent and model (launcher file), briefed with the original brief, decisions settled since, the prior report and a "Fix" section (the problem, the scope to fix, "report again the same way"); a resumed worker can drop later directives → check its report → in worktree mode, commit in its worktree and merge again → run the integrated check again.
    - Exception: a fix of a few lines, or one spanning several tasks, is done by the central session itself at the merge point (in-place: `<repo>`); in worktree mode, as a new commit.
 7. **Clean up** — only after the integrated check, the screen check (if any) and any final review the user added (`/code-review` etc.) are finished and their fixes are in. Don't remove workspaces before then; fix workers run in them. Clean up workers as the launcher file describes, then workspaces as the workspace file describes.
 

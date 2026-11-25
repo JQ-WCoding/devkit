@@ -19,12 +19,12 @@ You are a worker started by the central session. Do only this one task.
 - Out of scope (don't touch): <files and modules other workers own>
 
 ## Rules
-- Follow the repo's CLAUDE.md and rules docs (docs/rules/) if there are any. If you find you need to edit a file in another worker's scope, stop and report.
-- Don't: git commit, push, merge or switch branches; git init; start servers (devkit:run-app included; the central session starts them); write to databases; write to external services (issues, docs, messages); start other agent sessions (hc run, orca worker-start, etc.); propose devkit:parallel-work or split this task further. Exploration subagents (Agent tool) are fine.
+- Follow the repo's agent instructions (CLAUDE.md, AGENTS.md) and rules docs (docs/rules/) if there are any. If you find you need to edit a file in another worker's scope, stop and report.
+- Don't: git commit, push, merge or switch branches; git init; start servers (including run-app style tools or skills; the central session starts them); write to databases; write to external services (issues, docs, messages); start other agent sessions (hc run, orca worker-start, etc.); propose parallel work or split this task further. Read-only helper agents your tool provides (e.g. Claude's Agent tool) are fine for exploration.
 - [subagent|orca][worktree] You start in the central session's working folder. Start every shell command with `cd <work folder> && …`, and read and edit files by absolute path under the work folder. Never edit the same-named file in the central repo.
 - [in-place] Other workers are editing the same folder at the same time, and there is no git history to undo with. Only read files outside your scope. Even inside your scope, stop and report before deleting or moving anything. Ask the central session before running commands that change the whole folder, such as installing dependencies.
 - [hc] Long commands such as dependency installs or builds may run as `hc run --bg --rm --no-notify --name <slug>-build -- env PATH="$PATH" sh -c '<command>'` followed by `hc wait <slug>-build`. Pass the current PATH like this instead of writing one out (the hc run shell may lack PATH setup such as nvm).
-- [subagent|orca] Long commands may run with Bash run_in_background.
+- [subagent|orca] Long commands may run in the background with your tool's own feature for it (Claude: Bash run_in_background).
 - Chain helper commands with `&&` and write their output to a log file; check both the exit code and the log's tail. If a command ended within seconds or exited with 127, check whether the tool was found.
 - [worktree] If the worktree has no dependency folder (node_modules etc.), install dependencies before running checks.
 - Don't implement unclear choices that aren't in "Settled decisions"; report the options and their impact instead.

@@ -14,8 +14,10 @@ This file only maps parallel-work steps onto Orca's supervised loop. Orca's comm
 - Per task, all parallel ones in one response:
 
   ```text
-  ORCA orchestration worker-start --spec "<filled brief>" --task-title <slug> --worktree current --agent claude --json
+  ORCA orchestration worker-start --spec "<filled brief>" --task-title <slug> --worktree current --agent <agent> [--model <model>] --json
   ```
+
+- `<agent>` is the task's Agent (`claude` by default). Add `--model <model>` only when the task has a Model; otherwise the agent uses its own default.
 
 - `--worktree current` puts every worker in the central session's workspace; the brief's `cd <work folder>` line sends edit workers into their `worktrees/<slug>` (the same as subagents). Don't use `new-child` or `new-top-level`: this skill creates and merges the worktrees itself.
 - Write down each `dispatch_id` and terminal handle next to its slug. A non-zero exit is not a reason to relaunch: read `failedStage` and `residualResources` and follow the guide's recovery reference.
@@ -34,7 +36,7 @@ ORCA orchestration check --wait --types "worker_done,escalation,question" --time
 
 - A worker's question (`ask`): `ORCA orchestration reply --id <message_id> --body "<answer>" --json`.
 - Orca wants every settled worker reused, retained or released before the delivery is acknowledged, and retains only on the user's explicit request. So, unlike the other launchers, a worker is released right after its report is read and checked in step 3: `ORCA orchestration worker-release --dispatch <dispatch_id> --json`. Its work folder and changes stay; only the terminal closes.
-- Fixes (4-6) go to a fresh worker in the same work folder: `worker-start` as in Launch, with `--spec` set to the original brief plus a "Fix" section (the problem, the scope to fix, and "report again the same way"). Collect and release it the same way.
+- Fixes (4-6) go to a fresh worker in the same work folder: `worker-start` as in Launch, with the original task's `--agent` and `--model`, and `--spec` set to the original brief plus a "Fix" section (the problem, the scope to fix, and "report again the same way"). Collect and release it the same way.
 
 ## Long checks (central session)
 

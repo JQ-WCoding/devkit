@@ -2,6 +2,8 @@
 
 If Agent, SendMessage or ListAgents appear only by name and not as callable tools, load them first: `ToolSearch` with `select:Agent,SendMessage,ListAgents`.
 
+Subagents are Claude only. If a task's Agent is not `claude`, tell the user that it needs the `orca` or `hc` launcher, and ask whether to run it with `claude` instead.
+
 ## Launch
 
 Use the Agent tool once per task: `subagent_type` `general-purpose`, `description` `<slug>`, `prompt` the filled brief. Send all workers that run together in one response. Write down each returned agent ID next to its slug.
