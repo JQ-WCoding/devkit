@@ -84,5 +84,27 @@
       "Does not use parallel-work because this is a single task; edits it directly in this session",
       "Creates no worktree and starts no worker"
     ]
+  },
+  {
+    "skills": ["parallel-work"],
+    "query": "/devkit:parallel-work 1. Add paging to the shipment order grid (use codex for this one) 2. Add a shipped-at column to the shipment history table. Running inside hc (HC_TERMINAL_ID=t3)",
+    "files": [],
+    "expected_behavior": [
+      "Chooses the hc launcher and shows agent codex for task 1 and claude (default) for task 2 in the step 1 table",
+      "Checks hc templates before launching task 1; if no codex template exists, stops, shows the example from hc-templates.md and asks the user to confirm its command (with --no-daemon and an interactive launch, never codex exec) before creating it",
+      "Launches task 1 as hc run --bg --name <slug> --cwd <work folder> codex \"<filled brief>\" and checks first_message.sent; launches task 2 with the unchanged claude command",
+      "Gives a fix worker for task 1 (4-6) the codex agent again"
+    ]
+  },
+  {
+    "skills": ["parallel-work"],
+    "query": "/devkit:parallel-work 1. Write a migration for the stock table 2. Fix the date filter on the inbound list screen, run this one on antigravity. Running inside Orca (ORCA_TERMINAL_HANDLE set)",
+    "files": [],
+    "expected_behavior": [
+      "Chooses the orca launcher and shows agent antigravity for task 2 and claude for task 1 in the step 1 table",
+      "Starts task 2 with worker-start --agent antigravity and adds --model only if the user named a model",
+      "Collects, replies to and releases the antigravity worker with the same orchestration commands as the claude worker",
+      "Without Orca and hc (subagent launcher), says antigravity needs orca or hc and asks whether to run task 2 with claude instead"
+    ]
   }
 ]
