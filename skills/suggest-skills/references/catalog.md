@@ -22,7 +22,7 @@ All use `model: inherit`, read-only tools, no file edits, `file:line`-centered r
 
 | Skill | Condition (evidence) | Blueprint |
 |---|---|---|
-| Project work flow | On top of the common `devkit:analyze`/`develop` flow, repo-specific steps (reading a specific spec format, status verdicts, menu and permission registration, mockup comparison, etc.) have repeated 3+ times | `blueprints/project-flow.md` |
+| Project work flow | On top of the common `devkit:analyze`/`develop` flow, repo-specific steps (reading a specific spec format, status verdicts, menu and permission registration, mockup comparison, etc.) repeat often enough, by your judgment and whatever the count | `blueprints/project-flow.md` |
 | `clean-temp` protect globs (no new skill) | Temp-file cleanup was requested and this repo keeps local work folders (specs, mockups, work SQL, decks) that `devkit:clean-temp` would not know to protect | Write `.devkit/clean-temp/config.json` as `{"protect": ["<glob>", ...]}`: globs match repo-relative paths, `*` also matches `/`, a trailing `/` means everything under it (e.g. `"docs/design/[!_]*"`) |
 | `visual-docs` | Requests to document flowcharts, sequences or ERDs recur, or `docs/` has several Mermaid docs | `blueprints/visual-docs.md` |
 | Recurring maintenance procedure | Dozens of commits with the same verb (dependency bumps, release prep, data correction, certificate rotation, etc.) with the same checks every time | Follow the structure of `blueprints/tool-skill.md` (procedure, commands, checks, prohibitions) |

@@ -4,7 +4,7 @@ A skill that keeps the common `devkit:analyze`/`devkit:develop` flow and adds on
 
 ## Conditions to build (evidence)
 
-One of the following has repeated 3+ times.
+One of the following repeats often enough, by your judgment and whatever the count.
 
 - A fixed-format input (slide design spec, screen definition, spreadsheet requirements, partner integration spec) must be read the same way every time
 - A verdict missing from the common analysis doc is needed every time (spec status verdict, menu/permission/code registration, partner auth procedure)

@@ -66,7 +66,7 @@ flowchart LR
 2. 작업마다: `/devkit:analyze <이슈 링크, 파일 또는 요구사항>` → 물으면 승인 → `/devkit:develop` (점검은 `check-runner`가 돌리고, 완료 보고 전에 `verifier`가 분석 문서 기준으로 판정한다) → 필요하면 `/devkit:check` → `/devkit:commit` → `/devkit:push` → `/devkit:pr-publish`.
 3. 리뷰어로서: `/devkit:peer-review` → 지난번 이후 팀원이 공유 브랜치에 올린 것을 리뷰한다. 첫 실행 때 `docs/rules/git.md`로부터 `.devkit/peer-review/config.json`을 만든다.
 4. 서로 독립된 요청 여러 개를 한 번에: `/devkit:parallel-work <번호 붙인 요청들>` → 열린 질문이 있으면 작업 분할 승인 → 작업자 병렬 실행 → 커밋·병합·통합 점검 확인.
-5. 가끔: `/devkit:suggest-skills` → 이 저장소의 규칙 행·스킬·에이전트 후보를 근거와 함께 받고, 고른 것만 만든다. 같은 작업이 반복되거나 같은 교정을 두 번 받으면 Claude가 한 번 제안한다. 자꾸 교정하게 되는 프로젝트 스킬은 `/devkit:improve-skill <name>`으로 고친다.
+5. 가끔: `/devkit:suggest-skills` → 이 저장소의 규칙 행·스킬·에이전트 후보를 근거와 함께 받고, 고른 것만 만든다. Claude가 먼저 제안하지 않으니 자주 반복된다고 느낄 때 직접 실행한다. 자꾸 교정하게 되는 프로젝트 스킬은 `/devkit:improve-skill <name>`으로 고친다.
 
 분석 문서, 고정된 승인본 `analysis.approved.md`, 교차 검증 실행(`cross-check/`), 작업 SQL은 `<repo>/.devkit/work/<작업 ID>/`에 둔다 (Git 제외). 실행 기록(`check-runner`, `verifier`, 런타임·DB·baseline 판정)은 그 아래 `runs/`에 JSON으로 남는다. `skills/check/scripts/record_run.py`가 쓰며(스키마 `devkit.run/1`), 작업 ID가 없으면 `.devkit/runs/`에 둔다. 보고에는 이 스크립트가 출력하는 판정 단어(`PASS`, `FAIL`, `PARTIAL`)를 그대로 쓴다.
 

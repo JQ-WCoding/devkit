@@ -42,7 +42,7 @@ python3 -I "${CLAUDE_PLUGIN_ROOT}/skills/setup/scripts/scan_repo.py" <repo root>
 
 **Skill and agent candidates** (`skills` or both): match the conditions in [catalog.md](references/catalog.md) against the fingerprint and history. Reading a blueprint to judge fit is fine. Find repeated tasks in groups of same-type commits (same scope, same verb, same folder pattern), traces of repeating the same steps in this conversation, and repeated tasks the user mentioned.
 
-**Corrections**: if the user made the same correction twice or more in this conversation, raise it as a rule row or skill content candidate with a `Level` (pinpoint-checklist). If a rule row for it already exists without an `enforced by` note, the candidate goes one level above `doc`; a reworded row is not a fix. Corrections aimed at an existing skill inside this project go to `devkit:improve-skill` instead.
+**Corrections**: if you judge that the user has given the same correction often enough to recur, whatever the count, raise it as a rule row or skill content candidate with a `Level` (pinpoint-checklist). If a rule row for it already exists without an `enforced by` note, the candidate goes one level above `doc`; a reworded row is not a fix. Corrections aimed at an existing skill inside this project go to `devkit:improve-skill` instead.
 
 Save the raw tables returned by subagents to `<scratchpad>/candidates.md`, and the main agent's merged verdicts to `<scratchpad>/suggestions.md` (adopted candidates, `needs confirmation`, discarded with reasons).
 

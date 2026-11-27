@@ -26,8 +26,7 @@
     "query": "(the third request for the same multi-step task)",
     "files": [],
     "expected_behavior": [
-      "After finishing the task, suggests devkit:suggest-skills once in one line",
-      "If declined, does not bring it up again in the same session"
+      "Does the task without suggesting devkit:suggest-skills or devkit:improve-skill unprompted"
     ]
   },
   {
